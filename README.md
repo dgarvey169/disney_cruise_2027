@@ -1,14 +1,39 @@
-# Disney Cruise 2027
+# Disney Destiny: 7-Night Western Caribbean (2027)
 
-Planning, itineraries, and analysis tools for the 2027 Disney Cruise.
+Planning, itineraries, budget forecasting, and analytics for the Garvey Family Disney Cruise sailing.
 
-## Overview
-This repository contains tools, data notebooks, and planning resources for the upcoming 2027 Disney Cruise.
+## 🛳️ Reservation Summary
+- **Reservation #**: `44830495`
+- **Ship**: **Disney Destiny**
+- **Sailing Dates**: **July 31, 2027 – August 7, 2027**
+- **Departure Port**: Fort Lauderdale, FL (Port Everglades)
+- **Stateroom**: `9100` (Cat 04B – Deluxe Family Oceanview Stateroom with Verandah, Deck 9 Midship)
+- **Party**: Katie Ann Garvey, Andrew Ryan Garvey, Riley Regina Garvey, Amelia Lee Garvey
+- **Dining**: Main Seating (5:45 PM Dinner / 8:15 PM Evening Show)
 
-## Features
-- **Interactive Planning Notebook**: [2027_Disney_Cruise.ipynb](2027_Disney_Cruise.ipynb) for itinerary modeling, budget forecasting, and activity tracking.
-- **Itinerary & Booking Management**: Track schedules, ports of call, and Castaway Club booking windows.
-- **Data & Cost Analysis**: Configurable cost modeling for staterooms, gratuities, flights, and excursions.
+## 📅 Key Dates & Milestones
+- **May 2, 2027**: Activity & Excursion Booking Window Opens (Port Adventures, Palo Dining, Spa)
+- **June 28, 2027**: Online Check-in & Port Arrival Time (PAT) Selection Opens
+- **July 31, 2027**: Embarkation (All Aboard 4:00 PM / Departs 5:00 PM)
+- **August 7, 2027**: Debarkation (Begins 8:00 AM)
+
+## 🗺️ Itinerary Highlights
+| Day | Date | Port / Location | Ashore | Onboard | Highlights |
+|---|---|---|---|---|---|
+| **Day 1** | Sat, Jul 31 | Fort Lauderdale, FL | — | 4:00 PM | Embarkation & Sail Away Party |
+| **Day 2** | Sun, Aug 1 | At Sea | — | — | Sea Day, Broadway Show |
+| **Day 3** | Mon, Aug 2 | George Town, Grand Cayman | 8:00 AM | 5:00 PM | Tendering, Stingray City, Snorkeling |
+| **Day 4** | Tue, Aug 3 | Falmouth, Jamaica | 7:30 AM | 5:00 PM | Dunn's River Falls, Excursions |
+| **Day 5** | Wed, Aug 4 | At Sea | — | — | Pirate Night & Fireworks at Sea |
+| **Day 6** | Thu, Aug 5 | Lookout Cay at Lighthouse Point | 8:30 AM | 5:30 PM | Disney's Island, Beaches, Junkanoo |
+| **Day 7** | Fri, Aug 6 | Nassau, Bahamas | 8:00 AM | 4:45 PM | Atlantis, Blue Lagoon, Farewell Dinner |
+| **Day 8** | Sat, Aug 7 | Fort Lauderdale, FL | 8:00 AM | — | Debarkation |
+
+## 📁 Repository Structure
+- [2027_Disney_Cruise.ipynb](2027_Disney_Cruise.ipynb): Interactive planning notebook with pandas models for budget, timelines, and excursions.
+- [Itineraries/](Itineraries/):
+  - [My Reservations - Disney Cruise Line.pdf](Itineraries/My%20Reservations%20-%20Disney%20Cruise%20Line.pdf)
+  - [My Reservations - Disney Cruise Line_Daily_Itinerary.pdf](Itineraries/My%20Reservations%20-%20Disney%20Cruise%20Line_Daily_Itinerary.pdf)
 
 ## Getting Started
 1. Clone the repository:
