@@ -8,81 +8,109 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/simple.min.css" id="theme">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/black.min.css" id="theme">
 
   <style>
+    /* Clean, modern typography */
     .reveal h1, .reveal h2, .reveal h3 {
       text-transform: none;
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      color: #1a365d; /* Professional Navy Blue */
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 500;
+      letter-spacing: 0.5px;
     }
+    
+    /* Resize title slide text to ensure it fits perfectly */
+    .reveal h1 { font-size: 2.2em; margin-bottom: 15px; }
+    .reveal h2 { font-size: 1.4em; color: #e2e8f0; }
+
+    /* Elegant, semi-transparent frosted glass boxes behind text for legibility against the ocean */
     .reveal section {
-      padding: 20px;
+      background: rgba(15, 23, 42, 0.85); /* Deep slate overlay for extreme legibility */
+      padding: 35px 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
+    
+    /* Make body text easy to read */
+    .reveal p, .reveal li, .reveal td {
+      color: #f8f9fa;
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+    
     ul {
-      list-style-type: square !important;
-      color: #333333;
+      list-style-type: none !important;
+      padding: 0;
     }
     li {
-      margin-bottom: 12px;
-      font-size: 0.9em;
+      margin-bottom: 14px;
+      border-left: 3px solid #63b3ed;
+      padding-left: 10px;
+      text-align: left;
     }
+
+    /* Clean table styling */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      font-size: 0.8em;
+      margin-top: 15px;
+      font-size: 0.85em;
     }
     th {
-      background-color: #f8f9fa;
-      color: #1a365d;
-      border-bottom: 2px solid #1a365d !important;
+      color: #63b3ed; /* Soft blue accent */
+      border-bottom: 2px solid #63b3ed !important;
       padding: 10px;
       text-align: left;
+      font-weight: normal;
     }
     td {
       padding: 12px 10px;
-      border-bottom: 1px solid #e2e8f0;
-      color: #4a5568;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      text-align: left;
     }
+
+    .accent { color: #63b3ed; }
     .budget-highlight {
-      color: #2f855a;
+      color: #68d391; /* Soft green */
       font-weight: bold;
-      font-size: 1.5em;
-      margin-top: 20px;
+      font-size: 1.6em;
+      margin-top: 15px;
     }
   </style>
 </head>
-<body style="background-color: #ffffff;">
+<!-- High-quality, serene tropical beach/ocean background -->
+<body style="background-image: url('https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed;">
   <div class="reveal">
     <div class="slides">
       
       <section>
-        <h1>Executive Summary</h1>
-        <h2>Garvey Family Vacation 2027</h2>
-        <p style="color: #718096;">Project: Disney Destiny - Western Caribbean</p>
-        <p><small>Timeline: July 31 - August 7, 2027</small></p>
+        <h1>Garvey Family Vacation</h1>
+        <h2>Disney Destiny 2027</h2>
+        <p><span class="accent">July 31 - August 7, 2027</span><br>
+        <small style="color: #a0aec0;">Western Caribbean Itinerary</small></p>
       </section>
 
       <section>
         <h2>Travel Logistics</h2>
         <ul>
-          <li><strong>Outbound Flight:</strong> Friday, July 30 (PHL to FLL via American Airlines)</li>
-          <li><strong>Pre-Cruise Accommodations:</strong> Marriott Residence Inn / Courtyard (Fort Lauderdale)</li>
-          <li><strong>Embarkation:</strong> Saturday, July 31 at Port Everglades</li>
+          <li><strong>Outbound:</strong> Fri, July 30 (PHL to FLL, American Airlines)</li>
+          <li><strong>Pre-Cruise:</strong> Marriott Residence Inn / Courtyard</li>
+          <li><strong>Embarkation:</strong> Sat, July 31 at Port Everglades</li>
         </ul>
       </section>
 
       <section>
-        <h2>Itinerary & Port Strategy</h2>
+        <h2>Port Strategy</h2>
         <table>
           <thead><tr><th>Location</th><th>Planned Activity</th></tr></thead>
           <tbody>
-            <tr><td>Grand Cayman</td><td>Stingray City & Turtle Centre Excursion</td></tr>
-            <tr><td>Falmouth, Jamaica</td><td>Port Exploration / Ship Amenities</td></tr>
-            <tr><td>Lookout Cay</td><td>Private Beach Destination</td></tr>
-            <tr><td>Nassau, Bahamas</td><td>Blue Lagoon Island / Ship Amenities</td></tr>
+            <tr><td>Grand Cayman</td><td>Stingray City & Turtle Centre</td></tr>
+            <tr><td>Falmouth, Jamaica</td><td>Explore Port & Enjoy Ship Amenities</td></tr>
+            <tr><td>Lookout Cay</td><td>Disney's Private Beach Destination</td></tr>
+            <tr><td>Nassau, Bahamas</td><td>Blue Lagoon Island or Relax Onboard</td></tr>
           </tbody>
         </table>
       </section>
@@ -92,8 +120,8 @@
         <ul>
           <li><strong>Adult Dining:</strong> Palo Steakhouse Brunch</li>
           <li><strong>Seminars:</strong> Margarita, Bourbon & Beer Tastings</li>
-          <li><strong>Youth Activities (Amelia):</strong> Bibbidi Bobbidi Boutique</li>
-          <li><strong>Youth Activities (Riley):</strong> Edge Club (Ages 11-14)</li>
+          <li><strong>Amelia:</strong> Bibbidi Bobbidi Boutique Makeover</li>
+          <li><strong>Riley:</strong> Edge Tween Club (Ages 11-14)</li>
         </ul>
       </section>
 
@@ -101,7 +129,14 @@
         <h2>Budget Overview</h2>
         <p class="budget-highlight">~$11,298</p>
         <p>Total Estimated Expenditure</p>
-        <p><small style="color: #718096;"><em>Note: Optimized by reallocating Falmouth excursion funds ($450 savings).</em></small></p>
+        <p><small style="color: #a0aec0;"><em>(Optimized by staying onboard in Falmouth - saved $450)</em></small></p>
+      </section>
+
+      <section>
+        <h2>Ready to Sail</h2>
+        <p style="margin-bottom: 5px;">Next Major Milestone:</p>
+        <h3 class="accent" style="margin-top: 0;">May 2, 2027</h3>
+        <p><small style="color: #a0aec0;">Booking window opens for activities</small></p>
       </section>
 
     </div>
@@ -111,7 +146,9 @@
   <script>
     Reveal.initialize({
       hash: true,
-      transition: 'slide'
+      transition: 'fade', // Smooth, professional fade transition
+      center: true,
+      margin: 0.15 // Gives the slides a bit more breathing room so they don't hit the edges
     });
   </script>
 </body>
