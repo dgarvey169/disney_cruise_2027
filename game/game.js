@@ -410,9 +410,9 @@ class GameScene extends Phaser.Scene {
         // DECK 11 (Main Pool Deck) - y = 1300
         // ----------------------------------------------------
         platforms.create(450, 1300, 'deck').setScale(22, 1).refreshBody(); 
-        water.create(1040, 1310, 'pool').setScale(7.5, 1).refreshBody();   
+        water.create(1040, 1300, 'pool').setScale(7.5, 1).refreshBody();   
         platforms.create(1790, 1300, 'deck').setScale(30.5, 1).refreshBody(); 
-
+        
         doors.create(400, 1250, 'door'); 
         this.add.text(360, 1190, 'Senses Spa', { fontSize: '14px', fill: '#000' });
         
@@ -424,7 +424,6 @@ class GameScene extends Phaser.Scene {
         iceCreamStands.create(1500, 1250, 'icecream_stand');
         this.add.text(1460, 1200, 'Eye Scream Treats', { fontSize: '14px', fill: '#000', backgroundColor: '#FFB6C1', padding: 4 });
 
-
         // Stairs up to Deck 12 (Walk under them, then climb RIGHT)
         for(let i=0; i<6; i++) createOneWayStair(100 + (i*40), 1260 - (i*40));
 
@@ -434,10 +433,10 @@ class GameScene extends Phaser.Scene {
         platforms.create(1370, 1020, 'deck').setScale(51.5, 1).refreshBody(); 
 
         this.add.text(600, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
-        water.create(630, 1030, 'pool').setScale(2, 1).refreshBody(); 
+        water.create(630, 1020, 'pool').setScale(2, 1).refreshBody(); 
         
         this.add.text(1700, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
-        water.create(1750, 1030, 'pool').setScale(2, 1).refreshBody();
+        water.create(1750, 1020, 'pool').setScale(2, 1).refreshBody();
 
         doors.create(2000, 970, 'door');
         this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
