@@ -26,19 +26,16 @@ class BootScene extends Phaser.Scene {
     preload() {
         let g = this.add.graphics();
         
-        // Riley
         g.fillStyle(0x0000ff, 1);
         g.fillRect(0, 0, 32, 48);
         g.generateTexture('riley', 32, 48);
         g.clear();
 
-        // Amelia
         g.fillStyle(0xff69b4, 1);
         g.fillRect(0, 0, 32, 40);
         g.generateTexture('amelia', 32, 40);
         g.clear();
         
-        // Deck
         g.fillStyle(0x8B4513, 1);
         g.lineStyle(1, 0x654321, 1);
         g.fillRect(0, 0, 40, 40);
@@ -46,19 +43,16 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('deck', 40, 40);
         g.clear();
 
-        // Pool
         g.fillStyle(0x00BFFF, 0.7);
         g.fillRect(0, 0, 40, 40);
         g.generateTexture('pool', 40, 40);
         g.clear();
 
-        // Door
         g.fillStyle(0x8B0000, 1);
         g.fillRect(0, 0, 40, 60);
         g.generateTexture('door', 40, 60);
         g.clear();
 
-        // AquaMouse Tube
         g.fillStyle(0xFFFFFF, 0.9);
         g.lineStyle(2, 0x0000FF, 1);
         g.fillRect(0, 0, 80, 20);
@@ -76,10 +70,7 @@ class TitleScene extends Phaser.Scene {
     create() {
         this.add.text(400, 200, 'Disney Destiny Adventure', { fontSize: '40px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
         this.add.text(400, 300, 'Click to Start', { fontSize: '24px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
-        
-        this.input.on('pointerdown', () => {
-            this.scene.start('CharacterSelectScene');
-        });
+        this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
     }
 }
 
@@ -94,13 +85,13 @@ class CharacterSelectScene extends Phaser.Scene {
         let amelia = this.add.image(550, 300, 'amelia').setInteractive({ useHandCursor: true });
         this.add.text(550, 350, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
 
-        riley.on('pointerdown', () => {
-            this.scene.start('GameScene', { character: 'riley', name: 'Riley' });
-        });
+        riley.on('pointerover', () => riley.setTint(0xcccccc));
+        riley.on('pointerout', () => riley.clearTint());
+        amelia.on('pointerover', () => amelia.setTint(0xcccccc));
+        amelia.on('pointerout', () => amelia.clearTint());
 
-        amelia.on('pointerdown', () => {
-            this.scene.start('GameScene', { character: 'amelia', name: 'Amelia' });
-        });
+        riley.on('pointerdown', () => this.scene.start('GameScene', { character: 'riley', name: 'Riley' }));
+        amelia.on('pointerdown', () => this.scene.start('GameScene', { character: 'amelia', name: 'Amelia' }));
     }
 }
 
@@ -123,60 +114,63 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 11 (Main Pool Deck) - y = 1300
         // ----------------------------------------------------
-        platforms.create(450, 1300, 'deck').setScale(22, 1).refreshBody(); // Forward
+        platforms.create(450, 1300, 'deck').setScale(22, 1).refreshBody(); // Left Side
         water.create(1040, 1310, 'pool').setScale(7.5, 1).refreshBody();   // Main Pools
-        platforms.create(1790, 1300, 'deck').setScale(30, 1).refreshBody(); // Aft
+        platforms.create(1790, 1300, 'deck').setScale(30, 1).refreshBody(); // Right Side
 
-        doors.create(200, 1250, 'door'); 
-        this.add.text(160, 1190, 'Senses Spa', { fontSize: '14px', fill: '#000' });
+        doors.create(100, 1250, 'door'); 
+        this.add.text(60, 1190, 'Senses Spa', { fontSize: '14px', fill: '#000' });
         
         doors.create(2100, 1250, 'door');
         this.add.text(2030, 1190, 'Marceline Market', { fontSize: '14px', fill: '#000' });
-
         this.add.text(950, 1200, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
 
-        // Left Stairs (starts near pool at 300, climbs LEFT)
+        // Left Stairs up to Deck 12 (Starts at 500, climbs LEFT up to 300)
         for(let i=0; i<6; i++) {
             for(let j=0; j<=i; j++) {
-                platforms.create(300 - (i*40), 1260 - (j*40), 'deck');
+                platforms.create(500 - (i*40), 1260 - (j*40), 'deck');
             }
         }
         
-        // Right Stairs (starts near middle at 1660, climbs RIGHT)
+        // Right Stairs up to Deck 12 (Starts at 1300, climbs RIGHT up to 1500)
         for(let i=0; i<6; i++) {
             for(let j=0; j<=i; j++) {
-                platforms.create(1660 + (i*40), 1260 - (j*40), 'deck');
+                platforms.create(1300 + (i*40), 1260 - (j*40), 'deck');
             }
         }
 
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
         // ----------------------------------------------------
-        platforms.create(520, 1020, 'deck').setScale(9.5, 1).refreshBody(); // Left Balcony
-        platforms.create(1750, 1020, 'deck').setScale(18, 1).refreshBody(); // Right Balcony
-
-        this.add.text(350, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
-        water.create(500, 1030, 'pool').setScale(2, 1).refreshBody(); 
+        // Left Balcony must stop right where highest left stair is (300) to avoid ceiling trap. Spans 20 to 280.
+        platforms.create(150, 1020, 'deck').setScale(6.5, 1).refreshBody(); 
         
-        this.add.text(1450, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
-        water.create(1500, 1030, 'pool');
+        // Right Balcony must stop right where highest right stair is (1500). Spans 1520 to 2400.
+        platforms.create(1960, 1020, 'deck').setScale(22, 1).refreshBody(); 
 
-        doors.create(1900, 970, 'door');
-        this.add.text(1860, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
+        this.add.text(100, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
+        water.create(150, 1030, 'pool').setScale(2, 1).refreshBody(); 
+        
+        this.add.text(1650, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
+        water.create(1700, 1030, 'pool');
 
-        // Stairs up to Deck 13 (starts on right balcony at 1560, climbs LEFT)
+        doors.create(2000, 970, 'door');
+        this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
+
+        // Stairs up to Deck 13 (starts on edge of right balcony at 1520, climbs LEFT to 1320)
         for(let i=0; i<6; i++) {
             for(let j=0; j<=i; j++) {
-                platforms.create(1560 - (i*40), 980 - (j*40), 'deck');
+                platforms.create(1520 - (i*40), 980 - (j*40), 'deck');
             }
         }
 
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
-        platforms.create(1220, 780, 'deck').setScale(6.5, 1).refreshBody();
+        // Deck 13 must end where stairs end (1320). Spans 1100 to 1300.
+        platforms.create(1200, 780, 'deck').setScale(5, 1).refreshBody();
 
-        this.add.text(1150, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
+        this.add.text(1130, 720, 'AquaMouse', { fontSize: '16px', fill: '#000' });
         
         // AquaMouse Tubes
         platforms.create(1050, 680, 'tube');
@@ -208,8 +202,8 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        let speed = this.inWater ? 100 : 220;
-        let jumpPower = this.inWater ? -300 : -500;
+        let speed = this.inWater ? 100 : 250; // Increased speed slightly for better flow
+        let jumpPower = this.inWater ? -300 : -550; // Increased jump power slightly to clear 40px easily
         
         this.inWater = false; 
 
