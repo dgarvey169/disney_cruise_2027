@@ -85,6 +85,11 @@ class CharacterSelectScene extends Phaser.Scene {
         let amelia = this.add.image(550, 300, 'amelia').setInteractive({ useHandCursor: true });
         this.add.text(550, 350, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
 
+        riley.on('pointerover', () => riley.setTint(0xcccccc));
+        riley.on('pointerout', () => riley.clearTint());
+        amelia.on('pointerover', () => amelia.setTint(0xcccccc));
+        amelia.on('pointerout', () => amelia.clearTint());
+
         riley.on('pointerdown', () => this.scene.start('GameScene', { character: 'riley', name: 'Riley' }));
         amelia.on('pointerdown', () => this.scene.start('GameScene', { character: 'amelia', name: 'Amelia' }));
     }
@@ -104,9 +109,9 @@ class GameScene extends Phaser.Scene {
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
+        const slides = this.physics.add.staticGroup();
         const doors = this.physics.add.staticGroup();
 
-        // Helper for one-way jump platforms (prevents getting stuck underneath stairs)
         const createOneWayStair = (x, y) => {
             let step = platforms.create(x, y, 'deck');
             step.body.checkCollision.down = false;
@@ -117,9 +122,9 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 11 (Main Pool Deck) - y = 1300
         // ----------------------------------------------------
-        platforms.create(450, 1300, 'deck').setScale(22, 1).refreshBody(); // Left Side
-        water.create(1040, 1310, 'pool').setScale(7.5, 1).refreshBody();   // Main Pools
-        platforms.create(1790, 1300, 'deck').setScale(30.5, 1).refreshBody(); // Right Side
+        platforms.create(450, 1300, 'deck').setScale(22, 1).refreshBody(); 
+        water.create(1040, 1310, 'pool').setScale(7.5, 1).refreshBody();   
+        platforms.create(1790, 1300, 'deck').setScale(30.5, 1).refreshBody(); 
 
         doors.create(400, 1250, 'door'); 
         this.add.text(360, 1190, 'Senses Spa', { fontSize: '14px', fill: '#000' });
@@ -129,15 +134,11 @@ class GameScene extends Phaser.Scene {
         this.add.text(950, 1200, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
 
         // Stairs up to Deck 12 (Walk under them, then climb RIGHT)
-        // Starts at x=100 (lowest), climbs right up to x=300 (highest)
-        for(let i=0; i<6; i++) {
-            createOneWayStair(100 + (i*40), 1260 - (i*40));
-        }
+        for(let i=0; i<6; i++) createOneWayStair(100 + (i*40), 1260 - (i*40));
 
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
         // ----------------------------------------------------
-        // Starts at x=340 (just right of highest stair), spans right to 2400
         platforms.create(1370, 1020, 'deck').setScale(51.5, 1).refreshBody(); 
 
         this.add.text(600, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
@@ -150,29 +151,37 @@ class GameScene extends Phaser.Scene {
         this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
 
         // Stairs up to Deck 13 (Walk under them, then climb LEFT)
-        // Starts at x=2300 (lowest), climbs left up to x=2100 (highest)
-        for(let i=0; i<6; i++) {
-            createOneWayStair(2300 - (i*40), 980 - (i*40));
-        }
+        for(let i=0; i<6; i++) createOneWayStair(2300 - (i*40), 980 - (i*40));
 
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
-        // Starts at x=20, ends at x=2060 (just left of highest stair)
         platforms.create(1040, 780, 'deck').setScale(51, 1).refreshBody();
 
-        this.add.text(1200, 720, 'AquaMouse', { fontSize: '16px', fill: '#000' });
+        this.add.text(1200, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
         
-        // AquaMouse Tubes (riding high up above deck 13)
+        // AquaMouse Tubes (climbing up)
         platforms.create(1150, 680, 'tube');
         platforms.create(1050, 600, 'tube');
         platforms.create(950, 520, 'tube');
         platforms.create(850, 440, 'tube');
-        platforms.create(750, 360, 'tube');
+
+        // Top Deck of AquaMouse
+        platforms.create(750, 360, 'deck').setScale(2.5, 1).refreshBody();
+        this.add.text(700, 310, 'AquaMouse Top!', { fontSize: '16px', fill: '#000' });
+
+        // The AquaMouse Slide (going down and left)
+        for(let i=1; i<=10; i++) {
+            slides.create(750 - (i*40), 360 + (i*40), 'pool');
+        }
+
+        // AquaMouse Splashdown Pool on Deck 13
+        this.add.text(280, 720, 'Splashdown!', { fontSize: '14px', fill: '#000' });
+        water.create(330, 790, 'pool').setScale(4, 1).refreshBody();
 
         // UI
         this.add.text(16, 16, `Playing as: ${this.characterName}`, { fontSize: '20px', fill: '#000' }).setScrollFactor(0);
-        this.add.text(16, 40, 'Walk under the stairs to hop up them!', { fontSize: '16px', fill: '#333' }).setScrollFactor(0);
+        this.add.text(16, 40, 'Climb to the top of the AquaMouse and slide down!', { fontSize: '16px', fill: '#333' }).setScrollFactor(0);
 
         // Player (Spawn in the middle of Deck 11)
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
@@ -180,33 +189,48 @@ class GameScene extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+        
+        // Collisions
         this.physics.add.collider(this.player, platforms);
         
         this.physics.add.collider(this.player, water, () => {
             this.inWater = true;
         });
 
+        this.physics.add.collider(this.player, slides, () => {
+            this.onSlide = true;
+        });
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.inWater = false;
+        this.onSlide = false;
     }
 
     update() {
         let speed = this.inWater ? 100 : 250;
         let jumpPower = this.inWater ? -300 : -550;
         
-        this.inWater = false; 
-
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-speed);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(speed);
+        if (this.onSlide) {
+            // Automatic sliding logic! Forces player left and prevents jumping
+            this.player.setVelocityX(-400); 
         } else {
-            this.player.setVelocityX(0);
+            // Normal movement
+            if (this.cursors.left.isDown) {
+                this.player.setVelocityX(-speed);
+            } else if (this.cursors.right.isDown) {
+                this.player.setVelocityX(speed);
+            } else {
+                this.player.setVelocityX(0);
+            }
+
+            if (this.cursors.up.isDown && this.player.body.touching.down) {
+                this.player.setVelocityY(jumpPower);
+            }
         }
 
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(jumpPower);
-        }
+        // Reset states for the next frame
+        this.inWater = false; 
+        this.onSlide = false;
     }
 }
 
