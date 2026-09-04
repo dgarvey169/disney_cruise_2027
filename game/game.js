@@ -619,8 +619,9 @@ class GameScene extends Phaser.Scene {
         
         // Collisions
         this.physics.add.collider(this.player, platforms);
+        this.physics.add.collider(this.player, water);
         
-        this.physics.add.collider(this.player, water, () => {
+        this.physics.add.overlap(this.player, water, () => {
             this.inWater = true;
         });
 
