@@ -142,9 +142,13 @@ class GameScene extends Phaser.Scene {
 
         this.add.text(950, 1200, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
 
-        // Stairs up to Deck 12 (Left side & Right side)
-        for(let i=0; i<6; i++) platforms.create(100 + (i*40), 1260 - (i*40), 'deck');
-        for(let i=0; i<6; i++) platforms.create(2300 - (i*40), 1260 - (i*40), 'deck');
+        // Solid Stairs up to Deck 12 (Left side & Right side)
+        for(let i=0; i<6; i++) {
+            for(let j=0; j<=i; j++) {
+                platforms.create(100 + (i*40), 1260 - (j*40), 'deck');
+                platforms.create(2300 - (i*40), 1260 - (j*40), 'deck');
+            }
+        }
 
 
         // ----------------------------------------------------
@@ -164,14 +168,18 @@ class GameScene extends Phaser.Scene {
         doors.create(1900, 970, 'door');
         this.add.text(1860, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
 
-        // Stairs up to Deck 13 (Middle Right)
-        for(let i=0; i<5; i++) platforms.create(1600 - (i*40), 980 - (i*40), 'deck');
+        // Solid Stairs up to Deck 13 (Middle Right)
+        for(let i=0; i<6; i++) {
+            for(let j=0; j<=i; j++) {
+                platforms.create(1580 - (i*40), 980 - (j*40), 'deck');
+            }
+        }
 
 
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
-        for (let x = 1100; x <= 1400; x += 40) platforms.create(x, 780, 'deck');
+        for (let x = 1100; x <= 1340; x += 40) platforms.create(x, 780, 'deck');
 
         this.add.text(1150, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
         
@@ -190,7 +198,7 @@ class GameScene extends Phaser.Scene {
 
         // Player (Spawn on Deck 11 by the main pool)
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
-        this.player.setBounce(0.1);
+        this.player.setBounce(0.0); // Remove bounce to prevent glitching on stairs
         this.player.setCollideWorldBounds(true);
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
