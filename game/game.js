@@ -753,6 +753,7 @@ class GameScene extends Phaser.Scene {
                     this.player.setVelocityY(jumpPower);
                 }
             }
+        }
         
         if (this.hasIceCream) {
             this.iceCreamSprite.x = this.player.x + 15;
