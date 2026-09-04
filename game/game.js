@@ -26,19 +26,54 @@ class BootScene extends Phaser.Scene {
     preload() {
         let g = this.add.graphics();
         
-        g.fillStyle(0x0000ff, 1);
-        g.fillRect(0, 0, 32, 48);
+        // Riley (Blue)
+        g.fillStyle(0xffdcb1, 1); // Skin
+        g.fillRect(8, 4, 16, 14); // Head
+        g.fillStyle(0x8B4513, 1); // Brown Hair
+        g.fillRect(6, 2, 20, 6);  // Top hair
+        g.fillRect(6, 8, 6, 12);  // Left hair
+        g.fillRect(20, 8, 6, 12); // Right hair
+        g.fillStyle(0x0000ff, 1); // Blue Shirt
+        g.fillRect(8, 18, 16, 16); // Body
+        g.fillStyle(0xffdcb1, 1); // Arms
+        g.fillRect(4, 18, 4, 14); // Left arm
+        g.fillRect(24, 18, 4, 14); // Right arm
+        g.fillStyle(0x000080, 1); // Dark Blue Pants
+        g.fillRect(8, 34, 6, 14); // Left leg
+        g.fillRect(18, 34, 6, 14); // Right leg
         g.generateTexture('riley', 32, 48);
         g.clear();
 
-        g.fillStyle(0xff69b4, 1);
-        g.fillRect(0, 0, 32, 40);
+        // Amelia (Pink)
+        g.fillStyle(0xffdcb1, 1); // Skin
+        g.fillRect(8, 4, 16, 12); // Head
+        g.fillStyle(0xFFD700, 1); // Blonde Hair
+        g.fillRect(6, 2, 20, 6);  // Top hair
+        g.fillRect(6, 8, 5, 10);  // Left hair
+        g.fillRect(21, 8, 5, 10); // Right hair
+        g.fillStyle(0xff69b4, 1); // Pink Dress
+        g.fillRect(8, 16, 16, 14); // Body
+        g.fillRect(4, 26, 24, 6); // Skirt flare
+        g.fillStyle(0xffdcb1, 1); // Arms
+        g.fillRect(4, 16, 4, 10); // Left arm
+        g.fillRect(24, 16, 4, 10); // Right arm
+        g.fillStyle(0xffdcb1, 1); // Legs
+        g.fillRect(10, 32, 4, 8); // Left leg
+        g.fillRect(18, 32, 4, 8); // Right leg
         g.generateTexture('amelia', 32, 40);
         g.clear();
         
-        g.fillStyle(0x8B4513, 1);
-        g.lineStyle(1, 0x654321, 1);
+        // Deck (Cruise Ship Teak Wood)
+        g.fillStyle(0xC19A6B, 1); 
         g.fillRect(0, 0, 40, 40);
+        g.lineStyle(1, 0x8B4513, 0.5);
+        for(let i = 4; i < 40; i += 8) {
+            g.beginPath();
+            g.moveTo(0, i);
+            g.lineTo(40, i);
+            g.strokePath();
+        }
+        g.lineStyle(2, 0x5C4033, 1);
         g.strokeRect(0, 0, 40, 40);
         g.generateTexture('deck', 40, 40);
         g.clear();
