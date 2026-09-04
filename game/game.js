@@ -64,51 +64,58 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('amelia', 32, 40);
         g.clear();
         
-        // Riley Swim
-        g.fillStyle(0xffdcb1, 1); // Skin
-        g.fillRect(8, 4, 16, 14); // Head
-        g.fillStyle(0xA0522D, 1); // Light Brown Hair
-        g.fillRect(6, 2, 20, 6);  
-        g.fillRect(6, 8, 6, 12);  
-        g.fillRect(20, 8, 6, 12); 
-        g.fillStyle(0x0000ff, 1); // Blue Shirt
-        g.fillRect(8, 18, 16, 16); 
-        g.fillStyle(0xffdcb1, 1); // Arms raised
-        g.fillRect(2, 8, 4, 14); 
-        g.fillRect(26, 8, 4, 14); 
-        // Inner tube
-        g.fillStyle(0xFF0000, 1);
-        g.fillRoundedRect(2, 22, 28, 12, 6);
-        g.fillStyle(0xFFFFFF, 1);
-        g.fillRect(6, 22, 4, 12);
-        g.fillRect(22, 22, 4, 12);
-        g.fillStyle(0x000080, 1); // Dark Blue Pants
-        g.fillRect(8, 34, 16, 10); 
-        g.generateTexture('riley_swim', 32, 48);
-        g.clear();
+        // Floaties colors: Red, Yellow, Green, Purple
+        const floatieColors = [0xFF0000, 0xFFFF00, 0x00FF00, 0x800080];
 
-        // Amelia Swim
-        g.fillStyle(0xffdcb1, 1); // Skin
-        g.fillRect(8, 4, 16, 12); // Head
-        g.fillStyle(0xA0522D, 1); // Light Brown Hair
-        g.fillRect(6, 2, 20, 6);  
-        g.fillRect(6, 8, 5, 10);  
-        g.fillRect(21, 8, 5, 10); 
-        g.fillStyle(0xff69b4, 1); // Pink Dress
-        g.fillRect(8, 16, 16, 14); 
-        g.fillStyle(0xffdcb1, 1); // Arms raised
-        g.fillRect(2, 8, 4, 10); 
-        g.fillRect(26, 8, 4, 10); 
-        // Inner tube
-        g.fillStyle(0xFFFF00, 1);
-        g.fillRoundedRect(2, 22, 28, 12, 6);
-        g.fillStyle(0xFFFFFF, 1);
-        g.fillRect(6, 22, 4, 12);
-        g.fillRect(22, 22, 4, 12);
-        g.fillStyle(0xff69b4, 1);
-        g.fillRect(6, 34, 20, 6);
-        g.generateTexture('amelia_swim', 32, 40);
-        g.clear();
+        for (let i = 0; i < floatieColors.length; i++) {
+            let color = floatieColors[i];
+
+            // Riley Swim
+            g.fillStyle(0xffdcb1, 1); // Skin
+            g.fillRect(8, 4, 16, 14); // Head
+            g.fillStyle(0xA0522D, 1); // Light Brown Hair
+            g.fillRect(6, 2, 20, 6);  
+            g.fillRect(6, 8, 6, 12);  
+            g.fillRect(20, 8, 6, 12); 
+            g.fillStyle(0x0000ff, 1); // Blue Shirt
+            g.fillRect(8, 18, 16, 16); 
+            g.fillStyle(0xffdcb1, 1); // Arms raised
+            g.fillRect(2, 8, 4, 14); 
+            g.fillRect(26, 8, 4, 14); 
+            // Inner tube
+            g.fillStyle(color, 1);
+            g.fillRoundedRect(2, 22, 28, 12, 6);
+            g.fillStyle(0xFFFFFF, 1);
+            g.fillRect(6, 22, 4, 12);
+            g.fillRect(22, 22, 4, 12);
+            g.fillStyle(0x000080, 1); // Dark Blue Pants
+            g.fillRect(8, 34, 16, 10); 
+            g.generateTexture('riley_swim_' + i, 32, 48);
+            g.clear();
+
+            // Amelia Swim
+            g.fillStyle(0xffdcb1, 1); // Skin
+            g.fillRect(8, 4, 16, 12); // Head
+            g.fillStyle(0xA0522D, 1); // Light Brown Hair
+            g.fillRect(6, 2, 20, 6);  
+            g.fillRect(6, 8, 5, 10);  
+            g.fillRect(21, 8, 5, 10); 
+            g.fillStyle(0xff69b4, 1); // Pink Dress
+            g.fillRect(8, 16, 16, 14); 
+            g.fillStyle(0xffdcb1, 1); // Arms raised
+            g.fillRect(2, 8, 4, 10); 
+            g.fillRect(26, 8, 4, 10); 
+            // Inner tube
+            g.fillStyle(color, 1);
+            g.fillRoundedRect(2, 22, 28, 12, 6);
+            g.fillStyle(0xFFFFFF, 1);
+            g.fillRect(6, 22, 4, 12);
+            g.fillRect(22, 22, 4, 12);
+            g.fillStyle(0xff69b4, 1);
+            g.fillRect(6, 34, 20, 6);
+            g.generateTexture('amelia_swim_' + i, 32, 40);
+            g.clear();
+        }
         
         // Deck (Cruise Ship Teak Wood)
         g.fillStyle(0xC19A6B, 1); 
@@ -624,6 +631,8 @@ class GameScene extends Phaser.Scene {
         }
 
         this.inWater = false;
+        this.wasInWater = false;
+        this.currentFloatieColor = 0;
         this.onSlide = false;
     }
 
@@ -670,8 +679,13 @@ class GameScene extends Phaser.Scene {
             // Player is riding raft, don't allow normal movement
             this.player.setVelocity(0, 0);
         } else {
+            if (this.inWater && !this.wasInWater) {
+                // Just entered water, pick a new random color for floatie (0-3)
+                this.currentFloatieColor = Phaser.Math.Between(0, 3);
+            }
+
             if (this.inWater) {
-                this.player.setTexture(this.selectedCharacter + '_swim');
+                this.player.setTexture(this.selectedCharacter + '_swim_' + this.currentFloatieColor);
                 this.player.angle = (Math.sin(this.time.now / 150) * 10); // Swimming bob
             } else {
                 this.player.setTexture(this.selectedCharacter);
@@ -701,6 +715,7 @@ class GameScene extends Phaser.Scene {
         }
 
         // Reset states for the next frame
+        this.wasInWater = this.inWater;
         this.inWater = false; 
     }
 }
