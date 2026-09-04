@@ -29,7 +29,7 @@ class BootScene extends Phaser.Scene {
         // Riley (Blue)
         g.fillStyle(0xffdcb1, 1); // Skin
         g.fillRect(8, 4, 16, 14); // Head
-        g.fillStyle(0x8B4513, 1); // Brown Hair
+        g.fillStyle(0xA0522D, 1); // Light Brown Hair
         g.fillRect(6, 2, 20, 6);  // Top hair
         g.fillRect(6, 8, 6, 12);  // Left hair
         g.fillRect(20, 8, 6, 12); // Right hair
@@ -47,7 +47,7 @@ class BootScene extends Phaser.Scene {
         // Amelia (Pink)
         g.fillStyle(0xffdcb1, 1); // Skin
         g.fillRect(8, 4, 16, 12); // Head
-        g.fillStyle(0xFFD700, 1); // Blonde Hair
+        g.fillStyle(0xA0522D, 1); // Light Brown Hair
         g.fillRect(6, 2, 20, 6);  // Top hair
         g.fillRect(6, 8, 5, 10);  // Left hair
         g.fillRect(21, 8, 5, 10); // Right hair
