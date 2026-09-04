@@ -116,6 +116,24 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0xffffff, 0.5);
         g.fillRoundedRect(0, 0, 80, 80, 10);
         g.generateTexture('btn', 80, 80);
+        g.clear();
+
+        // Ice Cream Stand
+        g.fillStyle(0xFFFFFF, 1); // White base
+        g.fillRect(0, 20, 60, 40);
+        g.fillStyle(0xFFC0CB, 1); // Pink awning
+        g.fillRect(0, 0, 60, 20);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(10, 20, 40, 20); // Counter window
+        g.generateTexture('icecream_stand', 60, 60);
+        g.clear();
+
+        // Ice Cream Cone
+        g.fillStyle(0xD2B48C, 1); // Cone
+        g.fillTriangle(15, 30, 5, 15, 25, 15);
+        g.fillStyle(0xFF69B4, 1); // Strawberry ice cream
+        g.fillCircle(15, 12, 10);
+        g.generateTexture('icecream', 30, 30);
         g.destroy();
     }
     create() {
@@ -191,6 +209,11 @@ class GameScene extends Phaser.Scene {
         this.add.text(2030, 1190, 'Marceline Market', { fontSize: '14px', fill: '#000' });
         this.add.text(950, 1200, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
 
+        const iceCreamStands = this.physics.add.staticGroup();
+        iceCreamStands.create(1500, 1250, 'icecream_stand');
+        this.add.text(1460, 1200, 'Eye Scream Treats', { fontSize: '14px', fill: '#000', backgroundColor: '#FFB6C1', padding: 4 });
+
+
         // Stairs up to Deck 12 (Walk under them, then climb RIGHT)
         for(let i=0; i<6; i++) createOneWayStair(100 + (i*40), 1260 - (i*40));
 
@@ -262,6 +285,32 @@ class GameScene extends Phaser.Scene {
             this.onSlide = true;
         });
 
+        this.hasIceCream = false;
+        this.iceCreamSprite = this.add.sprite(0, 0, 'icecream');
+        this.iceCreamSprite.setVisible(false);
+
+        this.physics.add.overlap(this.player, iceCreamStands, () => {
+            if (!this.hasIceCream) {
+                this.hasIceCream = true;
+                this.iceCreamSprite.setVisible(true);
+                
+                let yumText = this.add.text(this.player.x, this.player.y - 40, 'Yummy!', { fontSize: '16px', fill: '#ff0000', fontStyle: 'bold' });
+                
+                this.time.delayedCall(5000, () => {
+                    this.hasIceCream = false;
+                    this.iceCreamSprite.setVisible(false);
+                });
+                
+                this.tweens.add({
+                    targets: yumText,
+                    y: this.player.y - 80,
+                    alpha: 0,
+                    duration: 2000,
+                    onComplete: () => yumText.destroy()
+                });
+            }
+        });
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.mobileInput = { left: false, right: false, up: false };
 
@@ -317,6 +366,11 @@ class GameScene extends Phaser.Scene {
             if (isUp && this.player.body.touching.down) {
                 this.player.setVelocityY(jumpPower);
             }
+        }
+        
+        if (this.hasIceCream) {
+            this.iceCreamSprite.x = this.player.x + 15;
+            this.iceCreamSprite.y = this.player.y - 10;
         }
 
         // Reset states for the next frame
