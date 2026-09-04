@@ -170,21 +170,24 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('bird', 20, 20);
         g.clear();
 
-        // Ship Wall (White with red stripe and porthole)
+        // Ship Wall (White with red stripe and spaced out portholes)
         g.fillStyle(0xFFFFFF, 1);
-        g.fillRect(0, 0, 120, 120);
+        g.fillRect(0, 0, 480, 120);
         g.fillStyle(0x000000, 0.1); // subtle line for deck separation
-        g.fillRect(0, 0, 120, 4);
+        g.fillRect(0, 0, 480, 4);
         g.fillStyle(0xFF0000, 1);
-        g.fillRect(0, 110, 120, 10); // Red stripe
+        g.fillRect(0, 110, 480, 10); // Red stripe
         
-        // Porthole
+        // Portholes (Pair of them in the middle of this 480px block)
         g.fillStyle(0x444444, 1);
-        g.fillCircle(60, 60, 20);
-        g.fillStyle(0x87CEEB, 1);
-        g.fillCircle(60, 60, 16);
+        g.fillCircle(200, 60, 20);
+        g.fillCircle(280, 60, 20);
         
-        g.generateTexture('ship_wall', 120, 120);
+        g.fillStyle(0x87CEEB, 1);
+        g.fillCircle(200, 60, 16);
+        g.fillCircle(280, 60, 16);
+        
+        g.generateTexture('ship_wall', 480, 120);
         g.clear();
 
         // Ocean Background
