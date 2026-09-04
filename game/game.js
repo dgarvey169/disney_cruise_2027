@@ -441,14 +441,21 @@ class GameScene extends Phaser.Scene {
         screenBg.lineStyle(4, 0x000000, 1);
         screenBg.strokeRect(940, 1100, 200, 120);
         
-        // Movie Screen Cartoon Element (Bouncing Mickey Head)
-        this.cartoonHead = this.add.circle(1040, 1160, 15, 0xFFFFFF);
-        this.cartoonLeftEar = this.add.circle(1028, 1148, 8, 0xFFFFFF);
-        this.cartoonRightEar = this.add.circle(1052, 1148, 8, 0xFFFFFF);
-        this.cartoon = this.add.container(0, 0, [this.cartoonHead, this.cartoonLeftEar, this.cartoonRightEar]);
+        // Movie Screen Mask
+        let screenMask = this.add.graphics();
+        screenMask.fillStyle(0xFFFFFF, 1);
+        screenMask.fillRect(940, 1100, 200, 120);
+        let mask = new Phaser.Display.Masks.GeometryMask(this, screenMask);
         
-        this.cartoonVx = 80;
-        this.cartoonVy = 80;
+        // Movie Screen Cartoon Elements (Cat and Mouse)
+        this.mouse = this.add.circle(940, 1190, 6, 0x8B4513).setMask(mask);
+        
+        let catHead = this.add.circle(0, 0, 12, 0x808080);
+        let catLeftEar = this.add.triangle(-6, -8, 0, 0, 12, 0, 6, -12, 0x808080);
+        let catRightEar = this.add.triangle(6, -8, 0, 0, 12, 0, 6, -12, 0x808080);
+        this.cat = this.add.container(900, 1184, [catHead, catLeftEar, catRightEar]).setMask(mask);
+        
+        this.cartoonVx = 100;
 
         const iceCreamStands = this.physics.add.staticGroup();
         iceCreamStands.create(1500, 1250, 'icecream_stand');
@@ -744,23 +751,21 @@ class GameScene extends Phaser.Scene {
             this.iceCreamSprite.y = this.player.y - 10;
         }
 
-        // Movie Screen Animation
+        // Movie Screen Animation: Cat and Mouse
         let dt = this.game.loop.delta / 1000;
-        this.cartoon.x += this.cartoonVx * dt;
-        this.cartoon.y += this.cartoonVy * dt;
-        
-        let cx = 1040 + this.cartoon.x;
-        let cy = 1160 + this.cartoon.y;
-        
-        if (cx < 960 || cx > 1120) {
-            this.cartoonVx *= -1;
-            let color = Phaser.Math.Between(0x111111, 0xFFFFFF);
-            this.cartoon.list.forEach(c => c.fillColor = color);
-        }
-        if (cy < 1120 || cy > 1200) {
-            this.cartoonVy *= -1;
-            let color = Phaser.Math.Between(0x111111, 0xFFFFFF);
-            this.cartoon.list.forEach(c => c.fillColor = color);
+        this.mouse.x += this.cartoonVx * dt;
+        this.cat.x += this.cartoonVx * dt;
+
+        if (this.cartoonVx > 0 && this.cat.x > 1150) { // both ran off right edge
+            this.cartoonVx = -100;
+            this.cat.setScale(-1, 1);
+            this.mouse.x = 1150;
+            this.cat.x = 1180;
+        } else if (this.cartoonVx < 0 && this.cat.x < 930) { // both ran off left edge
+            this.cartoonVx = 100;
+            this.cat.setScale(1, 1);
+            this.mouse.x = 930;
+            this.cat.x = 900; 
         }
 
         // Reset states for the next frame
