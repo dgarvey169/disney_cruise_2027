@@ -34,16 +34,10 @@ Planning, itineraries, budget forecasting, and analytics for the Garvey Family D
 | **Day 8** | Sat, Aug 7 | Fort Lauderdale, FL | 8:00 AM | — | Debarkation |
 
 ## 📁 Repository Structure
-- [2027_Disney_Cruise.ipynb](2027_Disney_Cruise.ipynb): Interactive planning notebook with pandas models for budget, timelines, and excursions.
+- [2027_Disney_Cruise.ipynb](2027_Disney_Cruise.ipynb) / [2027_Disney_Cruise.md](2027_Disney_Cruise.md): Interactive planning notebook and markdown export with pandas models for budget, timelines, and excursions.
+- [presentation.html](presentation.html): Presentation slide deck for the cruise planning.
+- [game/](game/): Contains the source code for the 8-bit Disney Destiny adventure game.
 - [Itineraries/](Itineraries/):
   - [My Reservations - Disney Cruise Line.pdf](Itineraries/My%20Reservations%20-%20Disney%20Cruise%20Line.pdf)
   - [My Reservations - Disney Cruise Line_Daily_Itinerary.pdf](Itineraries/My%20Reservations%20-%20Disney%20Cruise%20Line_Daily_Itinerary.pdf)
-
-## Getting Started
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/dgarvey169/disney_cruise_2027.git
-   cd disney_cruise_2027
-   ```
-2. Open and run the interactive planning notebook:
-   - [2027_Disney_Cruise.ipynb](2027_Disney_Cruise.ipynb) in Jupyter, VS Code, or Google Colab.
+- [CONTEXT.md](CONTEXT.md) & [GEMINI.md](GEMINI.md): Project context and rules files.
