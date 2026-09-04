@@ -136,13 +136,12 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('pool', 40, 40);
         g.clear();
 
-        // Thin Transparent Railing
+        // Thin Transparent Railing (shorter by one rung)
         g.fillStyle(0xFFFFFF, 0.5); // Semi-transparent white
-        g.fillRect(0, 0, 40, 4);  // Top rail (handrail)
-        g.fillRect(0, 15, 40, 2); // Mid rail 1
-        g.fillRect(0, 30, 40, 2); // Mid rail 2
-        g.fillRect(0, 0, 4, 40); // Left post
-        g.fillRect(36, 0, 4, 40); // Right post
+        g.fillRect(0, 15, 40, 4);  // Top rail (handrail)
+        g.fillRect(0, 30, 40, 2); // Mid rail 1
+        g.fillRect(0, 15, 4, 25); // Left post
+        g.fillRect(36, 15, 4, 25); // Right post
         g.generateTexture('railing', 40, 40);
         g.clear();
 
@@ -191,13 +190,21 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('icecream_stand', 60, 60);
         g.clear();
 
-        // Ice Cream Cone
-        g.fillStyle(0xD2B48C, 1); // Cone
-        g.fillTriangle(15, 30, 5, 15, 25, 15);
-        g.fillStyle(0xFF69B4, 1); // Strawberry ice cream
-        g.fillCircle(15, 12, 10);
-        g.generateTexture('icecream', 30, 30);
-        g.clear();
+        // Ice Cream Cones (Multiple Flavors)
+        const flavors = [
+            { key: 'strawberry', color: 0xFF69B4 },
+            { key: 'chocolate', color: 0x8B4513 },
+            { key: 'vanilla', color: 0xFFFDD0 },
+            { key: 'mint', color: 0x98FF98 }
+        ];
+        for (let flavor of flavors) {
+            g.fillStyle(0xD2B48C, 1); // Cone
+            g.fillTriangle(15, 30, 5, 15, 25, 15);
+            g.fillStyle(flavor.color, 1);
+            g.fillCircle(15, 12, 10);
+            g.generateTexture('icecream_' + flavor.key, 30, 30);
+            g.clear();
+        }
 
         // Raft
         g.fillStyle(0xFFFF00, 1); // Yellow raft
@@ -576,12 +583,20 @@ class GameScene extends Phaser.Scene {
 
 
         this.hasIceCream = false;
-        this.iceCreamSprite = this.add.sprite(0, 0, 'icecream');
+        this.iceCreamFlavors = ['strawberry', 'chocolate', 'vanilla', 'mint'];
+        this.currentFlavorIndex = 0;
+        this.iceCreamSprite = this.add.sprite(0, 0, 'icecream_strawberry');
         this.iceCreamSprite.setVisible(false);
 
         this.physics.add.overlap(this.player, iceCreamStands, () => {
             if (!this.hasIceCream) {
                 this.hasIceCream = true;
+                
+                // Change flavor
+                let flavor = this.iceCreamFlavors[this.currentFlavorIndex];
+                this.iceCreamSprite.setTexture('icecream_' + flavor);
+                this.currentFlavorIndex = (this.currentFlavorIndex + 1) % this.iceCreamFlavors.length;
+                
                 this.iceCreamSprite.setVisible(true);
                 
                 let yumText = this.add.text(this.player.x, this.player.y - 40, 'Yummy!', { fontSize: '16px', fill: '#ff0000', fontStyle: 'bold' });
