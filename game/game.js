@@ -445,6 +445,24 @@ class GameScene extends Phaser.Scene {
         // Stairs up to Deck 13 (Walk under them, then climb LEFT)
         for(let i=0; i<6; i++) createOneWayStair(2300 - (i*40), 980 - (i*40));
 
+        this.stairsZones = this.physics.add.group();
+        
+        // Zone for Deck 11 -> 12 (right-up)
+        // From x=100..300, y=1060..1260
+        let sz1 = this.add.zone(200, 1160, 240, 240);
+        this.physics.add.existing(sz1);
+        sz1.body.allowGravity = false;
+        sz1.stairType = 'right_up';
+        this.stairsZones.add(sz1);
+
+        // Zone for Deck 12 -> 13 (left-up)
+        // From x=2100..2300, y=780..980
+        let sz2 = this.add.zone(2200, 880, 240, 240);
+        this.physics.add.existing(sz2);
+        sz2.body.allowGravity = false;
+        sz2.stairType = 'left_up';
+        this.stairsZones.add(sz2);
+
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
@@ -473,9 +491,9 @@ class GameScene extends Phaser.Scene {
         // --- RAILINGS ---
         // Foreground transparent railings
         this.add.tileSprite(0, 1280, 2400, 40, 'railing').setOrigin(0, 0).setDepth(10);
-        this.add.tileSprite(340, 960, 2060, 40, 'railing').setOrigin(0, 0).setDepth(10);
-        this.add.tileSprite(20, 720, 2040, 40, 'railing').setOrigin(0, 0).setDepth(10);
-        this.add.tileSprite(700, 300, 100, 40, 'railing').setOrigin(0, 0).setDepth(10); // Top deck
+        this.add.tileSprite(340, 1000, 2060, 40, 'railing').setOrigin(0, 0).setDepth(10);
+        this.add.tileSprite(20, 760, 2040, 40, 'railing').setOrigin(0, 0).setDepth(10);
+        this.add.tileSprite(700, 340, 100, 40, 'railing').setOrigin(0, 0).setDepth(10); // Top deck
 
         // The AquaMouse Slide (circular loop around the deck!)
         let slideCurve = new Phaser.Curves.Spline([
@@ -565,13 +583,13 @@ class GameScene extends Phaser.Scene {
                             },
                             onComplete: () => {
                                 // 3. Splashdown & Hop Out
+                                this.ridingRaft = false;
                                 this.player.body.allowGravity = true;
                                 this.player.setVelocity(-200, -300); // Hop out!
                                 
                                 // Reset raft back to start
                                 this.raft.x = 1200; 
                                 this.raft.y = 750;
-                                this.time.delayedCall(1000, () => this.ridingRaft = false);
                             }
                         });
                     }
@@ -589,6 +607,11 @@ class GameScene extends Phaser.Scene {
 
 
         this.hasIceCream = false;
+        
+        this.onStairs = false;
+        this.physics.add.overlap(this.player, this.stairsZones, (player, zone) => {
+            this.onStairs = zone.stairType;
+        });
         this.iceCreamFlavors = ['strawberry', 'chocolate', 'vanilla', 'mint'];
         this.currentFlavorIndex = 0;
         this.iceCreamSprite = this.add.sprite(0, 0, 'icecream_strawberry');
@@ -690,23 +713,47 @@ class GameScene extends Phaser.Scene {
                 this.player.setTexture(this.selectedCharacter);
                 this.player.angle = 0; // Reset angle
             }
-            // Normal movement
+            // Movement
             let isLeft = this.cursors.left.isDown || this.mobileInput.left;
             let isRight = this.cursors.right.isDown || this.mobileInput.right;
             let isUp = this.cursors.up.isDown || this.mobileInput.up;
 
-            if (isLeft) {
-                this.player.setVelocityX(-speed);
-            } else if (isRight) {
-                this.player.setVelocityX(speed);
+            if (this.onStairs) {
+                // Ignore gravity when traversing stairs if pressing keys, to slide smoothly
+                if (this.onStairs === 'right_up') {
+                    if (isRight) {
+                        this.player.setVelocityX(speed);
+                        this.player.setVelocityY(-speed); // Climb up and right
+                    } else if (isLeft) {
+                        this.player.setVelocityX(-speed);
+                        this.player.setVelocityY(speed); // Climb down and left
+                    } else {
+                        this.player.setVelocityX(0); 
+                    }
+                } else if (this.onStairs === 'left_up') {
+                    if (isLeft) {
+                        this.player.setVelocityX(-speed);
+                        this.player.setVelocityY(-speed); // Climb up and left
+                    } else if (isRight) {
+                        this.player.setVelocityX(speed);
+                        this.player.setVelocityY(speed); // Climb down and right
+                    } else {
+                        this.player.setVelocityX(0); 
+                    }
+                }
             } else {
-                this.player.setVelocityX(0);
-            }
+                if (isLeft) {
+                    this.player.setVelocityX(-speed);
+                } else if (isRight) {
+                    this.player.setVelocityX(speed);
+                } else {
+                    this.player.setVelocityX(0);
+                }
 
-            if (isUp && this.player.body.touching.down) {
-                this.player.setVelocityY(jumpPower);
+                if (isUp && this.player.body.touching.down) {
+                    this.player.setVelocityY(jumpPower);
+                }
             }
-        }
         
         if (this.hasIceCream) {
             this.iceCreamSprite.x = this.player.x + 15;
@@ -716,6 +763,7 @@ class GameScene extends Phaser.Scene {
         // Reset states for the next frame
         this.wasInWater = this.inWater;
         this.inWater = false; 
+        this.onStairs = false;
     }
 }
 
