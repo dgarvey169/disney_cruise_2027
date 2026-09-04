@@ -58,6 +58,11 @@ class BootScene extends Phaser.Scene {
         g.fillRect(0, 0, 80, 20);
         g.strokeRect(0, 0, 80, 20);
         g.generateTexture('tube', 80, 20);
+        g.clear();
+
+        g.fillStyle(0xffffff, 0.5);
+        g.fillRoundedRect(0, 0, 80, 80, 10);
+        g.generateTexture('btn', 80, 80);
         g.destroy();
     }
     create() {
@@ -205,8 +210,31 @@ class GameScene extends Phaser.Scene {
         });
 
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.mobileInput = { left: false, right: false, up: false };
+
+        if (!this.sys.game.device.os.desktop) {
+            this.createMobileControls();
+        }
+
         this.inWater = false;
         this.onSlide = false;
+    }
+
+    createMobileControls() {
+        this.input.addPointer(2); // Enable multi-touch
+
+        const createBtn = (x, y, text, key) => {
+            let btn = this.add.image(x, y, 'btn').setScrollFactor(0).setInteractive();
+            let label = this.add.text(x, y, text, { fontSize: '32px', fill: '#000', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
+            
+            btn.on('pointerdown', () => { btn.setTint(0xaaaaaa); this.mobileInput[key] = true; });
+            btn.on('pointerup', () => { btn.clearTint(); this.mobileInput[key] = false; });
+            btn.on('pointerout', () => { btn.clearTint(); this.mobileInput[key] = false; });
+        };
+
+        createBtn(60, 520, '<', 'left');
+        createBtn(160, 520, '>', 'right');
+        createBtn(740, 520, '^', 'up');
     }
 
     update() {
@@ -218,15 +246,19 @@ class GameScene extends Phaser.Scene {
             this.player.setVelocityX(-400); 
         } else {
             // Normal movement
-            if (this.cursors.left.isDown) {
+            let isLeft = this.cursors.left.isDown || this.mobileInput.left;
+            let isRight = this.cursors.right.isDown || this.mobileInput.right;
+            let isUp = this.cursors.up.isDown || this.mobileInput.up;
+
+            if (isLeft) {
                 this.player.setVelocityX(-speed);
-            } else if (this.cursors.right.isDown) {
+            } else if (isRight) {
                 this.player.setVelocityX(speed);
             } else {
                 this.player.setVelocityX(0);
             }
 
-            if (this.cursors.up.isDown && this.player.body.touching.down) {
+            if (isUp && this.player.body.touching.down) {
                 this.player.setVelocityY(jumpPower);
             }
         }
