@@ -95,6 +95,24 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('tube', 80, 20);
         g.clear();
 
+        // Slide Tube (AquaMouse)
+        g.fillStyle(0x87CEFA, 0.6); // Light transparent blue
+        g.fillRect(0, 0, 40, 40);
+        g.lineStyle(4, 0xFF4500, 0.8); // Orange/Red stripe
+        g.beginPath();
+        g.moveTo(0, 40);
+        g.lineTo(40, 0);
+        g.strokePath();
+        g.lineStyle(4, 0xFFD700, 0.8); // Yellow stripe
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(40, 40);
+        g.strokePath();
+        g.lineStyle(2, 0x00BFFF, 1); // Border
+        g.strokeRect(0, 0, 40, 40);
+        g.generateTexture('slide_tube', 40, 40);
+        g.clear();
+
         g.fillStyle(0xffffff, 0.5);
         g.fillRoundedRect(0, 0, 80, 80, 10);
         g.generateTexture('btn', 80, 80);
@@ -212,7 +230,7 @@ class GameScene extends Phaser.Scene {
 
         // The AquaMouse Slide (going down and left, one-way collision so you can walk through it)
         for(let i=1; i<=10; i++) {
-            let slideBlock = slides.create(750 - (i*40), 360 + (i*40), 'pool');
+            let slideBlock = slides.create(750 - (i*40), 360 + (i*40), 'slide_tube');
             slideBlock.body.checkCollision.down = false;
             slideBlock.body.checkCollision.left = false;
             slideBlock.body.checkCollision.right = false;
@@ -279,7 +297,10 @@ class GameScene extends Phaser.Scene {
         if (this.onSlide) {
             // Automatic sliding logic! Forces player left and prevents jumping
             this.player.setVelocityX(-400); 
+            // Twirl logic!
+            this.player.angle += 15;
         } else {
+            this.player.angle = 0; // Reset angle
             // Normal movement
             let isLeft = this.cursors.left.isDown || this.mobileInput.left;
             let isRight = this.cursors.right.isDown || this.mobileInput.right;
