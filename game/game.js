@@ -6,8 +6,9 @@ const config = {
     backgroundColor: '#87CEEB',
     pixelArt: true,
     scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        mode: Phaser.Scale.RESIZE,
+        width: '100%',
+        height: '100%'
     },
     physics: {
         default: 'arcade',
@@ -189,8 +190,14 @@ class BootScene extends Phaser.Scene {
 class TitleScene extends Phaser.Scene {
     constructor() { super('TitleScene'); }
     create() {
-        this.add.text(400, 200, 'Disney Destiny Adventure', { fontSize: '40px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
-        this.add.text(400, 300, 'Click to Start', { fontSize: '24px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let title = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 50, 'Disney Destiny Adventure', { fontSize: '40px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
+        let startText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY + 50, 'Click to Start', { fontSize: '24px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
+        
+        this.scale.on('resize', (gameSize) => {
+            title.setPosition(gameSize.width / 2, gameSize.height / 2 - 50);
+            startText.setPosition(gameSize.width / 2, gameSize.height / 2 + 50);
+        });
+
         this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
     }
 }
@@ -198,13 +205,21 @@ class TitleScene extends Phaser.Scene {
 class CharacterSelectScene extends Phaser.Scene {
     constructor() { super('CharacterSelectScene'); }
     create() {
-        this.add.text(400, 100, 'Select Your Character', { fontSize: '32px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let title = this.add.text(this.cameras.main.centerX, 100, 'Select Your Character', { fontSize: '32px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
         
-        let riley = this.add.image(250, 300, 'riley').setInteractive({ useHandCursor: true });
-        this.add.text(250, 350, 'Riley (11)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let riley = this.add.image(this.cameras.main.centerX - 150, this.cameras.main.centerY, 'riley').setInteractive({ useHandCursor: true });
+        let rileyText = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 50, 'Riley (11)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
         
-        let amelia = this.add.image(550, 300, 'amelia').setInteractive({ useHandCursor: true });
-        this.add.text(550, 350, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let amelia = this.add.image(this.cameras.main.centerX + 150, this.cameras.main.centerY, 'amelia').setInteractive({ useHandCursor: true });
+        let ameliaText = this.add.text(this.cameras.main.centerX + 150, this.cameras.main.centerY + 50, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+
+        this.scale.on('resize', (gameSize) => {
+            title.setPosition(gameSize.width / 2, 100);
+            riley.setPosition(gameSize.width / 2 - 150, gameSize.height / 2);
+            rileyText.setPosition(gameSize.width / 2 - 150, gameSize.height / 2 + 50);
+            amelia.setPosition(gameSize.width / 2 + 150, gameSize.height / 2);
+            ameliaText.setPosition(gameSize.width / 2 + 150, gameSize.height / 2 + 50);
+        });
 
         riley.on('pointerover', () => riley.setTint(0xcccccc));
         riley.on('pointerout', () => riley.clearTint());
@@ -261,11 +276,15 @@ class GameScene extends Phaser.Scene {
         // Deck 11 is around y=1200, so horizon should be visible behind the decks.
         // The game world is 1400 tall. 
         // We'll place the ocean at the bottom of the screen with a very low scroll factor.
-        this.add.tileSprite(0, 400, 800, 300, 'ocean_bg')
+        this.oceanBg = this.add.tileSprite(0, 400, this.scale.width, 300, 'ocean_bg')
             .setOrigin(0, 0)
-            .setScrollFactor(0, 0.1) // barely moves vertically, fixed horizontally but we tile it! Wait, if it's fixed horizontally it covers the screen width!
-            // Wait, tileSprite width of 800 covers exactly one screen width. Since scrollFactorX is 0, it won't scroll offscreen!
-            .setDisplaySize(800, 400); 
+            .setScrollFactor(0, 0.1) 
+            .setDisplaySize(this.scale.width, 400); 
+
+        this.scale.on('resize', (gameSize) => {
+            this.oceanBg.setSize(gameSize.width, 300);
+            this.oceanBg.setDisplaySize(gameSize.width, 400);
+        }); 
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
@@ -494,18 +513,32 @@ class GameScene extends Phaser.Scene {
     createMobileControls() {
         this.input.addPointer(2); // Enable multi-touch
 
-        const createBtn = (x, y, text, key) => {
+        const createBtn = (x_offset, y_offset, text, key, isRightSide=false) => {
+            let x = isRightSide ? this.scale.width - x_offset : x_offset;
+            let y = this.scale.height - y_offset;
             let btn = this.add.image(x, y, 'btn').setScrollFactor(0).setInteractive();
             let label = this.add.text(x, y, text, { fontSize: '32px', fill: '#000', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
             
             btn.on('pointerdown', () => { btn.setTint(0xaaaaaa); this.mobileInput[key] = true; });
             btn.on('pointerup', () => { btn.clearTint(); this.mobileInput[key] = false; });
             btn.on('pointerout', () => { btn.clearTint(); this.mobileInput[key] = false; });
+            return { btn, label, x_offset, y_offset, isRightSide };
         };
 
-        createBtn(60, 520, '<', 'left');
-        createBtn(160, 520, '>', 'right');
-        createBtn(740, 520, '^', 'up');
+        let btns = [
+            createBtn(60, 80, '<', 'left'),
+            createBtn(160, 80, '>', 'right'),
+            createBtn(60, 80, '^', 'up', true) // Anchor to right side
+        ];
+
+        this.scale.on('resize', (gameSize) => {
+            for (let b of btns) {
+                let x = b.isRightSide ? gameSize.width - b.x_offset : b.x_offset;
+                let y = gameSize.height - b.y_offset;
+                b.btn.setPosition(x, y);
+                b.label.setPosition(x, y);
+            }
+        });
     }
 
     update() {
