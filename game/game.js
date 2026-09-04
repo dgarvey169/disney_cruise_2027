@@ -134,6 +134,14 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0xFF69B4, 1); // Strawberry ice cream
         g.fillCircle(15, 12, 10);
         g.generateTexture('icecream', 30, 30);
+        g.clear();
+
+        // Raft
+        g.fillStyle(0xFFFF00, 1); // Yellow raft
+        g.fillRoundedRect(0, 0, 40, 20, 8);
+        g.fillStyle(0x000000, 0.2); // Inner hole
+        g.fillRoundedRect(5, 5, 30, 10, 4);
+        g.generateTexture('raft', 40, 20);
         g.destroy();
     }
     create() {
@@ -241,56 +249,55 @@ class GameScene extends Phaser.Scene {
 
         this.add.text(1200, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
         
-        // AquaMouse Tubes (climbing up)
-        platforms.create(1150, 680, 'tube');
-        platforms.create(1050, 600, 'tube');
-        platforms.create(950, 520, 'tube');
-        platforms.create(850, 440, 'tube');
+        // AquaMouse Raft Lift
+        this.raft = this.physics.add.sprite(1200, 750, 'raft');
+        this.raft.body.allowGravity = false;
+        this.raft.setImmovable(true);
+        
+        // Wait, if ridingRaft logic goes in overlap, we can do it here. We need it to be bound after player creation though. 
+        // We can create the raft and a zone here, but overlap with player must happen after player is created.
+        let liftZone = this.add.zone(1200, 750, 80, 80);
+        this.physics.world.enable(liftZone);
+        liftZone.body.allowGravity = false;
+        
+        this.ridingRaft = false;
+        this.liftZone = liftZone; // save reference for collider later
 
         // Top Deck of AquaMouse
         platforms.create(750, 360, 'deck').setScale(2.5, 1).refreshBody();
         this.add.text(700, 310, 'AquaMouse Top!', { fontSize: '16px', fill: '#000' });
 
-        // The AquaMouse Slide (going down and left, one-way collision so you can walk through it)
-        for(let i=1; i<=10; i++) {
-            let slideBlock = slides.create(750 - (i*40), 360 + (i*40), 'slide_tube');
-            slideBlock.setVisible(false); // Hide the staircase physics blocks
-            slideBlock.body.checkCollision.down = false;
-            slideBlock.body.checkCollision.left = false;
-            slideBlock.body.checkCollision.right = false;
-        }
+        // The AquaMouse Slide (circular loop around the deck!)
+        let slideCurve = new Phaser.Curves.Spline([
+            750, 360,
+            1000, 200,
+            1300, 250,
+            1200, 450,
+            800, 500,
+            500, 600,
+            350, 760
+        ]);
 
-        // Draw a smooth, continuous slide visual
+        this.slideCurve = slideCurve;
+        let slideStartZone = this.add.zone(750, 340, 60, 60);
+        this.physics.world.enable(slideStartZone);
+        slideStartZone.body.allowGravity = false;
+        this.slideStartZone = slideStartZone;
+
+        // Draw the looping slide visually
         let slideGraphics = this.add.graphics();
         // Main transparent blue tube
         slideGraphics.lineStyle(40, 0x87CEFA, 0.6); 
-        slideGraphics.beginPath();
-        slideGraphics.moveTo(750, 380);
-        slideGraphics.lineTo(350, 780);
-        slideGraphics.strokePath();
+        slideCurve.draw(slideGraphics, 64);
         
         // Orange stripe
-        slideGraphics.lineStyle(6, 0xFF4500, 0.8);
-        slideGraphics.beginPath();
-        slideGraphics.moveTo(760, 370);
-        slideGraphics.lineTo(360, 770);
-        slideGraphics.strokePath();
+        slideGraphics.lineStyle(4, 0xFF4500, 0.8);
+        slideCurve.draw(slideGraphics, 64);
         
-        // Yellow stripe
-        slideGraphics.lineStyle(6, 0xFFD700, 0.8);
-        slideGraphics.beginPath();
-        slideGraphics.moveTo(740, 390);
-        slideGraphics.lineTo(340, 790);
-        slideGraphics.strokePath();
-        
-        // Tube borders
-        slideGraphics.lineStyle(2, 0x00BFFF, 1);
-        slideGraphics.beginPath();
-        slideGraphics.moveTo(770, 360);
-        slideGraphics.lineTo(370, 760); // Top border
-        slideGraphics.moveTo(730, 400);
-        slideGraphics.lineTo(330, 800); // Bottom border
-        slideGraphics.strokePath();
+        // Yellow stripe (offset slightly by drawing the same curve with a slight translation? Or just keep one stripe)
+        // Let's just have a thick orange/yellow core
+        slideGraphics.lineStyle(2, 0xFFD700, 1);
+        slideCurve.draw(slideGraphics, 64);
 
         // AquaMouse Splashdown Pool on Deck 13
         this.add.text(280, 720, 'Splashdown!', { fontSize: '14px', fill: '#000' });
@@ -306,6 +313,30 @@ class GameScene extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+
+        // Raft Lift Logic
+        this.physics.add.overlap(this.player, this.liftZone, () => {
+            if (!this.ridingRaft && this.player.body.touching.down) {
+                this.ridingRaft = true;
+                this.player.body.allowGravity = false;
+                this.player.setVelocity(0, 0);
+
+                this.tweens.add({
+                    targets: [this.player, this.raft],
+                    x: 750,
+                    y: 320, // drop them right at the top
+                    duration: 3000,
+                    ease: 'Sine.easeInOut',
+                    onComplete: () => {
+                        this.player.body.allowGravity = true;
+                        // Return raft to bottom for next ride
+                        this.raft.x = 1200;
+                        this.raft.y = 750;
+                        this.time.delayedCall(1000, () => this.ridingRaft = false);
+                    }
+                });
+            }
+        });
         
         // Collisions
         this.physics.add.collider(this.player, platforms);
@@ -314,8 +345,30 @@ class GameScene extends Phaser.Scene {
             this.inWater = true;
         });
 
-        this.physics.add.collider(this.player, slides, () => {
-            this.onSlide = true;
+        // We don't use physics blocks for the slide anymore, we just tween along the path
+        this.physics.add.overlap(this.player, this.slideStartZone, () => {
+            if (!this.onSlide) {
+                this.onSlide = true;
+                this.player.body.allowGravity = false;
+                
+                // Tween along the curve
+                let pathObj = { t: 0 };
+                this.tweens.add({
+                    targets: pathObj,
+                    t: 1,
+                    ease: 'Sine.easeInOut',
+                    duration: 4000,
+                    onUpdate: () => {
+                        let p = this.slideCurve.getPoint(pathObj.t);
+                        this.player.x = p.x;
+                        this.player.y = p.y;
+                    },
+                    onComplete: () => {
+                        this.onSlide = false;
+                        this.player.body.allowGravity = true;
+                    }
+                });
+            }
         });
 
         this.hasIceCream = false;
@@ -377,10 +430,12 @@ class GameScene extends Phaser.Scene {
         let jumpPower = this.inWater ? -300 : -550;
         
         if (this.onSlide) {
-            // Automatic sliding logic! Forces player left and prevents jumping
-            this.player.setVelocityX(-400); 
             // Twirl logic!
             this.player.angle += 15;
+            this.player.setVelocity(0, 0); // Disable physics movement while sliding
+        } else if (this.ridingRaft) {
+            // Player is riding raft, don't allow normal movement
+            this.player.setVelocity(0, 0);
         } else {
             this.player.angle = 0; // Reset angle
             // Normal movement
@@ -408,7 +463,6 @@ class GameScene extends Phaser.Scene {
 
         // Reset states for the next frame
         this.inWater = false; 
-        this.onSlide = false;
     }
 }
 
