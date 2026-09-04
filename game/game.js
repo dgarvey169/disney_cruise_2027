@@ -372,14 +372,12 @@ class GameScene extends Phaser.Scene {
         // Deck 11 is around y=1200, so horizon should be visible behind the decks.
         // The game world is 1400 tall. 
         // We'll place the ocean at the bottom of the screen with a very low scroll factor.
-        this.oceanBg = this.add.tileSprite(0, 400, this.scale.width, 300, 'ocean_bg')
+        this.oceanBg = this.add.tileSprite(0, 400, this.scale.width, 1400, 'ocean_bg')
             .setOrigin(0, 0)
-            .setScrollFactor(0, 0.1) 
-            .setDisplaySize(this.scale.width, 400); 
+            .setScrollFactor(0, 0.1);
 
         this.scale.on('resize', (gameSize) => {
-            this.oceanBg.setSize(gameSize.width, 300);
-            this.oceanBg.setDisplaySize(gameSize.width, 400);
+            this.oceanBg.setSize(gameSize.width, 1400);
         }); 
 
         // --- SHIP WALLS ---
@@ -401,10 +399,11 @@ class GameScene extends Phaser.Scene {
         const doors = this.physics.add.staticGroup();
 
         const createOneWayStair = (x, y) => {
-            let step = platforms.create(x, y, 'deck');
+            let step = platforms.create(x, y, 'deck').setScale(1, 0.5).refreshBody();
             step.body.checkCollision.down = false;
             step.body.checkCollision.left = false;
             step.body.checkCollision.right = false;
+            this.add.image(x, y - 20, 'railing').setDepth(10);
         };
 
         // ----------------------------------------------------
@@ -473,7 +472,7 @@ class GameScene extends Phaser.Scene {
 
         // --- RAILINGS ---
         // Foreground transparent railings
-        this.add.tileSprite(0, 1240, 2400, 40, 'railing').setOrigin(0, 0).setDepth(10);
+        this.add.tileSprite(0, 1280, 2400, 40, 'railing').setOrigin(0, 0).setDepth(10);
         this.add.tileSprite(340, 960, 2060, 40, 'railing').setOrigin(0, 0).setDepth(10);
         this.add.tileSprite(20, 720, 2040, 40, 'railing').setOrigin(0, 0).setDepth(10);
         this.add.tileSprite(700, 300, 100, 40, 'railing').setOrigin(0, 0).setDepth(10); // Top deck
