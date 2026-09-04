@@ -398,12 +398,26 @@ class GameScene extends Phaser.Scene {
         const slides = this.physics.add.staticGroup();
         const doors = this.physics.add.staticGroup();
 
-        const createOneWayStair = (x, y) => {
-            let step = platforms.create(x, y, 'deck').setScale(1, 0.5).refreshBody();
-            step.body.checkCollision.down = false;
-            step.body.checkCollision.left = false;
-            step.body.checkCollision.right = false;
-            this.add.image(x, y - 20, 'railing').setDepth(10);
+        const createStaircase = (startX, startY, steps, dirX, dirY) => {
+            // Visual steps
+            for (let i = 0; i < steps; i++) {
+                let sx = startX + (i * 40 * dirX);
+                let sy = startY + (i * 40 * dirY);
+                this.add.image(sx, sy, 'deck').setScale(1, 0.5); // Visual step
+                this.add.image(sx, sy - 20, 'railing').setDepth(10);
+            }
+            // Physics ramp (invisible)
+            let totalDist = steps * 40;
+            for (let i = -20; i <= totalDist; i += 4) { 
+                let rx = startX + (i * dirX);
+                let ry = startY + (i * dirY) - 10;
+                let p = platforms.create(rx, ry, 'deck').setVisible(false);
+                p.setDisplaySize(4, 4);
+                p.refreshBody();
+                p.body.checkCollision.down = false;
+                p.body.checkCollision.left = false;
+                p.body.checkCollision.right = false;
+            }
         };
 
         // ----------------------------------------------------
@@ -424,8 +438,8 @@ class GameScene extends Phaser.Scene {
         iceCreamStands.create(1500, 1250, 'icecream_stand');
         this.add.text(1460, 1200, 'Eye Scream Treats', { fontSize: '14px', fill: '#000', backgroundColor: '#FFB6C1', padding: 4 });
 
-        // Stairs up to Deck 12 (Walk under them, then climb RIGHT)
-        for(let i=0; i<6; i++) createOneWayStair(100 + (i*40), 1260 - (i*40));
+        // Stairs up to Deck 12 (right-up)
+        createStaircase(100, 1260, 6, 1, -1);
 
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
@@ -441,31 +455,17 @@ class GameScene extends Phaser.Scene {
         doors.create(2000, 970, 'door');
         this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
 
-        // Stairs up to Deck 13 (Walk under them, then climb LEFT)
-        for(let i=0; i<6; i++) createOneWayStair(2300 - (i*40), 980 - (i*40));
-
-        this.stairsZones = this.physics.add.group();
-        
-        // Zone for Deck 11 -> 12 (right-up)
-        // From x=100..300, y=1060..1260
-        let sz1 = this.add.zone(200, 1160, 240, 240);
-        this.physics.add.existing(sz1);
-        sz1.body.allowGravity = false;
-        sz1.stairType = 'right_up';
-        this.stairsZones.add(sz1);
-
-        // Zone for Deck 12 -> 13 (left-up)
-        // From x=2100..2300, y=780..980
-        let sz2 = this.add.zone(2200, 880, 240, 240);
-        this.physics.add.existing(sz2);
-        sz2.body.allowGravity = false;
-        sz2.stairType = 'left_up';
-        this.stairsZones.add(sz2);
+        // Stairs up to Deck 13 (left-up)
+        createStaircase(2300, 980, 6, -1, -1);
 
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
         platforms.create(1040, 780, 'deck').setScale(51, 1).refreshBody();
+
+        // AquaMouse Splashdown Pool
+        this.add.text(350, 710, 'Splashdown', { fontSize: '14px', fill: '#000' });
+        water.create(350, 780, 'pool').setScale(4, 1).refreshBody();
 
         this.add.text(1200, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
         
@@ -606,11 +606,6 @@ class GameScene extends Phaser.Scene {
 
 
         this.hasIceCream = false;
-        
-        this.onStairs = false;
-        this.physics.add.overlap(this.player, this.stairsZones, (player, zone) => {
-            this.onStairs = zone.stairType;
-        });
         this.iceCreamFlavors = ['strawberry', 'chocolate', 'vanilla', 'mint'];
         this.currentFlavorIndex = 0;
         this.iceCreamSprite = this.add.sprite(0, 0, 'icecream_strawberry');
@@ -717,41 +712,16 @@ class GameScene extends Phaser.Scene {
             let isRight = this.cursors.right.isDown || this.mobileInput.right;
             let isUp = this.cursors.up.isDown || this.mobileInput.up;
 
-            if (this.onStairs) {
-                // Ignore gravity when traversing stairs if pressing keys, to slide smoothly
-                if (this.onStairs === 'right_up') {
-                    if (isRight) {
-                        this.player.setVelocityX(speed);
-                        this.player.setVelocityY(-speed); // Climb up and right
-                    } else if (isLeft) {
-                        this.player.setVelocityX(-speed);
-                        this.player.setVelocityY(speed); // Climb down and left
-                    } else {
-                        this.player.setVelocityX(0); 
-                    }
-                } else if (this.onStairs === 'left_up') {
-                    if (isLeft) {
-                        this.player.setVelocityX(-speed);
-                        this.player.setVelocityY(-speed); // Climb up and left
-                    } else if (isRight) {
-                        this.player.setVelocityX(speed);
-                        this.player.setVelocityY(speed); // Climb down and right
-                    } else {
-                        this.player.setVelocityX(0); 
-                    }
-                }
+            if (isLeft) {
+                this.player.setVelocityX(-speed);
+            } else if (isRight) {
+                this.player.setVelocityX(speed);
             } else {
-                if (isLeft) {
-                    this.player.setVelocityX(-speed);
-                } else if (isRight) {
-                    this.player.setVelocityX(speed);
-                } else {
-                    this.player.setVelocityX(0);
-                }
+                this.player.setVelocityX(0);
+            }
 
-                if (isUp && this.player.body.touching.down) {
-                    this.player.setVelocityY(jumpPower);
-                }
+            if (isUp && this.player.body.touching.down) {
+                this.player.setVelocityY(jumpPower);
             }
         }
         
@@ -762,8 +732,7 @@ class GameScene extends Phaser.Scene {
 
         // Reset states for the next frame
         this.wasInWater = this.inWater;
-        this.inWater = false; 
-        this.onStairs = false;
+        this.inWater = false;
     }
 }
 
