@@ -279,10 +279,20 @@ class GameScene extends Phaser.Scene {
         ]);
 
         this.slideCurve = slideCurve;
-        let slideStartZone = this.add.zone(750, 340, 60, 60);
-        this.physics.world.enable(slideStartZone);
-        slideStartZone.body.allowGravity = false;
-        this.slideStartZone = slideStartZone;
+        // Draw the lift tube visually
+        let liftGraphics = this.add.graphics();
+        liftGraphics.lineStyle(40, 0xFFFFFF, 0.5); 
+        liftGraphics.beginPath();
+        liftGraphics.moveTo(1200, 750);
+        liftGraphics.lineTo(750, 360);
+        liftGraphics.strokePath();
+        liftGraphics.lineStyle(2, 0x0000FF, 1);
+        liftGraphics.beginPath();
+        liftGraphics.moveTo(1220, 740);
+        liftGraphics.lineTo(770, 350);
+        liftGraphics.moveTo(1180, 760);
+        liftGraphics.lineTo(730, 370);
+        liftGraphics.strokePath();
 
         // Draw the looping slide visually
         let slideGraphics = this.add.graphics();
@@ -314,25 +324,46 @@ class GameScene extends Phaser.Scene {
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-        // Raft Lift Logic
+        // Raft Lift Logic & Slide
         this.physics.add.overlap(this.player, this.liftZone, () => {
             if (!this.ridingRaft && this.player.body.touching.down) {
                 this.ridingRaft = true;
                 this.player.body.allowGravity = false;
                 this.player.setVelocity(0, 0);
 
+                // 1. Lift Tween
                 this.tweens.add({
                     targets: [this.player, this.raft],
                     x: 750,
-                    y: 320, // drop them right at the top
+                    y: 350, 
                     duration: 3000,
                     ease: 'Sine.easeInOut',
                     onComplete: () => {
-                        this.player.body.allowGravity = true;
-                        // Return raft to bottom for next ride
-                        this.raft.x = 1200;
-                        this.raft.y = 750;
-                        this.time.delayedCall(1000, () => this.ridingRaft = false);
+                        // 2. Slide Tween (Both player and raft!)
+                        let pathObj = { t: 0 };
+                        this.tweens.add({
+                            targets: pathObj,
+                            t: 1,
+                            ease: 'Sine.easeInOut',
+                            duration: 4000,
+                            onUpdate: () => {
+                                let p = this.slideCurve.getPoint(pathObj.t);
+                                this.player.x = p.x;
+                                this.player.y = p.y - 10; // Player sits on raft
+                                this.raft.x = p.x;
+                                this.raft.y = p.y;
+                            },
+                            onComplete: () => {
+                                // 3. Splashdown & Hop Out
+                                this.player.body.allowGravity = true;
+                                this.player.setVelocity(-200, -300); // Hop out!
+                                
+                                // Reset raft back to start
+                                this.raft.x = 1200; 
+                                this.raft.y = 750;
+                                this.time.delayedCall(1000, () => this.ridingRaft = false);
+                            }
+                        });
                     }
                 });
             }
@@ -345,31 +376,7 @@ class GameScene extends Phaser.Scene {
             this.inWater = true;
         });
 
-        // We don't use physics blocks for the slide anymore, we just tween along the path
-        this.physics.add.overlap(this.player, this.slideStartZone, () => {
-            if (!this.onSlide) {
-                this.onSlide = true;
-                this.player.body.allowGravity = false;
-                
-                // Tween along the curve
-                let pathObj = { t: 0 };
-                this.tweens.add({
-                    targets: pathObj,
-                    t: 1,
-                    ease: 'Sine.easeInOut',
-                    duration: 4000,
-                    onUpdate: () => {
-                        let p = this.slideCurve.getPoint(pathObj.t);
-                        this.player.x = p.x;
-                        this.player.y = p.y;
-                    },
-                    onComplete: () => {
-                        this.onSlide = false;
-                        this.player.body.allowGravity = true;
-                    }
-                });
-            }
-        });
+
 
         this.hasIceCream = false;
         this.iceCreamSprite = this.add.sprite(0, 0, 'icecream');
