@@ -12,7 +12,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 800 },
+            gravity: { y: 1000 }, // Snappy gravity
             debug: false
         }
     },
@@ -26,19 +26,19 @@ class BootScene extends Phaser.Scene {
     preload() {
         let g = this.add.graphics();
         
-        // Riley (blue placeholder)
+        // Riley
         g.fillStyle(0x0000ff, 1);
         g.fillRect(0, 0, 32, 48);
         g.generateTexture('riley', 32, 48);
         g.clear();
 
-        // Amelia (pink placeholder)
+        // Amelia
         g.fillStyle(0xff69b4, 1);
         g.fillRect(0, 0, 32, 40);
         g.generateTexture('amelia', 32, 40);
         g.clear();
         
-        // Ship Deck block (40x40) to easily tile
+        // Deck
         g.fillStyle(0x8B4513, 1);
         g.lineStyle(1, 0x654321, 1);
         g.fillRect(0, 0, 40, 40);
@@ -46,18 +46,24 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('deck', 40, 40);
         g.clear();
 
-        // Pool water block (40x40)
+        // Pool
         g.fillStyle(0x00BFFF, 0.7);
         g.fillRect(0, 0, 40, 40);
         g.generateTexture('pool', 40, 40);
         g.clear();
 
-        // AquaMouse tube platform
+        // Door
+        g.fillStyle(0x8B0000, 1);
+        g.fillRect(0, 0, 40, 60);
+        g.generateTexture('door', 40, 60);
+        g.clear();
+
+        // AquaMouse Tube
         g.fillStyle(0xFFFFFF, 0.9);
         g.lineStyle(2, 0x0000FF, 1);
-        g.fillRect(0, 0, 120, 20);
-        g.strokeRect(0, 0, 120, 20);
-        g.generateTexture('tube', 120, 20);
+        g.fillRect(0, 0, 80, 20);
+        g.strokeRect(0, 0, 80, 20);
+        g.generateTexture('tube', 80, 20);
         g.destroy();
     }
     create() {
@@ -112,54 +118,84 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // Expand the world to be scrolling (1600px wide)
-        this.physics.world.setBounds(0, 0, 1600, 600);
-        this.cameras.main.setBounds(0, 0, 1600, 600);
+        // Massive world! 2400 wide (Forward to Aft), 1400 tall
+        this.physics.world.setBounds(0, 0, 2400, 1400);
+        this.cameras.main.setBounds(0, 0, 2400, 1400);
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
+        const doors = this.physics.add.staticGroup();
 
-        // 1. Build the Deck Floor (0 to 600, gap, 800 to 1600)
-        for (let x = 20; x < 600; x += 40) {
-            platforms.create(x, 580, 'deck');
-        }
-        for (let x = 820; x < 1600; x += 40) {
-            platforms.create(x, 580, 'deck');
-        }
+        // ----------------------------------------------------
+        // DECK 11 (Main Pool Deck) - y = 1300
+        // ----------------------------------------------------
+        for (let x = 20; x < 900; x += 40) platforms.create(x, 1300, 'deck');      // Forward
+        for (let x = 920; x <= 1200; x += 40) water.create(x, 1310, 'pool');       // Main Pools
+        for (let x = 1220; x <= 2400; x += 40) platforms.create(x, 1300, 'deck');  // Aft
 
-        // 2. Build the Pool in the gap (600 to 800)
-        for (let x = 620; x <= 780; x += 40) {
-            // Submerged effect: water is slightly lower
-            water.create(x, 595, 'pool'); 
-        }
+        // Deck 11 Facilities
+        doors.create(200, 1250, 'door'); 
+        this.add.text(160, 1190, 'Senses Spa', { fontSize: '14px', fill: '#000' });
+        
+        doors.create(2100, 1250, 'door');
+        this.add.text(2030, 1190, 'Marceline Market', { fontSize: '14px', fill: '#000' });
 
-        // 3. Build the AquaMouse
-        // A series of steps/tubes leading up to a slide on the right side
-        platforms.create(1000, 480, 'tube');
-        platforms.create(1200, 380, 'tube');
-        platforms.create(1400, 280, 'tube');
-        platforms.create(1200, 180, 'tube');
-        platforms.create(1000, 100, 'tube'); // Top of the slide
+        this.add.text(950, 1200, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
 
-        // UI Text (fixed to camera using setScrollFactor)
-        this.add.text(16, 16, `Playing as: ${this.characterName}`, { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setScrollFactor(0);
-        this.add.text(16, 40, 'Location: Upper Deck & Pool', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setScrollFactor(0);
-        let clubText = (this.selectedCharacter === 'riley') ? 'Find the Edge!' : 'Find the Oceaneer\'s Club!';
-        this.add.text(16, 64, clubText, { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setScrollFactor(0);
-        this.add.text(16, 88, 'Use Arrow Keys to explore.', { fontSize: '16px', fill: '#333', fontFamily: 'Arial' }).setScrollFactor(0);
+        // Stairs up to Deck 12 (Left side & Right side)
+        for(let i=0; i<6; i++) platforms.create(100 + (i*40), 1260 - (i*40), 'deck');
+        for(let i=0; i<6; i++) platforms.create(2300 - (i*40), 1260 - (i*40), 'deck');
 
-        // Add Player
-        this.player = this.physics.add.sprite(100, 300, this.selectedCharacter);
+
+        // ----------------------------------------------------
+        // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
+        // ----------------------------------------------------
+        for (let x = 300; x <= 700; x += 40) platforms.create(x, 1020, 'deck');  // Left Balcony
+        for (let x = 1400; x <= 2100; x += 40) platforms.create(x, 1020, 'deck'); // Right Balcony
+
+        // Deck 12 Facilities
+        this.add.text(350, 950, 'Quiet Cove (Adults)', { fontSize: '14px', fill: '#000' });
+        water.create(500, 1030, 'pool'); 
+        water.create(540, 1030, 'pool');
+        
+        this.add.text(1450, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
+        water.create(1500, 1030, 'pool');
+
+        doors.create(1900, 970, 'door');
+        this.add.text(1860, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
+
+        // Stairs up to Deck 13 (Middle Right)
+        for(let i=0; i<5; i++) platforms.create(1600 - (i*40), 980 - (i*40), 'deck');
+
+
+        // ----------------------------------------------------
+        // DECK 13 (AquaMouse) - y = 780
+        // ----------------------------------------------------
+        for (let x = 1100; x <= 1400; x += 40) platforms.create(x, 780, 'deck');
+
+        this.add.text(1150, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
+        
+        // AquaMouse Tubes (riding high up)
+        platforms.create(1050, 680, 'tube');
+        platforms.create(950, 600, 'tube');
+        platforms.create(850, 520, 'tube');
+        platforms.create(950, 440, 'tube');
+        platforms.create(1100, 360, 'tube');
+        platforms.create(1250, 360, 'tube');
+        platforms.create(1400, 440, 'tube');
+
+        // UI
+        this.add.text(16, 16, `Playing as: ${this.characterName}`, { fontSize: '20px', fill: '#000' }).setScrollFactor(0);
+        this.add.text(16, 40, 'Explore Decks 11, 12, & 13!', { fontSize: '16px', fill: '#333' }).setScrollFactor(0);
+
+        // Player (Spawn on Deck 11 by the main pool)
+        this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
         this.player.setBounce(0.1);
         this.player.setCollideWorldBounds(true);
 
-        // Make Camera follow player with a slight smooth lag
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-
-        // Collisions
         this.physics.add.collider(this.player, platforms);
         
-        // Water collision behavior
         this.physics.add.collider(this.player, water, () => {
             this.inWater = true;
         });
@@ -169,14 +205,11 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        // Apply water effects if in pool
-        let speed = this.inWater ? 100 : 200; // Slower in water
-        let jumpPower = this.inWater ? -300 : -450; // Less jump in water
+        let speed = this.inWater ? 100 : 220;
+        let jumpPower = this.inWater ? -300 : -500;
         
-        // Reset water status every frame
         this.inWater = false; 
 
-        // Horizontal Movement
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-speed);
         } else if (this.cursors.right.isDown) {
@@ -185,7 +218,6 @@ class GameScene extends Phaser.Scene {
             this.player.setVelocityX(0);
         }
 
-        // Jumping
         if (this.cursors.up.isDown && this.player.body.touching.down) {
             this.player.setVelocityY(jumpPower);
         }
