@@ -142,6 +142,43 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0x000000, 0.2); // Inner hole
         g.fillRoundedRect(5, 5, 30, 10, 4);
         g.generateTexture('raft', 40, 20);
+        g.clear();
+
+        // Sun
+        g.fillStyle(0xFFD700, 1);
+        g.fillCircle(40, 40, 40);
+        g.generateTexture('sun', 80, 80);
+        g.clear();
+
+        // Cloud
+        g.fillStyle(0xFFFFFF, 0.8);
+        g.fillCircle(30, 30, 30);
+        g.fillCircle(60, 20, 20);
+        g.fillCircle(80, 30, 30);
+        g.fillCircle(55, 40, 25);
+        g.generateTexture('cloud', 110, 60);
+        g.clear();
+
+        // Bird (V shape)
+        g.lineStyle(2, 0x000000, 1);
+        g.beginPath();
+        g.moveTo(0, 10);
+        g.lineTo(10, 20);
+        g.lineTo(20, 10);
+        g.strokePath();
+        g.generateTexture('bird', 20, 20);
+        g.clear();
+
+        // Ocean Background
+        g.fillStyle(0x006994, 1); // Deep blue ocean
+        g.fillRect(0, 0, 800, 300);
+        // Add some wave details
+        g.fillStyle(0x007BA7, 1);
+        for(let w = 0; w < 20; w++) {
+            g.fillRect(Math.random() * 800, Math.random() * 300, 40, 5);
+        }
+        g.generateTexture('ocean_bg', 800, 300);
+
         g.destroy();
     }
     create() {
@@ -190,6 +227,45 @@ class GameScene extends Phaser.Scene {
     create() {
         this.physics.world.setBounds(0, 0, 2400, 1400);
         this.cameras.main.setBounds(0, 0, 2400, 1400);
+
+        // --- BACKGROUND GRAPHICS ---
+        // Sun (fixed in the sky)
+        this.add.image(600, 150, 'sun').setScrollFactor(0.05);
+
+        // Clouds (Parallax)
+        for (let i = 0; i < 15; i++) {
+            let cx = Phaser.Math.Between(0, 2400);
+            let cy = Phaser.Math.Between(50, 400);
+            let sf = 0.1 + (Math.random() * 0.2); // Parallax factor
+            this.add.image(cx, cy, 'cloud').setScrollFactor(sf).setAlpha(0.8).setScale(0.5 + Math.random());
+        }
+
+        // Birds
+        for (let i = 0; i < 8; i++) {
+            let bx = Phaser.Math.Between(0, 2400);
+            let by = Phaser.Math.Between(100, 500);
+            let sf = 0.2 + (Math.random() * 0.3);
+            let bird = this.add.image(bx, by, 'bird').setScrollFactor(sf);
+            // Simple bird animation tween
+            this.tweens.add({
+                targets: bird,
+                y: by - 10,
+                duration: 500 + Math.random() * 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+
+        // Ocean Horizon
+        // Deck 11 is around y=1200, so horizon should be visible behind the decks.
+        // The game world is 1400 tall. 
+        // We'll place the ocean at the bottom of the screen with a very low scroll factor.
+        this.add.tileSprite(0, 400, 800, 300, 'ocean_bg')
+            .setOrigin(0, 0)
+            .setScrollFactor(0, 0.1) // barely moves vertically, fixed horizontally but we tile it! Wait, if it's fixed horizontally it covers the screen width!
+            // Wait, tileSprite width of 800 covers exactly one screen width. Since scrollFactorX is 0, it won't scroll offscreen!
+            .setDisplaySize(800, 400); 
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
