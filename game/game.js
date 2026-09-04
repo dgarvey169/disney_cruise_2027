@@ -170,9 +170,12 @@ class GameScene extends Phaser.Scene {
         platforms.create(750, 360, 'deck').setScale(2.5, 1).refreshBody();
         this.add.text(700, 310, 'AquaMouse Top!', { fontSize: '16px', fill: '#000' });
 
-        // The AquaMouse Slide (going down and left)
+        // The AquaMouse Slide (going down and left, one-way collision so you can walk through it)
         for(let i=1; i<=10; i++) {
-            slides.create(750 - (i*40), 360 + (i*40), 'pool');
+            let slideBlock = slides.create(750 - (i*40), 360 + (i*40), 'pool');
+            slideBlock.body.checkCollision.down = false;
+            slideBlock.body.checkCollision.left = false;
+            slideBlock.body.checkCollision.right = false;
         }
 
         // AquaMouse Splashdown Pool on Deck 13
