@@ -2,6 +2,10 @@
 
 Planning, itineraries, budget forecasting, and analytics for the Garvey Family Disney Cruise sailing.
 
+## 🔗 Quick Links
+- **[View Presentation](presentation.html)** - Planning and budget presentation
+- **[Play the Game!](game/)** - An 8-bit adventure game onboard the Disney Destiny
+
 ## 🛳️ Reservation Summary
 - **Reservation #**: `44830495`
 - **Ship**: **Disney Destiny**
