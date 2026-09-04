@@ -432,7 +432,23 @@ class GameScene extends Phaser.Scene {
         
         doors.create(2100, 1250, 'door');
         this.add.text(2030, 1190, 'Marceline Market', { fontSize: '14px', fill: '#000' });
-        this.add.text(950, 1200, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
+        this.add.text(950, 1050, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
+        
+        // Movie Screen
+        let screenBg = this.add.graphics();
+        screenBg.fillStyle(0x222222, 1);
+        screenBg.fillRect(940, 1100, 200, 120);
+        screenBg.lineStyle(4, 0x000000, 1);
+        screenBg.strokeRect(940, 1100, 200, 120);
+        
+        // Movie Screen Cartoon Element (Bouncing Mickey Head)
+        this.cartoonHead = this.add.circle(1040, 1160, 15, 0xFFFFFF);
+        this.cartoonLeftEar = this.add.circle(1028, 1148, 8, 0xFFFFFF);
+        this.cartoonRightEar = this.add.circle(1052, 1148, 8, 0xFFFFFF);
+        this.cartoon = this.add.container(0, 0, [this.cartoonHead, this.cartoonLeftEar, this.cartoonRightEar]);
+        
+        this.cartoonVx = 80;
+        this.cartoonVy = 80;
 
         const iceCreamStands = this.physics.add.staticGroup();
         iceCreamStands.create(1500, 1250, 'icecream_stand');
@@ -536,9 +552,7 @@ class GameScene extends Phaser.Scene {
         slideGraphics.lineStyle(2, 0xFFD700, 1);
         slideCurve.draw(slideGraphics, 64);
 
-        // AquaMouse Splashdown Pool on Deck 13
-        this.add.text(280, 720, 'Splashdown!', { fontSize: '14px', fill: '#000' });
-        water.create(330, 790, 'pool').setScale(4, 1).refreshBody();
+        // Removed duplicate pool
 
         // UI
         this.add.text(16, 16, `Playing as: ${this.characterName}`, { fontSize: '20px', fill: '#000' }).setScrollFactor(0);
@@ -728,6 +742,25 @@ class GameScene extends Phaser.Scene {
         if (this.hasIceCream) {
             this.iceCreamSprite.x = this.player.x + 15;
             this.iceCreamSprite.y = this.player.y - 10;
+        }
+
+        // Movie Screen Animation
+        let dt = this.game.loop.delta / 1000;
+        this.cartoon.x += this.cartoonVx * dt;
+        this.cartoon.y += this.cartoonVy * dt;
+        
+        let cx = 1040 + this.cartoon.x;
+        let cy = 1160 + this.cartoon.y;
+        
+        if (cx < 960 || cx > 1120) {
+            this.cartoonVx *= -1;
+            let color = Phaser.Math.Between(0x111111, 0xFFFFFF);
+            this.cartoon.list.forEach(c => c.fillColor = color);
+        }
+        if (cy < 1120 || cy > 1200) {
+            this.cartoonVy *= -1;
+            let color = Phaser.Math.Between(0x111111, 0xFFFFFF);
+            this.cartoon.list.forEach(c => c.fillColor = color);
         }
 
         // Reset states for the next frame
