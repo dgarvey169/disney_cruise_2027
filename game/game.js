@@ -64,6 +64,52 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('amelia', 32, 40);
         g.clear();
         
+        // Riley Swim
+        g.fillStyle(0xffdcb1, 1); // Skin
+        g.fillRect(8, 4, 16, 14); // Head
+        g.fillStyle(0xA0522D, 1); // Light Brown Hair
+        g.fillRect(6, 2, 20, 6);  
+        g.fillRect(6, 8, 6, 12);  
+        g.fillRect(20, 8, 6, 12); 
+        g.fillStyle(0x0000ff, 1); // Blue Shirt
+        g.fillRect(8, 18, 16, 16); 
+        g.fillStyle(0xffdcb1, 1); // Arms raised
+        g.fillRect(2, 8, 4, 14); 
+        g.fillRect(26, 8, 4, 14); 
+        // Inner tube
+        g.fillStyle(0xFF0000, 1);
+        g.fillRoundedRect(2, 22, 28, 12, 6);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(6, 22, 4, 12);
+        g.fillRect(22, 22, 4, 12);
+        g.fillStyle(0x000080, 1); // Dark Blue Pants
+        g.fillRect(8, 34, 16, 10); 
+        g.generateTexture('riley_swim', 32, 48);
+        g.clear();
+
+        // Amelia Swim
+        g.fillStyle(0xffdcb1, 1); // Skin
+        g.fillRect(8, 4, 16, 12); // Head
+        g.fillStyle(0xA0522D, 1); // Light Brown Hair
+        g.fillRect(6, 2, 20, 6);  
+        g.fillRect(6, 8, 5, 10);  
+        g.fillRect(21, 8, 5, 10); 
+        g.fillStyle(0xff69b4, 1); // Pink Dress
+        g.fillRect(8, 16, 16, 14); 
+        g.fillStyle(0xffdcb1, 1); // Arms raised
+        g.fillRect(2, 8, 4, 10); 
+        g.fillRect(26, 8, 4, 10); 
+        // Inner tube
+        g.fillStyle(0xFFFF00, 1);
+        g.fillRoundedRect(2, 22, 28, 12, 6);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(6, 22, 4, 12);
+        g.fillRect(22, 22, 4, 12);
+        g.fillStyle(0xff69b4, 1);
+        g.fillRect(6, 34, 20, 6);
+        g.generateTexture('amelia_swim', 32, 40);
+        g.clear();
+        
         // Deck (Cruise Ship Teak Wood)
         g.fillStyle(0xC19A6B, 1); 
         g.fillRect(0, 0, 40, 40);
@@ -79,9 +125,25 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('deck', 40, 40);
         g.clear();
 
-        g.fillStyle(0x00BFFF, 0.7);
+        // Upgraded Pool (Funnel Vision style)
+        g.fillStyle(0xE0E0E0, 1); // White/Gray tiled lip
         g.fillRect(0, 0, 40, 40);
+        g.fillStyle(0x00BFFF, 0.8); // Deep blue water
+        g.fillRect(4, 4, 32, 36);
+        // Water surface highlight
+        g.fillStyle(0xFFFFFF, 0.4);
+        g.fillRect(6, 6, 28, 4);
         g.generateTexture('pool', 40, 40);
+        g.clear();
+
+        // Thin Transparent Railing
+        g.fillStyle(0xFFFFFF, 0.5); // Semi-transparent white
+        g.fillRect(0, 0, 40, 4);  // Top rail (handrail)
+        g.fillRect(0, 15, 40, 2); // Mid rail 1
+        g.fillRect(0, 30, 40, 2); // Mid rail 2
+        g.fillRect(0, 0, 4, 40); // Left post
+        g.fillRect(36, 0, 4, 40); // Right post
+        g.generateTexture('railing', 40, 40);
         g.clear();
 
         g.fillStyle(0x8B0000, 1);
@@ -395,6 +457,13 @@ class GameScene extends Phaser.Scene {
         platforms.create(750, 360, 'deck').setScale(2.5, 1).refreshBody();
         this.add.text(700, 310, 'AquaMouse Top!', { fontSize: '16px', fill: '#000' });
 
+        // --- RAILINGS ---
+        // Foreground transparent railings
+        this.add.tileSprite(0, 1240, 2400, 40, 'railing').setOrigin(0, 0).setDepth(10);
+        this.add.tileSprite(340, 960, 2060, 40, 'railing').setOrigin(0, 0).setDepth(10);
+        this.add.tileSprite(20, 720, 2040, 40, 'railing').setOrigin(0, 0).setDepth(10);
+        this.add.tileSprite(700, 300, 100, 40, 'railing').setOrigin(0, 0).setDepth(10); // Top deck
+
         // The AquaMouse Slide (circular loop around the deck!)
         let slideCurve = new Phaser.Curves.Spline([
             750, 360,
@@ -586,7 +655,13 @@ class GameScene extends Phaser.Scene {
             // Player is riding raft, don't allow normal movement
             this.player.setVelocity(0, 0);
         } else {
-            this.player.angle = 0; // Reset angle
+            if (this.inWater) {
+                this.player.setTexture(this.selectedCharacter + '_swim');
+                this.player.angle = (Math.sin(this.time.now / 150) * 10); // Swimming bob
+            } else {
+                this.player.setTexture(this.selectedCharacter);
+                this.player.angle = 0; // Reset angle
+            }
             // Normal movement
             let isLeft = this.cursors.left.isDown || this.mobileInput.left;
             let isRight = this.cursors.right.isDown || this.mobileInput.right;
