@@ -21,3 +21,4 @@ ENV/
 # OS generated
 .DS_Store
 Thumbs.db
+.agents/
