@@ -170,6 +170,23 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('bird', 20, 20);
         g.clear();
 
+        // Ship Wall (White with red stripe and porthole)
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(0, 0, 120, 120);
+        g.fillStyle(0x000000, 0.1); // subtle line for deck separation
+        g.fillRect(0, 0, 120, 4);
+        g.fillStyle(0xFF0000, 1);
+        g.fillRect(0, 110, 120, 10); // Red stripe
+        
+        // Porthole
+        g.fillStyle(0x444444, 1);
+        g.fillCircle(60, 60, 20);
+        g.fillStyle(0x87CEEB, 1);
+        g.fillCircle(60, 60, 16);
+        
+        g.generateTexture('ship_wall', 120, 120);
+        g.clear();
+
         // Ocean Background
         g.fillStyle(0x006994, 1); // Deep blue ocean
         g.fillRect(0, 0, 800, 300);
@@ -285,6 +302,19 @@ class GameScene extends Phaser.Scene {
             this.oceanBg.setSize(gameSize.width, 300);
             this.oceanBg.setDisplaySize(gameSize.width, 400);
         }); 
+
+        // --- SHIP WALLS ---
+        // Deck 11 wall (beneath y=1300 down to y=1420)
+        this.add.tileSprite(0, 1300, 2400, 120, 'ship_wall').setOrigin(0, 0);
+
+        // Deck 12 wall (beneath y=1020 down to y=1300, under Quiet Cove & Hero Zone)
+        this.add.tileSprite(340, 1020, 2060, 280, 'ship_wall').setOrigin(0, 0);
+
+        // Deck 13 wall (beneath y=780 down to y=1020, under AquaMouse)
+        this.add.tileSprite(20, 780, 2040, 240, 'ship_wall').setOrigin(0, 0);
+
+        // Top of AquaMouse structure (beneath y=360 down to y=780)
+        this.add.tileSprite(700, 360, 100, 420, 'ship_wall').setOrigin(0, 0);
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
