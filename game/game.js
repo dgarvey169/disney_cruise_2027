@@ -254,10 +254,43 @@ class GameScene extends Phaser.Scene {
         // The AquaMouse Slide (going down and left, one-way collision so you can walk through it)
         for(let i=1; i<=10; i++) {
             let slideBlock = slides.create(750 - (i*40), 360 + (i*40), 'slide_tube');
+            slideBlock.setVisible(false); // Hide the staircase physics blocks
             slideBlock.body.checkCollision.down = false;
             slideBlock.body.checkCollision.left = false;
             slideBlock.body.checkCollision.right = false;
         }
+
+        // Draw a smooth, continuous slide visual
+        let slideGraphics = this.add.graphics();
+        // Main transparent blue tube
+        slideGraphics.lineStyle(40, 0x87CEFA, 0.6); 
+        slideGraphics.beginPath();
+        slideGraphics.moveTo(750, 380);
+        slideGraphics.lineTo(350, 780);
+        slideGraphics.strokePath();
+        
+        // Orange stripe
+        slideGraphics.lineStyle(6, 0xFF4500, 0.8);
+        slideGraphics.beginPath();
+        slideGraphics.moveTo(760, 370);
+        slideGraphics.lineTo(360, 770);
+        slideGraphics.strokePath();
+        
+        // Yellow stripe
+        slideGraphics.lineStyle(6, 0xFFD700, 0.8);
+        slideGraphics.beginPath();
+        slideGraphics.moveTo(740, 390);
+        slideGraphics.lineTo(340, 790);
+        slideGraphics.strokePath();
+        
+        // Tube borders
+        slideGraphics.lineStyle(2, 0x00BFFF, 1);
+        slideGraphics.beginPath();
+        slideGraphics.moveTo(770, 360);
+        slideGraphics.lineTo(370, 760); // Top border
+        slideGraphics.moveTo(730, 400);
+        slideGraphics.lineTo(330, 800); // Bottom border
+        slideGraphics.strokePath();
 
         // AquaMouse Splashdown Pool on Deck 13
         this.add.text(280, 720, 'Splashdown!', { fontSize: '14px', fill: '#000' });
