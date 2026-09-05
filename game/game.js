@@ -547,14 +547,18 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
         // ----------------------------------------------------
-        // DECK 12 split: left section, Quiet Cove pool, middle, Toy Story Splash pool, right
-        // Quiet Cove pool spans ~x=550-710, Toy Story ~x=1670-1830
-        // Full deck is centered at x=1370 scale 51.5 → spans x=340 to x=2400
-        platforms.create(500, 1020, 'deck').setScale(7.5, 1).refreshBody();   // left of Quiet Cove
-        water.create(630, 1020, 'pool').setScale(2, 1).refreshBody();          // Quiet Cove pool (is the floor here)
-        platforms.create(1210, 1020, 'deck').setScale(25, 1).refreshBody();   // between pools
-        water.create(1750, 1020, 'pool').setScale(2, 1).refreshBody();         // Toy Story Splash pool
-        platforms.create(2100, 1020, 'deck').setScale(12, 1).refreshBody();   // right of Toy Story
+        // DECK 12 split (total span x=340 to x=2400, width=2060px, y=1020)
+        // Pool texture = 40px, deck texture = 40px, scale multiplies that width.
+        // Quiet Cove pool: 200px wide (scale=5), centered x=630 → spans x=530 to x=730
+        // Left platform: x=340 to x=530 = 190px wide → center x=435, scale=4.75 → use scale=5, center x=440
+        // Toy Story pool: 200px wide (scale=5), centered x=1800 → spans x=1700 to x=1900
+        // Middle platform: x=730 to x=1700 = 970px → center x=1215, scale=24.25 → use scale=24, center x=1210
+        // Right platform: x=1900 to x=2400 = 500px → center x=2150, scale=12.5 → use scale=13, center x=2160
+        platforms.create(440, 1020, 'deck').setScale(5, 1).refreshBody();      // left of Quiet Cove
+        water.create(630, 1020, 'pool').setScale(5, 1).refreshBody();           // Quiet Cove pool
+        platforms.create(1210, 1020, 'deck').setScale(24, 1).refreshBody();    // between pools
+        water.create(1800, 1020, 'pool').setScale(5, 1).refreshBody();          // Toy Story Splash pool
+        platforms.create(2160, 1020, 'deck').setScale(13, 1).refreshBody();    // right of Toy Story
 
         this.add.text(600, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
         this.add.text(1700, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
@@ -568,11 +572,13 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
-        // DECK 13 split: left section is Splashdown pool, rest is deck
-        // pool at x=350 scale=4 → spans ~x=270-430
-        // Full deck center x=1040 scale 51 → spans x=20 to x=2060
-        water.create(350, 780, 'pool').setScale(4, 1).refreshBody();          // Splashdown pool IS the floor here
-        platforms.create(750, 780, 'deck').setScale(33, 1).refreshBody();    // right of splashdown
+        // DECK 13 split (total span x=20 to x=2060, width=2040px, y=780)
+        // Splashdown pool: 240px wide (scale=6), centered x=350 → spans x=230 to x=470
+        // Left sliver: x=20 to x=230 = 210px → center x=125, scale=5.25 → use scale=5, center x=120
+        // Right platform: x=470 to x=2060 = 1590px → center x=1265, scale=39.75 → use scale=40, center x=1265
+        platforms.create(120, 780, 'deck').setScale(5, 1).refreshBody();       // left sliver
+        water.create(350, 780, 'pool').setScale(6, 1).refreshBody();            // Splashdown pool IS the floor here
+        platforms.create(1265, 780, 'deck').setScale(40, 1).refreshBody();     // right of splashdown → reaches x=2065
 
         // AquaMouse Splashdown Pool
         this.add.text(350, 710, 'Splashdown', { fontSize: '14px', fill: '#000' });
