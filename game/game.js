@@ -286,12 +286,92 @@ class BootScene extends Phaser.Scene {
 class TitleScene extends Phaser.Scene {
     constructor() { super('TitleScene'); }
     create() {
-        let title = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 50, 'Disney Destiny Adventure', { fontSize: '40px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
-        let startText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY + 50, 'Click to Start', { fontSize: '24px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
-        
+        const W = this.scale.width;
+        const H = this.scale.height;
+        let g = this.add.graphics();
+
+        // Caribbean sky gradient
+        g.fillGradientStyle(0x87CEEB, 0x87CEEB, 0x00BFFF, 0x00BFFF, 1);
+        g.fillRect(0, 0, W, H * 0.65);
+
+        // Deep Caribbean ocean
+        g.fillGradientStyle(0x006994, 0x006994, 0x003d5c, 0x003d5c, 1);
+        g.fillRect(0, H * 0.65, W, H * 0.35);
+
+        // Ocean shimmer waves
+        g.fillStyle(0x007BA7, 0.5);
+        for (let i = 0; i < 12; i++) {
+            g.fillRect(i * (W/12), H * 0.65 + (i % 2) * 8, W / 12, 6);
+        }
+
+        // Sun
+        g.fillStyle(0xFFD700, 1);
+        g.fillCircle(W * 0.15, H * 0.18, 50);
+        g.lineStyle(3, 0xFFEC8B, 0.7);
+        for (let a = 0; a < 360; a += 30) {
+            let rad = Phaser.Math.DegToRad(a);
+            g.beginPath();
+            g.moveTo(W * 0.15 + Math.cos(rad) * 55, H * 0.18 + Math.sin(rad) * 55);
+            g.lineTo(W * 0.15 + Math.cos(rad) * 75, H * 0.18 + Math.sin(rad) * 75);
+            g.strokePath();
+        }
+
+        // Clouds
+        g.fillStyle(0xFFFFFF, 0.85);
+        [[W*0.35, H*0.12, 60], [W*0.6, H*0.08, 45], [W*0.8, H*0.15, 55]].forEach(([cx, cy, r]) => {
+            g.fillCircle(cx, cy, r);
+            g.fillCircle(cx + r*0.7, cy + 10, r * 0.7);
+            g.fillCircle(cx - r*0.6, cy + 10, r * 0.6);
+        });
+
+        // Disney Cruise Ship
+        let shipX = W * 0.5, shipY = H * 0.65;
+        g.fillStyle(0x003366, 1);
+        g.fillRect(shipX - 200, shipY - 30, 400, 50);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(shipX - 190, shipY - 90, 380, 60);
+        g.fillRect(shipX - 170, shipY - 140, 340, 52);
+        g.fillRect(shipX - 140, shipY - 185, 280, 47);
+        g.fillStyle(0xCC0000, 1);
+        g.fillRect(shipX - 200, shipY - 36, 400, 8);
+        g.fillStyle(0x87CEEB, 1);
+        for (let i = -3; i <= 3; i++) {
+            g.fillCircle(shipX + i * 50, shipY - 60, 7);
+            g.fillCircle(shipX + i * 45 + 15, shipY - 112, 6);
+        }
+        // Mickey-eared funnel
+        g.fillStyle(0xCC0000, 1);
+        g.fillRect(shipX + 40, shipY - 235, 40, 50);
+        g.fillStyle(0x000000, 1);
+        g.fillCircle(shipX + 50, shipY - 248, 18);
+        g.fillCircle(shipX + 70, shipY - 248, 18);
+        g.fillCircle(shipX + 60, shipY - 230, 26);
+        // Bow
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillTriangle(shipX + 190, shipY - 90, shipX + 240, shipY - 30, shipX + 190, shipY - 30);
+        g.fillStyle(0x003366, 1);
+        g.fillTriangle(shipX + 190, shipY - 30, shipX + 240, shipY - 30, shipX + 240, shipY + 20);
+
+        // Title
+        let titleBg = this.add.graphics();
+        titleBg.fillStyle(0x000000, 0.45);
+        titleBg.fillRoundedRect(W/2 - 300, H * 0.3 - 40, 600, 70, 16);
+
+        let title = this.add.text(W / 2, H * 0.3, '🌊 Disney Destiny Adventure 🌊', {
+            fontSize: '32px', fill: '#ffffff', fontFamily: 'Arial',
+            fontStyle: 'bold', align: 'center', stroke: '#002244', strokeThickness: 4
+        }).setOrigin(0.5);
+
+        let startText = this.add.text(W / 2, H * 0.42, 'Tap or Click to Start', {
+            fontSize: '22px', fill: '#FFD700', fontFamily: 'Arial', fontStyle: 'bold',
+            stroke: '#000', strokeThickness: 3
+        }).setOrigin(0.5);
+
+        this.tweens.add({ targets: startText, alpha: 0.3, duration: 800, yoyo: true, repeat: -1 });
+
         this.scale.on('resize', (gameSize) => {
-            title.setPosition(gameSize.width / 2, gameSize.height / 2 - 50);
-            startText.setPosition(gameSize.width / 2, gameSize.height / 2 + 50);
+            title.setPosition(gameSize.width / 2, gameSize.height * 0.3);
+            startText.setPosition(gameSize.width / 2, gameSize.height * 0.42);
         });
 
         this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
@@ -579,50 +659,74 @@ class GameScene extends Phaser.Scene {
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-        // Raft Lift Logic & Slide
-        this.physics.add.overlap(this.player, this.liftZone, () => {
-            if (!this.ridingRaft && this.player.body.touching.down) {
-                this.ridingRaft = true;
-                this.player.body.allowGravity = false;
-                this.player.setVelocity(0, 0);
+        // AquaMouse boarding zone - show prompt, require Enter/tap
+        this.nearRaft = false;
+        this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.boardPromptText = this.add.text(1200, 700, 'Press ENTER to board!', {
+            fontSize: '14px', fill: '#fff', backgroundColor: '#000', padding: { x: 6, y: 4 }
+        }).setOrigin(0.5).setVisible(false);
 
-                // 1. Lift Tween
-                this.tweens.add({
-                    targets: [this.player, this.raft],
-                    x: 750,
-                    y: 350, 
-                    duration: 3000,
-                    ease: 'Sine.easeInOut',
-                    onComplete: () => {
-                        // 2. Slide Tween (Both player and raft!)
-                        let pathObj = { t: 0 };
-                        this.tweens.add({
-                            targets: pathObj,
-                            t: 1,
-                            ease: 'Sine.easeInOut',
-                            duration: 4000,
-                            onUpdate: () => {
-                                let p = this.slideCurve.getPoint(pathObj.t);
-                                this.player.x = p.x;
-                                this.player.y = p.y - 10; // Player sits on raft
-                                this.raft.x = p.x;
-                                this.raft.y = p.y;
-                            },
-                            onComplete: () => {
-                                // 3. Splashdown & Hop Out
-                                this.ridingRaft = false;
-                                this.player.body.allowGravity = true;
-                                this.player.setVelocity(-200, -300); // Hop out!
-                                
-                                // Reset raft back to start
-                                this.raft.x = 1200; 
-                                this.raft.y = 750;
-                            }
-                        });
-                    }
-                });
+        this.physics.add.overlap(this.player, this.liftZone, () => {
+            this.nearRaft = true;
+            if (!this.ridingRaft && this.player.body.touching.down) {
+                this.boardPromptText.setVisible(true);
             }
         });
+
+        // Board the raft
+        const boardRaft = () => {
+            if (!this.nearRaft || this.ridingRaft) return;
+            this.ridingRaft = true;
+            this.boardPromptText.setVisible(false);
+            this.player.body.allowGravity = false;
+            this.player.setVelocity(0, 0);
+
+            // 1. Lift Tween - player sits on top of raft
+            this.tweens.add({
+                targets: [this.player, this.raft],
+                x: 750,
+                y: 350,
+                duration: 3000,
+                ease: 'Sine.easeInOut',
+                onUpdate: () => {
+                    // Keep player seated on raft during lift
+                    this.player.x = this.raft.x;
+                    this.player.y = this.raft.y - 24;
+                },
+                onComplete: () => {
+                    // 2. Slide Tween
+                    let pathObj = { t: 0 };
+                    this.tweens.add({
+                        targets: pathObj,
+                        t: 1,
+                        ease: 'Sine.easeInOut',
+                        duration: 4000,
+                        onUpdate: () => {
+                            let p = this.slideCurve.getPoint(pathObj.t);
+                            this.raft.x = p.x;
+                            this.raft.y = p.y;
+                            this.player.x = p.x;
+                            this.player.y = p.y - 24; // Seated on raft
+                        },
+                        onComplete: () => {
+                            // 3. Splashdown & Hop Out
+                            this.ridingRaft = false;
+                            this.player.body.allowGravity = true;
+                            this.player.setVelocity(-200, -300);
+                            this.raft.x = 1200;
+                            this.raft.y = 750;
+                        }
+                    });
+                }
+            });
+        };
+
+        // Desktop: Enter key boards
+        this.enterKey.on('down', boardRaft);
+
+        // Mobile: tap the raft zone
+        this.liftZone.setInteractive();
+        this.liftZone.on('pointerdown', boardRaft);
         
         // Collisions
         this.physics.add.collider(this.player, platforms);
@@ -682,32 +786,70 @@ class GameScene extends Phaser.Scene {
     }
 
     createMobileControls() {
-        this.input.addPointer(2); // Enable multi-touch
+        this.input.addPointer(3); // Multi-touch
 
-        const createBtn = (x_offset, y_offset, text, key, isRightSide=false) => {
-            let x = isRightSide ? this.scale.width - x_offset : x_offset;
-            let y = this.scale.height - y_offset;
-            let btn = this.add.image(x, y, 'btn').setScrollFactor(0).setInteractive();
-            let label = this.add.text(x, y, text, { fontSize: '32px', fill: '#000', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
-            
-            btn.on('pointerdown', () => { btn.setTint(0xaaaaaa); this.mobileInput[key] = true; });
-            btn.on('pointerup', () => { btn.clearTint(); this.mobileInput[key] = false; });
-            btn.on('pointerout', () => { btn.clearTint(); this.mobileInput[key] = false; });
-            return { btn, label, x_offset, y_offset, isRightSide };
-        };
+        // --- Floating Joystick ---
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        let joyBase = this.add.graphics().setScrollFactor(0).setDepth(20).setAlpha(0.5);
+        let joyKnob = this.add.graphics().setScrollFactor(0).setDepth(21).setAlpha(0.7);
 
-        let btns = [
-            createBtn(60, 80, '<', 'left'),
-            createBtn(160, 80, '>', 'right'),
-            createBtn(60, 80, '^', 'up', true) // Anchor to right side
-        ];
+        joyBase.fillStyle(0xffffff, 1);
+        joyBase.fillCircle(0, 0, JOY_RADIUS);
+        joyBase.lineStyle(3, 0x888888, 1);
+        joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        this.scale.on('resize', (gameSize) => {
-            for (let b of btns) {
-                let x = b.isRightSide ? gameSize.width - b.x_offset : b.x_offset;
-                let y = gameSize.height - b.y_offset;
-                b.btn.setPosition(x, y);
-                b.label.setPosition(x, y);
+        joyKnob.fillStyle(0x4488ff, 1);
+        joyKnob.fillCircle(0, 0, KNOB_RADIUS);
+
+        joyBase.setVisible(false);
+        joyKnob.setVisible(false);
+
+        let joyPointer = null;
+        let joyOrigin = { x: 0, y: 0 };
+
+        this.input.on('pointerdown', (ptr) => {
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                // Left side: spawn joystick at touch point
+                if (joyPointer === null) {
+                    joyPointer = ptr;
+                    joyOrigin.x = ptr.x;
+                    joyOrigin.y = ptr.y;
+                    joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                // Right side / second finger: jump
+                this.mobileInput.up = true;
+                this.time.delayedCall(100, () => this.mobileInput.up = false);
+            }
+        });
+
+        this.input.on('pointermove', (ptr) => {
+            if (joyPointer && ptr.id === joyPointer.id) {
+                let dx = ptr.x - joyOrigin.x;
+                let dy = ptr.y - joyOrigin.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let clamped = Math.min(dist, JOY_RADIUS);
+                let angle = Math.atan2(dy, dx);
+                let kx = joyOrigin.x + Math.cos(angle) * clamped;
+                let ky = joyOrigin.y + Math.sin(angle) * clamped;
+                joyKnob.setPosition(kx, ky);
+
+                // Set directional input based on horizontal deflection
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+            }
+        });
+
+        this.input.on('pointerup', (ptr) => {
+            if (joyPointer && ptr.id === joyPointer.id) {
+                joyPointer = null;
+                joyBase.setVisible(false);
+                joyKnob.setVisible(false);
+                this.mobileInput.left = false;
+                this.mobileInput.right = false;
             }
         });
     }
@@ -717,26 +859,23 @@ class GameScene extends Phaser.Scene {
         let jumpPower = this.inWater ? -300 : -550;
         
         if (this.onSlide) {
-            // Twirl logic!
             this.player.angle += 15;
-            this.player.setVelocity(0, 0); // Disable physics movement while sliding
-        } else if (this.ridingRaft) {
-            // Player is riding raft, don't allow normal movement
             this.player.setVelocity(0, 0);
+        } else if (this.ridingRaft) {
+            // Player is seated on raft - position controlled by tween, no physics movement
         } else {
             if (this.inWater && !this.wasInWater) {
-                // Just entered water, pick a new random color for floatie (0-3)
                 this.currentFloatieColor = Phaser.Math.Between(0, 3);
             }
 
             if (this.inWater) {
                 this.player.setTexture(this.selectedCharacter + '_swim_' + this.currentFloatieColor);
-                this.player.angle = (Math.sin(this.time.now / 150) * 10); // Swimming bob
+                this.player.angle = (Math.sin(this.time.now / 150) * 10);
             } else {
                 this.player.setTexture(this.selectedCharacter);
-                this.player.angle = 0; // Reset angle
+                this.player.angle = 0;
             }
-            // Movement
+
             let isLeft = this.cursors.left.isDown || this.mobileInput.left;
             let isRight = this.cursors.right.isDown || this.mobileInput.right;
             let isUp = this.cursors.up.isDown || this.mobileInput.up;
@@ -764,21 +903,25 @@ class GameScene extends Phaser.Scene {
         this.mouse.x += this.cartoonVx * dt;
         this.cat.x += this.cartoonVx * dt;
 
-        if (this.cartoonVx > 0 && this.cat.x > 1150) { // both ran off right edge
+        if (this.cartoonVx > 0 && this.cat.x > 1150) {
             this.cartoonVx = -100;
             this.cat.setScale(-1, 1);
             this.mouse.x = 1150;
             this.cat.x = 1180;
-        } else if (this.cartoonVx < 0 && this.cat.x < 930) { // both ran off left edge
+        } else if (this.cartoonVx < 0 && this.cat.x < 930) {
             this.cartoonVx = 100;
             this.cat.setScale(1, 1);
             this.mouse.x = 930;
             this.cat.x = 900; 
         }
 
-        // Reset states for the next frame
+        // Reset per-frame states
         this.wasInWater = this.inWater;
         this.inWater = false;
+        this.nearRaft = false;
+        if (!this.ridingRaft) {
+            this.boardPromptText.setVisible(false);
+        }
     }
 }
 
