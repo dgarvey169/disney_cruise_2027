@@ -467,13 +467,17 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
         // ----------------------------------------------------
-        platforms.create(1370, 1020, 'deck').setScale(51.5, 1).refreshBody(); 
+        // DECK 12 split: left section, Quiet Cove pool, middle, Toy Story Splash pool, right
+        // Quiet Cove pool spans ~x=550-710, Toy Story ~x=1670-1830
+        // Full deck is centered at x=1370 scale 51.5 → spans x=340 to x=2400
+        platforms.create(500, 1020, 'deck').setScale(7.5, 1).refreshBody();   // left of Quiet Cove
+        water.create(630, 1020, 'pool').setScale(2, 1).refreshBody();          // Quiet Cove pool (is the floor here)
+        platforms.create(1210, 1020, 'deck').setScale(25, 1).refreshBody();   // between pools
+        water.create(1750, 1020, 'pool').setScale(2, 1).refreshBody();         // Toy Story Splash pool
+        platforms.create(2100, 1020, 'deck').setScale(12, 1).refreshBody();   // right of Toy Story
 
         this.add.text(600, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
-        water.create(630, 1020, 'pool').setScale(2, 1).refreshBody(); 
-        
         this.add.text(1700, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
-        water.create(1750, 1020, 'pool').setScale(2, 1).refreshBody();
 
         doors.create(2000, 970, 'door');
         this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
@@ -484,11 +488,14 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
-        platforms.create(1040, 780, 'deck').setScale(51, 1).refreshBody();
+        // DECK 13 split: left section is Splashdown pool, rest is deck
+        // pool at x=350 scale=4 → spans ~x=270-430
+        // Full deck center x=1040 scale 51 → spans x=20 to x=2060
+        water.create(350, 780, 'pool').setScale(4, 1).refreshBody();          // Splashdown pool IS the floor here
+        platforms.create(750, 780, 'deck').setScale(33, 1).refreshBody();    // right of splashdown
 
         // AquaMouse Splashdown Pool
         this.add.text(350, 710, 'Splashdown', { fontSize: '14px', fill: '#000' });
-        water.create(350, 780, 'pool').setScale(4, 1).refreshBody();
 
         this.add.text(1200, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
         
