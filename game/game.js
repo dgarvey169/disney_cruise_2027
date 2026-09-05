@@ -727,8 +727,8 @@ class GameScene extends Phaser.Scene {
             });
         };
 
-        // Desktop: Enter key boards
-        this.enterKey.on('down', boardRaft);
+        // Desktop: Enter key and mobile tap are handled in update() and via zone tap
+        this.boardRaft = boardRaft;
 
         // Mobile: tap the raft zone
         this.liftZone.setInteractive();
@@ -897,6 +897,11 @@ class GameScene extends Phaser.Scene {
             if (isUp && this.player.body.touching.down) {
                 this.player.setVelocityY(jumpPower);
             }
+        }
+
+        // Enter key boards the AquaMouse (checked here so nearRaft is already set for this frame)
+        if (this.nearRaft && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+            this.boardRaft();
         }
         
         if (this.hasIceCream) {
