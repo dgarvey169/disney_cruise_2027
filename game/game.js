@@ -408,7 +408,7 @@ class GameScene extends Phaser.Scene {
             }
             // Physics ramp (invisible)
             let totalDist = steps * 40;
-            for (let i = -20; i <= totalDist; i += 4) { 
+            for (let i = -20; i <= totalDist + 8; i += 2) { 
                 let rx = startX + (i * dirX);
                 let ry = startY + (i * dirY) - 10;
                 let p = platforms.create(rx, ry, 'deck').setVisible(false);
@@ -462,7 +462,7 @@ class GameScene extends Phaser.Scene {
         this.add.text(1460, 1200, 'Eye Scream Treats', { fontSize: '14px', fill: '#000', backgroundColor: '#FFB6C1', padding: 4 });
 
         // Stairs up to Deck 12 (right-up)
-        createStaircase(100, 1260, 6, 1, -1);
+        createStaircase(60, 1290, 7, 1, -1);
 
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
@@ -479,7 +479,7 @@ class GameScene extends Phaser.Scene {
         this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
 
         // Stairs up to Deck 13 (left-up)
-        createStaircase(2300, 980, 6, -1, -1);
+        createStaircase(2300, 1010, 6, -1, -1);
 
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
