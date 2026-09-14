@@ -975,6 +975,61 @@ class GameScene extends Phaser.Scene {
         } else if (this.ridingRaft) {
             // Player is seated on raft - position controlled by tween, no physics movement
         } else {
+            let isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                         (this.wasd && this.wasd.left && this.wasd.left.isDown) || 
+                         this.mobileInput.left;
+
+            let isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                          (this.wasd && this.wasd.right && this.wasd.right.isDown) || 
+                          this.mobileInput.right;
+
+            let jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
+                              (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.up)) ||
+                              (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) ||
+                              this.mobileInput.up;
+
+            // Smooth automatic exit when walking toward pool edge / deck ledge
+            if (inWater) {
+                const poolExits = [
+                    // Deck 11 Main Pool (deck top y=1280)
+                    { yMin: 1250, yMax: 1330, deckY: 1280, leftEdge: 912, rightEdge: 1158, leftTarget: 874, rightTarget: 1196 },
+                    // Deck 12 Quiet Cove (deck top y=1000)
+                    { yMin: 970, yMax: 1050, deckY: 1000, leftEdge: 562, rightEdge: 703, leftTarget: 524, rightTarget: 741, xMax: 1000 },
+                    // Deck 12 Toy Story Splash (deck top y=1000)
+                    { yMin: 970, yMax: 1050, deckY: 1000, leftEdge: 1727, rightEdge: 1878, leftTarget: 1689, rightTarget: 1916, xMin: 1500 },
+                    // Deck 13 Splashdown (deck top y=760)
+                    { yMin: 730, yMax: 810, deckY: 760, leftEdge: 257, rightEdge: 443, leftTarget: 219, rightTarget: 481 }
+                ];
+
+                let halfH = this.player.body.height / 2;
+                for (let pe of poolExits) {
+                    if (this.player.y >= pe.yMin && this.player.y <= pe.yMax) {
+                        if (pe.xMin && this.player.x < pe.xMin) continue;
+                        if (pe.xMax && this.player.x > pe.xMax) continue;
+
+                        if (isLeft && this.player.x <= pe.leftEdge) {
+                            this.player.x = pe.leftTarget;
+                            this.player.y = pe.deckY - halfH;
+                            this.player.body.updateFromGameObject();
+                            this.player.setVelocityY(0);
+                            inWater = false;
+                            this.inWater = false;
+                            speed = 250;
+                            break;
+                        } else if (isRight && this.player.x >= pe.rightEdge) {
+                            this.player.x = pe.rightTarget;
+                            this.player.y = pe.deckY - halfH;
+                            this.player.body.updateFromGameObject();
+                            this.player.setVelocityY(0);
+                            inWater = false;
+                            this.inWater = false;
+                            speed = 250;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (inWater && !this.wasInWater) {
                 this.currentFloatieColor = Phaser.Math.Between(0, 3);
             }
@@ -990,57 +1045,12 @@ class GameScene extends Phaser.Scene {
                 this.player.angle = 0;
             }
 
-            let isLeft = (this.cursors.left && this.cursors.left.isDown) || 
-                         (this.wasd && this.wasd.left && this.wasd.left.isDown) || 
-                         this.mobileInput.left;
-
-            let isRight = (this.cursors.right && this.cursors.right.isDown) || 
-                          (this.wasd && this.wasd.right && this.wasd.right.isDown) || 
-                          this.mobileInput.right;
-
-            let jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
-                              (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.up)) ||
-                              (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) ||
-                              this.mobileInput.up;
-
-            // Auto step-out when swimming toward pool edge / deck ledge
-            let steppingOut = false;
-            if (inWater) {
-                const poolEdges = [
-                    { minX: 890, maxX: 1180 },  // Deck 11 Main Pool
-                    { minX: 535, maxX: 730 },   // Deck 12 Quiet Cove
-                    { minX: 1705, maxX: 1900 }, // Deck 12 Toy Story Splash
-                    { minX: 235, maxX: 465 }    // Deck 13 Splashdown
-                ];
-
-                for (let p of poolEdges) {
-                    if (this.player.x >= p.minX - 40 && this.player.x <= p.maxX + 40) {
-                        let nearLeft = (this.player.x <= p.minX + 25) || this.player.body.blocked.left || this.player.body.touching.left;
-                        let nearRight = (this.player.x >= p.maxX - 25) || this.player.body.blocked.right || this.player.body.touching.right;
-
-                        if (isLeft && nearLeft) {
-                            steppingOut = true;
-                            this.player.setVelocityX(-speed);
-                            this.player.setVelocityY(-280);
-                            break;
-                        } else if (isRight && nearRight) {
-                            steppingOut = true;
-                            this.player.setVelocityX(speed);
-                            this.player.setVelocityY(-280);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!steppingOut) {
-                if (isLeft) {
-                    this.player.setVelocityX(-speed);
-                } else if (isRight) {
-                    this.player.setVelocityX(speed);
-                } else {
-                    this.player.setVelocityX(0);
-                }
+            if (isLeft) {
+                this.player.setVelocityX(-speed);
+            } else if (isRight) {
+                this.player.setVelocityX(speed);
+            } else {
+                this.player.setVelocityX(0);
             }
 
             if (jumpPressed && (this.player.body.touching.down || inWater)) {
