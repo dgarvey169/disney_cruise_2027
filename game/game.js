@@ -863,7 +863,7 @@ class GameScene extends Phaser.Scene {
             window.removeEventListener('keyup', onNativeKeyUp);
         });
 
-        this.mobileInput = { left: false, right: false, up: false };
+        this.mobileInput = { left: false, right: false, up: false, down: false };
 
         if (!this.sys.game.device.os.desktop) {
             this.createMobileControls();
@@ -938,9 +938,10 @@ class GameScene extends Phaser.Scene {
                 let ky = joyOrigin.y + Math.sin(angle) * clamped;
                 joyKnob.setPosition(kx, ky);
 
-                // Set directional input based on horizontal deflection
+                // Set directional input based on deflection
                 this.mobileInput.left = dx < -15;
                 this.mobileInput.right = dx > 15;
+                this.mobileInput.down = dy > 15;
             }
         });
 
@@ -951,6 +952,7 @@ class GameScene extends Phaser.Scene {
                 joyKnob.setVisible(false);
                 this.mobileInput.left = false;
                 this.mobileInput.right = false;
+                this.mobileInput.down = false;
             }
         });
     }
@@ -1042,7 +1044,8 @@ class GameScene extends Phaser.Scene {
                        this.mobileInput.up;
 
             let isDown = (this.cursors.down && this.cursors.down.isDown) ||
-                         (this.wasd && this.wasd.down && this.wasd.down.isDown);
+                         (this.wasd && this.wasd.down && this.wasd.down.isDown) ||
+                         this.mobileInput.down;
 
             let halfH = this.player.body.height / 2;
             let bottomY = this.player.y + halfH;
@@ -1083,20 +1086,18 @@ class GameScene extends Phaser.Scene {
                         jumpPressed = false;
                         this.mobileInput.up = false;
                     }
-                    // Landing on Stair 1 while airborne/falling
-                    else if (this.player.body.velocity.y > 0 && this.player.x >= 65 && this.player.x <= 335) {
+                    // Landing on Stair 1 while airborne/falling (strictly above Deck 11 floor)
+                    else if (this.player.body.velocity.y > 0 && this.player.x >= 80 && this.player.x <= 330 && bottomY < 1260) {
                         let sY = 1340 - this.player.x;
-                        let isGroundedDeck11 = Math.abs(bottomY - 1280) < 4 && this.player.body.touching.down;
-                        if (!isGroundedDeck11 && bottomY >= sY - 10 && bottomY <= sY + 16) {
+                        if (bottomY >= sY - 6 && bottomY <= sY + 8) {
                             this.currentStair = 'deck11_to_12';
                             this.player.setVelocityY(0);
                         }
                     }
-                    // Landing on Stair 2 while airborne/falling
-                    else if (this.player.body.velocity.y > 0 && this.player.x >= 2065 && this.player.x <= 2295) {
+                    // Landing on Stair 2 while airborne/falling (strictly above Deck 12 floor)
+                    else if (this.player.body.velocity.y > 0 && this.player.x >= 2070 && this.player.x <= 2280 && bottomY < 980) {
                         let sY = 760 + (this.player.x - 2060);
-                        let isGroundedDeck12 = Math.abs(bottomY - 1000) < 4 && this.player.body.touching.down;
-                        if (!isGroundedDeck12 && bottomY >= sY - 10 && bottomY <= sY + 16) {
+                        if (bottomY >= sY - 6 && bottomY <= sY + 8) {
                             this.currentStair = 'deck12_to_13';
                             this.player.setVelocityY(0);
                         }
@@ -1112,12 +1113,11 @@ class GameScene extends Phaser.Scene {
 
                 // 2. Process movement on stairs
                 if (this.currentStair === 'deck11_to_12') {
-                    // If near the bottom of Stair 1 (Deck 11) and pressing Right without Up/Jump, exit stairs onto Deck 11
-                    if (this.player.x <= 120 && isRight && !isUp && !jumpPressed) {
+                    // Step off down to Deck 11 if pressing Down near the bottom
+                    if (isDown && this.player.x <= 100) {
                         this.player.y = 1280 - halfH;
                         this.player.body.reset(this.player.x, this.player.y);
                         this.player.body.allowGravity = true;
-                        this.player.setVelocityX(speed);
                         this.player.setVelocityY(0);
                         this.currentStair = null;
                     } else if (jumpPressed) {
@@ -1131,7 +1131,7 @@ class GameScene extends Phaser.Scene {
                     } else {
                         let targetFloorY = 1340 - this.player.x;
                         if (isLeft) {
-                            if (this.player.x <= 60) {
+                            if (this.player.x <= 65) {
                                 this.player.x = 60;
                                 this.player.y = 1280 - halfH;
                                 this.player.body.reset(this.player.x, this.player.y);
@@ -1178,12 +1178,11 @@ class GameScene extends Phaser.Scene {
                         }
                     }
                 } else if (this.currentStair === 'deck12_to_13') {
-                    // If near the bottom of Stair 2 (Deck 12) and pressing Left without Up/Jump, exit stairs onto Deck 12
-                    if (this.player.x >= 2240 && isLeft && !isUp && !jumpPressed) {
+                    // Step off down to Deck 12 if pressing Down near the bottom
+                    if (isDown && this.player.x >= 2260) {
                         this.player.y = 1000 - halfH;
                         this.player.body.reset(this.player.x, this.player.y);
                         this.player.body.allowGravity = true;
-                        this.player.setVelocityX(-speed);
                         this.player.setVelocityY(0);
                         this.currentStair = null;
                     } else if (jumpPressed) {
@@ -1197,7 +1196,7 @@ class GameScene extends Phaser.Scene {
                     } else {
                         let targetFloorY = 760 + (this.player.x - 2060);
                         if (isRight) {
-                            if (this.player.x >= 2300) {
+                            if (this.player.x >= 2295) {
                                 this.player.x = 2300;
                                 this.player.y = 1000 - halfH;
                                 this.player.body.reset(this.player.x, this.player.y);
