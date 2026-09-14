@@ -1059,11 +1059,11 @@ class GameScene extends Phaser.Scene {
                 // 1. Detect entering / mounting / landing on stairs
                 if (!this.currentStair) {
                     // Descending from Deck 12 onto Stair 1 (moving left)
-                    if (this.player.x >= 310 && this.player.x <= 350 && bottomY >= 985 && bottomY <= 1015 && isLeft && !jumpPressed) {
+                    if (this.player.x >= 310 && this.player.x <= 360 && bottomY >= 980 && bottomY <= 1025 && isLeft && !jumpPressed) {
                         this.currentStair = 'deck11_to_12';
                     }
                     // Descending from Deck 13 onto Stair 2 (moving right)
-                    else if (this.player.x >= 2050 && this.player.x <= 2090 && bottomY >= 745 && bottomY <= 775 && isRight && !jumpPressed) {
+                    else if (this.player.x >= 2040 && this.player.x <= 2090 && bottomY >= 740 && bottomY <= 785 && isRight && !jumpPressed) {
                         this.currentStair = 'deck12_to_13';
                     }
                     // Mounting Stair 1 from Deck 11 base (facing right, pressing Up / Jump)
@@ -1098,7 +1098,14 @@ class GameScene extends Phaser.Scene {
 
                 // 2. Process movement on stairs
                 if (this.currentStair === 'deck11_to_12') {
-                    if (jumpPressed) {
+                    // If near the bottom of Stair 1 (Deck 11) and pressing Right without Up/Jump, exit stairs onto Deck 11
+                    if (this.player.x <= 120 && isRight && !isUp && !jumpPressed) {
+                        this.player.y = 1280 - halfH;
+                        this.player.body.reset(this.player.x, this.player.y);
+                        this.player.setVelocityX(speed);
+                        this.player.setVelocityY(0);
+                        this.currentStair = null;
+                    } else if (jumpPressed) {
                         this.player.setVelocityY(jumpPower);
                         this.currentStair = null;
                         this.mobileInput.up = false;
@@ -1149,7 +1156,14 @@ class GameScene extends Phaser.Scene {
                         }
                     }
                 } else if (this.currentStair === 'deck12_to_13') {
-                    if (jumpPressed) {
+                    // If near the bottom of Stair 2 (Deck 12) and pressing Left without Up/Jump, exit stairs onto Deck 12
+                    if (this.player.x >= 2240 && isLeft && !isUp && !jumpPressed) {
+                        this.player.y = 1000 - halfH;
+                        this.player.body.reset(this.player.x, this.player.y);
+                        this.player.setVelocityX(-speed);
+                        this.player.setVelocityY(0);
+                        this.currentStair = null;
+                    } else if (jumpPressed) {
                         this.player.setVelocityY(jumpPower);
                         this.currentStair = null;
                         this.mobileInput.up = false;
