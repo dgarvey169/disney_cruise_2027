@@ -487,18 +487,6 @@ class GameScene extends Phaser.Scene {
                 this.add.image(sx, sy, 'deck').setScale(1, 0.5); // Visual step
                 this.add.image(sx, sy - 20, 'railing').setDepth(10);
             }
-            // Physics ramp (invisible)
-            let totalDist = steps * 40;
-            for (let i = -20; i <= totalDist; i += 4) { 
-                let rx = startX + (i * dirX);
-                let ry = startY + (i * dirY) - 10;
-                let p = platforms.create(rx, ry, 'deck').setVisible(false);
-                p.setDisplaySize(4, 4);
-                p.refreshBody();
-                p.body.checkCollision.down = false;
-                p.body.checkCollision.left = false;
-                p.body.checkCollision.right = false;
-            }
         };
 
         // ----------------------------------------------------
@@ -753,7 +741,9 @@ class GameScene extends Phaser.Scene {
         this.liftZone.on('pointerdown', boardRaft);
         
         // Collisions
-        this.physics.add.collider(this.player, platforms);
+        this.physics.add.collider(this.player, platforms, null, () => {
+            return this.currentStair === null;
+        }, this);
         
         this.physics.add.overlap(this.player, water, () => {
             this.inWater = true;
@@ -883,6 +873,7 @@ class GameScene extends Phaser.Scene {
         this.wasInWater = false;
         this.currentFloatieColor = 0;
         this.onSlide = false;
+        this.currentStair = null;
     }
 
     canBoardRaft() {
@@ -1045,17 +1036,199 @@ class GameScene extends Phaser.Scene {
                 this.player.angle = 0;
             }
 
-            if (isLeft) {
-                this.player.setVelocityX(-speed);
-            } else if (isRight) {
-                this.player.setVelocityX(speed);
-            } else {
-                this.player.setVelocityX(0);
-            }
+            let isUp = (this.cursors.up && this.cursors.up.isDown) ||
+                       (this.wasd && this.wasd.up && this.wasd.up.isDown) ||
+                       (this.spaceKey && this.spaceKey.isDown) ||
+                       this.mobileInput.up;
 
-            if (jumpPressed && (this.player.body.touching.down || inWater)) {
-                this.player.setVelocityY(jumpPower);
-                this.mobileInput.up = false;
+            let isDown = (this.cursors.down && this.cursors.down.isDown) ||
+                         (this.wasd && this.wasd.down && this.wasd.down.isDown);
+
+            let halfH = this.player.body.height / 2;
+            let bottomY = this.player.y + halfH;
+
+            // --- STAIRCASE TRAVERSAL SYSTEM (Option A) ---
+            // Stair 1: Deck 11 (floor y=1280) to Deck 12 (floor y=1000), x from 60 to 340. Slope: floorY = 1340 - x
+            // Stair 2: Deck 12 (floor y=1000) to Deck 13 (floor y=760), x from 2060 to 2300. Slope: floorY = 760 + (x - 2060)
+            if (!inWater) {
+                // Drop through stairs when pressing Down
+                if (this.currentStair && isDown) {
+                    this.currentStair = null;
+                }
+
+                // 1. Detect entering / mounting / landing on stairs
+                if (!this.currentStair) {
+                    // Descending from Deck 12 onto Stair 1 (moving left)
+                    if (this.player.x >= 310 && this.player.x <= 350 && bottomY >= 985 && bottomY <= 1015 && isLeft && !jumpPressed) {
+                        this.currentStair = 'deck11_to_12';
+                    }
+                    // Descending from Deck 13 onto Stair 2 (moving right)
+                    else if (this.player.x >= 2050 && this.player.x <= 2090 && bottomY >= 745 && bottomY <= 775 && isRight && !jumpPressed) {
+                        this.currentStair = 'deck12_to_13';
+                    }
+                    // Mounting Stair 1 from Deck 11 base (facing right, pressing Up / Jump)
+                    else if (this.player.x >= 40 && this.player.x <= 100 && bottomY >= 1265 && bottomY <= 1295 && isRight && (jumpPressed || isUp)) {
+                        this.currentStair = 'deck11_to_12';
+                        jumpPressed = false;
+                        this.mobileInput.up = false;
+                    }
+                    // Mounting Stair 2 from Deck 12 base (facing left, pressing Up / Jump)
+                    else if (this.player.x >= 2260 && this.player.x <= 2340 && bottomY >= 985 && bottomY <= 1015 && isLeft && (jumpPressed || isUp)) {
+                        this.currentStair = 'deck12_to_13';
+                        jumpPressed = false;
+                        this.mobileInput.up = false;
+                    }
+                    // Landing on Stair 1 while airborne/falling
+                    else if (this.player.body.velocity.y > 0 && this.player.x >= 65 && this.player.x <= 335) {
+                        let sY = 1340 - this.player.x;
+                        let isGroundedDeck11 = Math.abs(bottomY - 1280) < 4 && this.player.body.touching.down;
+                        if (!isGroundedDeck11 && bottomY >= sY - 10 && bottomY <= sY + 16) {
+                            this.currentStair = 'deck11_to_12';
+                        }
+                    }
+                    // Landing on Stair 2 while airborne/falling
+                    else if (this.player.body.velocity.y > 0 && this.player.x >= 2065 && this.player.x <= 2295) {
+                        let sY = 760 + (this.player.x - 2060);
+                        let isGroundedDeck12 = Math.abs(bottomY - 1000) < 4 && this.player.body.touching.down;
+                        if (!isGroundedDeck12 && bottomY >= sY - 10 && bottomY <= sY + 16) {
+                            this.currentStair = 'deck12_to_13';
+                        }
+                    }
+                }
+
+                // 2. Process movement on stairs
+                if (this.currentStair === 'deck11_to_12') {
+                    if (jumpPressed) {
+                        this.player.setVelocityY(jumpPower);
+                        this.currentStair = null;
+                        this.mobileInput.up = false;
+                        if (isLeft) this.player.setVelocityX(-speed);
+                        else if (isRight) this.player.setVelocityX(speed);
+                        else this.player.setVelocityX(0);
+                    } else {
+                        let targetFloorY = 1340 - this.player.x;
+                        if (isLeft) {
+                            this.player.setVelocityX(-speed);
+                            if (this.player.x <= 60) {
+                                this.player.x = 60;
+                                this.player.y = 1280 - halfH;
+                                this.player.body.reset(this.player.x, this.player.y);
+                                this.player.setVelocityX(-speed);
+                                this.player.setVelocityY(0);
+                                this.currentStair = null;
+                            } else {
+                                this.player.y = targetFloorY - halfH;
+                                this.player.body.y = targetFloorY - this.player.body.height;
+                                this.player.body.prev.y = this.player.body.y;
+                                this.player.setVelocityY(0);
+                                this.player.body.touching.down = true;
+                            }
+                        } else if (isRight) {
+                            this.player.setVelocityX(speed);
+                            if (this.player.x >= 340) {
+                                this.player.x = 340;
+                                this.player.y = 1000 - halfH;
+                                this.player.body.reset(this.player.x, this.player.y);
+                                this.player.setVelocityX(speed);
+                                this.player.setVelocityY(0);
+                                this.currentStair = null;
+                            } else {
+                                this.player.y = targetFloorY - halfH;
+                                this.player.body.y = targetFloorY - this.player.body.height;
+                                this.player.body.prev.y = this.player.body.y;
+                                this.player.setVelocityY(0);
+                                this.player.body.touching.down = true;
+                            }
+                        } else {
+                            this.player.setVelocityX(0);
+                            this.player.y = targetFloorY - halfH;
+                            this.player.body.y = targetFloorY - this.player.body.height;
+                            this.player.body.prev.y = this.player.body.y;
+                            this.player.setVelocityY(0);
+                            this.player.body.touching.down = true;
+                        }
+                    }
+                } else if (this.currentStair === 'deck12_to_13') {
+                    if (jumpPressed) {
+                        this.player.setVelocityY(jumpPower);
+                        this.currentStair = null;
+                        this.mobileInput.up = false;
+                        if (isLeft) this.player.setVelocityX(-speed);
+                        else if (isRight) this.player.setVelocityX(speed);
+                        else this.player.setVelocityX(0);
+                    } else {
+                        let targetFloorY = 760 + (this.player.x - 2060);
+                        if (isRight) {
+                            this.player.setVelocityX(speed);
+                            if (this.player.x >= 2300) {
+                                this.player.x = 2300;
+                                this.player.y = 1000 - halfH;
+                                this.player.body.reset(this.player.x, this.player.y);
+                                this.player.setVelocityX(speed);
+                                this.player.setVelocityY(0);
+                                this.currentStair = null;
+                            } else {
+                                this.player.y = targetFloorY - halfH;
+                                this.player.body.y = targetFloorY - this.player.body.height;
+                                this.player.body.prev.y = this.player.body.y;
+                                this.player.setVelocityY(0);
+                                this.player.body.touching.down = true;
+                            }
+                        } else if (isLeft) {
+                            this.player.setVelocityX(-speed);
+                            if (this.player.x <= 2060) {
+                                this.player.x = 2060;
+                                this.player.y = 760 - halfH;
+                                this.player.body.reset(this.player.x, this.player.y);
+                                this.player.setVelocityX(-speed);
+                                this.player.setVelocityY(0);
+                                this.currentStair = null;
+                            } else {
+                                this.player.y = targetFloorY - halfH;
+                                this.player.body.y = targetFloorY - this.player.body.height;
+                                this.player.body.prev.y = this.player.body.y;
+                                this.player.setVelocityY(0);
+                                this.player.body.touching.down = true;
+                            }
+                        } else {
+                            this.player.setVelocityX(0);
+                            this.player.y = targetFloorY - halfH;
+                            this.player.body.y = targetFloorY - this.player.body.height;
+                            this.player.body.prev.y = this.player.body.y;
+                            this.player.setVelocityY(0);
+                            this.player.body.touching.down = true;
+                        }
+                    }
+                } else {
+                    // Regular floor movement
+                    if (isLeft) {
+                        this.player.setVelocityX(-speed);
+                    } else if (isRight) {
+                        this.player.setVelocityX(speed);
+                    } else {
+                        this.player.setVelocityX(0);
+                    }
+
+                    if (jumpPressed && (this.player.body.touching.down || inWater)) {
+                        this.player.setVelocityY(jumpPower);
+                        this.mobileInput.up = false;
+                    }
+                }
+            } else {
+                // In water
+                this.currentStair = null;
+                if (isLeft) {
+                    this.player.setVelocityX(-speed);
+                } else if (isRight) {
+                    this.player.setVelocityX(speed);
+                } else {
+                    this.player.setVelocityX(0);
+                }
+
+                if (jumpPressed) {
+                    this.player.setVelocityY(jumpPower);
+                    this.mobileInput.up = false;
+                }
             }
         }
 
