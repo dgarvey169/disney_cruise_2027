@@ -802,7 +802,84 @@ class GameScene extends Phaser.Scene {
             }
         });
 
+        // Desktop keyboard controls (Arrow keys + WASD + Spacebar)
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.wasd = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            right: Phaser.Input.Keyboard.KeyCodes.D
+        });
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // Prevent browser scrolling on game control keys
+        this.input.keyboard.addCapture([
+            Phaser.Input.Keyboard.KeyCodes.UP,
+            Phaser.Input.Keyboard.KeyCodes.DOWN,
+            Phaser.Input.Keyboard.KeyCodes.LEFT,
+            Phaser.Input.Keyboard.KeyCodes.RIGHT,
+            Phaser.Input.Keyboard.KeyCodes.SPACE
+        ]);
+
+        // Canvas focus management: ensure clicking canvas re-focuses game
+        if (this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                this.game.canvas.focus();
+            });
+        }
+
+        // Global recovery listeners: prevent stuck keys on window blur, tab switch, or modifier release
+        const resetKeyInputs = () => {
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
+            }
+            if (this.mobileInput) {
+                this.mobileInput.left = false;
+                this.mobileInput.right = false;
+                this.mobileInput.up = false;
+            }
+        };
+
+        const onNativeKeyUp = (e) => {
+            // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'Space') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.wasd && this.wasd.up) this.wasd.up.isDown = false;
+                if (this.spaceKey) this.spaceKey.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.wasd && this.wasd.left) this.wasd.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.wasd && this.wasd.right) this.wasd.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.wasd && this.wasd.down) this.wasd.down.isDown = false;
+            }
+            // If user released a modifier key (Alt, Meta/Command, Control, Shift), reset all keys
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeyInputs();
+            }
+        };
+
+        window.addEventListener('blur', resetKeyInputs);
+        window.addEventListener('focus', resetKeyInputs);
+        window.addEventListener('keyup', onNativeKeyUp);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) resetKeyInputs();
+        });
+
+        this.events.once('shutdown', () => {
+            window.removeEventListener('blur', resetKeyInputs);
+            window.removeEventListener('focus', resetKeyInputs);
+            window.removeEventListener('keyup', onNativeKeyUp);
+        });
+
         this.mobileInput = { left: false, right: false, up: false };
 
         if (!this.sys.game.device.os.desktop) {
@@ -916,9 +993,18 @@ class GameScene extends Phaser.Scene {
                 this.player.angle = 0;
             }
 
-            let isLeft = this.cursors.left.isDown || this.mobileInput.left;
-            let isRight = this.cursors.right.isDown || this.mobileInput.right;
-            let isUp = this.cursors.up.isDown || this.mobileInput.up;
+            let isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                         (this.wasd && this.wasd.left && this.wasd.left.isDown) || 
+                         this.mobileInput.left;
+
+            let isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                          (this.wasd && this.wasd.right && this.wasd.right.isDown) || 
+                          this.mobileInput.right;
+
+            let jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
+                              (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.up)) ||
+                              (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) ||
+                              this.mobileInput.up;
 
             if (isLeft) {
                 this.player.setVelocityX(-speed);
@@ -928,7 +1014,7 @@ class GameScene extends Phaser.Scene {
                 this.player.setVelocityX(0);
             }
 
-            if (isUp && this.player.body.touching.down) {
+            if (jumpPressed && (this.player.body.touching.down || this.inWater)) {
                 this.player.setVelocityY(jumpPower);
             }
         }
