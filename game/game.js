@@ -1060,4 +1060,5 @@ class GameScene extends Phaser.Scene {
 }
 
 config.scene = [BootScene, TitleScene, CharacterSelectScene, GameScene];
-const game = new Phaser.Game(config);
+window.game = new Phaser.Game(config);
+const game = window.game;
