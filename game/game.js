@@ -668,22 +668,55 @@ class GameScene extends Phaser.Scene {
         // AquaMouse boarding zone - show prompt, require Enter/tap
         this.nearRaft = false;
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-        this.boardPromptText = this.add.text(1200, 700, 'Press ENTER to board!', {
-            fontSize: '14px', fill: '#fff', backgroundColor: '#000', padding: { x: 6, y: 4 }
-        }).setOrigin(0.5).setVisible(false);
+
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        const promptLabel = isTouch ? 'Tap to board AquaMouse! 🛶' : 'Press ENTER or click to board! 🛶';
+        this.boardPromptText = this.add.text(1200, 700, promptLabel, {
+            fontSize: '14px', fill: '#fff', backgroundColor: '#0055aa', padding: { x: 8, y: 5 }, fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(25).setVisible(false);
+        this.boardPromptText.setInteractive({ useHandCursor: true });
+        this.boardPromptText.on('pointerdown', () => this.boardRaft());
+
+        // Mobile On-Screen Board Button (Fixed to HUD)
+        this.mobileBoardBtn = this.add.container(0, 0).setScrollFactor(0).setDepth(100).setVisible(false);
+        let btnBg = this.add.graphics();
+        btnBg.fillStyle(0x0066cc, 0.95);
+        btnBg.fillRoundedRect(-80, -25, 160, 50, 12);
+        btnBg.lineStyle(3, 0xffd700, 1);
+        btnBg.strokeRoundedRect(-80, -25, 160, 50, 12);
+
+        let btnText = this.add.text(0, 0, 'BOARD RAFT 🛶', {
+            fontSize: '15px',
+            fontStyle: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        this.mobileBoardBtn.add([btnBg, btnText]);
+        this.mobileBoardBtn.setSize(160, 50);
+        this.mobileBoardBtn.setInteractive(new Phaser.Geom.Rectangle(-80, -25, 160, 50), Phaser.Geom.Rectangle.Contains);
+        this.mobileBoardBtn.on('pointerdown', (pointer, localX, localY, event) => {
+            if (event && event.stopPropagation) event.stopPropagation();
+            this.boardRaft();
+        });
+
+        const updateBoardBtnPos = (w, h) => {
+            this.mobileBoardBtn.setPosition(w - 100, h - 130);
+        };
+        updateBoardBtnPos(this.scale.width, this.scale.height);
+        this.scale.on('resize', (gameSize) => {
+            updateBoardBtnPos(gameSize.width, gameSize.height);
+        });
 
         this.physics.add.overlap(this.player, this.liftZone, () => {
             this.nearRaft = true;
-            if (!this.ridingRaft && this.player.body.touching.down) {
-                this.boardPromptText.setVisible(true);
-            }
         });
 
         // Board the raft
         const boardRaft = () => {
-            if (!this.nearRaft || this.ridingRaft) return;
+            if (!this.canBoardRaft() || this.ridingRaft) return;
             this.ridingRaft = true;
-            this.boardPromptText.setVisible(false);
+            if (this.boardPromptText) this.boardPromptText.setVisible(false);
+            if (this.mobileBoardBtn) this.mobileBoardBtn.setVisible(false);
             this.player.body.allowGravity = false;
             this.player.setVelocity(0, 0);
 
@@ -727,11 +760,13 @@ class GameScene extends Phaser.Scene {
             });
         };
 
-        // Desktop: Enter key and mobile tap are handled in update() and via zone tap
         this.boardRaft = boardRaft;
 
-        // Mobile: tap the raft zone
-        this.liftZone.setInteractive();
+        // Make raft and liftZone clickable / tappable
+        this.raft.setInteractive({ useHandCursor: true });
+        this.raft.on('pointerdown', boardRaft);
+
+        this.liftZone.setInteractive(new Phaser.Geom.Rectangle(0, 0, 80, 80), Phaser.Geom.Rectangle.Contains);
         this.liftZone.on('pointerdown', boardRaft);
         
         // Collisions
@@ -791,6 +826,16 @@ class GameScene extends Phaser.Scene {
         this.onSlide = false;
     }
 
+    canBoardRaft() {
+        if (this.ridingRaft) return false;
+        if (this.nearRaft) return true;
+        if (this.player && this.raft) {
+            let dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.raft.x, this.raft.y);
+            return dist < 100;
+        }
+        return false;
+    }
+
     createMobileControls() {
         this.input.addPointer(3); // Multi-touch
 
@@ -815,6 +860,14 @@ class GameScene extends Phaser.Scene {
         let joyOrigin = { x: 0, y: 0 };
 
         this.input.on('pointerdown', (ptr) => {
+            // If tapping the on-screen board button, ignore generic jump
+            if (this.mobileBoardBtn && this.mobileBoardBtn.visible) {
+                let bounds = this.mobileBoardBtn.getBounds();
+                if (bounds.contains(ptr.x, ptr.y)) {
+                    return;
+                }
+            }
+
             const halfW = this.scale.width / 2;
             if (ptr.x < halfW) {
                 // Left side: spawn joystick at touch point
@@ -899,8 +952,22 @@ class GameScene extends Phaser.Scene {
             }
         }
 
-        // Enter key boards the AquaMouse (checked here so nearRaft is already set for this frame)
-        if (this.nearRaft && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+        // AquaMouse boarding handling & UI visibility
+        let canBoard = this.canBoardRaft();
+        if (canBoard && !this.ridingRaft) {
+            this.boardPromptText.setVisible(true);
+            if (this.mobileBoardBtn && (!this.sys.game.device.os.desktop || this.sys.game.device.input.touch)) {
+                this.mobileBoardBtn.setVisible(true);
+            }
+        } else {
+            this.boardPromptText.setVisible(false);
+            if (this.mobileBoardBtn) {
+                this.mobileBoardBtn.setVisible(false);
+            }
+        }
+
+        // Enter key boards the AquaMouse
+        if (canBoard && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
             this.boardRaft();
         }
         
@@ -930,9 +997,6 @@ class GameScene extends Phaser.Scene {
         this.wasInWater = this.inWater;
         this.inWater = false;
         this.nearRaft = false;
-        if (!this.ridingRaft) {
-            this.boardPromptText.setVisible(false);
-        }
     }
 }
 
