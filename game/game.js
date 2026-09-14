@@ -662,6 +662,12 @@ class GameScene extends Phaser.Scene {
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
         this.player.setBounce(0.0);
         this.player.setCollideWorldBounds(true);
+        this.player.setInteractive({ useHandCursor: true });
+        this.player.on('pointerdown', () => {
+            if (this.canBoardRaft()) {
+                this.boardRaft();
+            }
+        });
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
@@ -679,24 +685,6 @@ class GameScene extends Phaser.Scene {
         this.boardPromptText.setInteractive({ useHandCursor: true });
         this.boardPromptText.on('pointerdown', () => this.boardRaft());
 
-        // Connect DOM Board Button
-        const domBtn = document.getElementById('aqua-board-btn');
-        if (domBtn && !domBtn._hasBoardListener) {
-            domBtn._hasBoardListener = true;
-            const onBoardClick = (e) => {
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-                if (window.gameScene && typeof window.gameScene.boardRaft === 'function') {
-                    window.gameScene.boardRaft();
-                }
-            };
-            domBtn.addEventListener('pointerdown', onBoardClick);
-            domBtn.addEventListener('touchstart', onBoardClick);
-            domBtn.addEventListener('click', onBoardClick);
-        }
-
         this.physics.add.overlap(this.player, this.liftZone, () => {
             this.nearRaft = true;
         });
@@ -706,8 +694,6 @@ class GameScene extends Phaser.Scene {
             if (this.ridingRaft) return;
             this.ridingRaft = true;
 
-            const dBtn = document.getElementById('aqua-board-btn');
-            if (dBtn) dBtn.style.display = 'none';
             if (this.boardPromptText) this.boardPromptText.setVisible(false);
 
             // Crucial: disable body collisions so platforms and decks do not fight the tween
@@ -949,13 +935,10 @@ class GameScene extends Phaser.Scene {
 
         // AquaMouse boarding handling & UI visibility
         let canBoard = this.canBoardRaft();
-        const domBoardBtn = document.getElementById('aqua-board-btn');
         if (canBoard && !this.ridingRaft) {
             this.boardPromptText.setVisible(true);
-            if (domBoardBtn) domBoardBtn.style.display = 'block';
         } else {
             this.boardPromptText.setVisible(false);
-            if (domBoardBtn) domBoardBtn.style.display = 'none';
         }
 
         // Enter key boards the AquaMouse
