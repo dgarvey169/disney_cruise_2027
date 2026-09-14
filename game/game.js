@@ -475,6 +475,7 @@ class GameScene extends Phaser.Scene {
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
+        this.water = water;
         const slides = this.physics.add.staticGroup();
         const doors = this.physics.add.staticGroup();
 
@@ -488,7 +489,7 @@ class GameScene extends Phaser.Scene {
             }
             // Physics ramp (invisible)
             let totalDist = steps * 40;
-            for (let i = -20; i <= totalDist + 8; i += 2) { 
+            for (let i = -20; i <= totalDist; i += 4) { 
                 let rx = startX + (i * dirX);
                 let ry = startY + (i * dirY) - 10;
                 let p = platforms.create(rx, ry, 'deck').setVisible(false);
@@ -505,6 +506,7 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         platforms.create(450, 1300, 'deck').setScale(22, 1).refreshBody(); 
         water.create(1040, 1300, 'pool').setScale(7.5, 1).refreshBody();   
+        platforms.create(1040, 1320, 'deck').setScale(7.5, 1).setVisible(false).refreshBody(); // Pool floor
         platforms.create(1790, 1300, 'deck').setScale(30.5, 1).refreshBody(); 
         
         doors.create(400, 1250, 'door'); 
@@ -547,17 +549,12 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y = 1020
         // ----------------------------------------------------
-        // DECK 12 split (total span x=340 to x=2400, width=2060px, y=1020)
-        // Pool texture = 40px, deck texture = 40px, scale multiplies that width.
-        // Quiet Cove pool: 200px wide (scale=5), centered x=630 → spans x=530 to x=730
-        // Left platform: x=340 to x=530 = 190px wide → center x=435, scale=4.75 → use scale=5, center x=440
-        // Toy Story pool: 200px wide (scale=5), centered x=1800 → spans x=1700 to x=1900
-        // Middle platform: x=730 to x=1700 = 970px → center x=1215, scale=24.25 → use scale=24, center x=1210
-        // Right platform: x=1900 to x=2400 = 500px → center x=2150, scale=12.5 → use scale=13, center x=2160
         platforms.create(440, 1020, 'deck').setScale(5, 1).refreshBody();      // left of Quiet Cove
         water.create(630, 1020, 'pool').setScale(5, 1).refreshBody();           // Quiet Cove pool
-        platforms.create(1210, 1020, 'deck').setScale(24, 1).refreshBody();    // between pools
+        platforms.create(630, 1040, 'deck').setScale(5, 1).setVisible(false).refreshBody(); // Quiet Cove floor
+        platforms.create(1215, 1020, 'deck').setScale(24.5, 1).refreshBody();  // between pools
         water.create(1800, 1020, 'pool').setScale(5, 1).refreshBody();          // Toy Story Splash pool
+        platforms.create(1800, 1040, 'deck').setScale(5, 1).setVisible(false).refreshBody(); // Toy Story floor
         platforms.create(2160, 1020, 'deck').setScale(13, 1).refreshBody();    // right of Toy Story
 
         this.add.text(600, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
@@ -572,12 +569,9 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 13 (AquaMouse) - y = 780
         // ----------------------------------------------------
-        // DECK 13 split (total span x=20 to x=2060, width=2040px, y=780)
-        // Splashdown pool: 240px wide (scale=6), centered x=350 → spans x=230 to x=470
-        // Left sliver: x=20 to x=230 = 210px → center x=125, scale=5.25 → use scale=5, center x=120
-        // Right platform: x=470 to x=2060 = 1590px → center x=1265, scale=39.75 → use scale=40, center x=1265
-        platforms.create(120, 780, 'deck').setScale(5, 1).refreshBody();       // left sliver
-        water.create(350, 780, 'pool').setScale(6, 1).refreshBody();            // Splashdown pool IS the floor here
+        platforms.create(125, 780, 'deck').setScale(5.5, 1).refreshBody();     // left sliver
+        water.create(350, 780, 'pool').setScale(6, 1).refreshBody();            // Splashdown pool
+        platforms.create(350, 800, 'deck').setScale(6, 1).setVisible(false).refreshBody(); // Splashdown floor
         platforms.create(1265, 780, 'deck').setScale(40, 1).refreshBody();     // right of splashdown → reaches x=2065
 
         // AquaMouse Splashdown Pool
@@ -760,7 +754,6 @@ class GameScene extends Phaser.Scene {
         
         // Collisions
         this.physics.add.collider(this.player, platforms);
-        this.physics.add.collider(this.player, water);
         
         this.physics.add.overlap(this.player, water, () => {
             this.inWater = true;
@@ -972,8 +965,9 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
-        let speed = this.inWater ? 100 : 250;
-        let jumpPower = this.inWater ? -300 : -550;
+        let inWater = this.inWater || (this.water && this.physics.overlap(this.player, this.water));
+        let speed = inWater ? 130 : 250;
+        let jumpPower = inWater ? -420 : -550;
         
         if (this.onSlide) {
             this.player.angle += 15;
@@ -981,13 +975,16 @@ class GameScene extends Phaser.Scene {
         } else if (this.ridingRaft) {
             // Player is seated on raft - position controlled by tween, no physics movement
         } else {
-            if (this.inWater && !this.wasInWater) {
+            if (inWater && !this.wasInWater) {
                 this.currentFloatieColor = Phaser.Math.Between(0, 3);
             }
 
-            if (this.inWater) {
+            if (inWater) {
                 this.player.setTexture(this.selectedCharacter + '_swim_' + this.currentFloatieColor);
                 this.player.angle = (Math.sin(this.time.now / 150) * 10);
+                if (this.player.body.velocity.y > 160) {
+                    this.player.body.setVelocityY(160);
+                }
             } else {
                 this.player.setTexture(this.selectedCharacter);
                 this.player.angle = 0;
@@ -1014,8 +1011,9 @@ class GameScene extends Phaser.Scene {
                 this.player.setVelocityX(0);
             }
 
-            if (jumpPressed && (this.player.body.touching.down || this.inWater)) {
+            if (jumpPressed && (this.player.body.touching.down || inWater)) {
                 this.player.setVelocityY(jumpPower);
+                this.mobileInput.up = false;
             }
         }
 
@@ -1055,7 +1053,7 @@ class GameScene extends Phaser.Scene {
         }
 
         // Reset per-frame states
-        this.wasInWater = this.inWater;
+        this.wasInWater = inWater;
         this.inWater = false;
         this.nearRaft = false;
     }
