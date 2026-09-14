@@ -18,11 +18,37 @@
         canvas {
             display: block;
         }
+        #aqua-board-btn {
+            display: none;
+            position: fixed;
+            bottom: 85px;
+            right: 25px;
+            padding: 14px 22px;
+            background: linear-gradient(135deg, #0052cc, #0088ff);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            border: 3px solid #ffd700;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            z-index: 99999;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #aqua-board-btn:active {
+            transform: scale(0.95);
+            background: linear-gradient(135deg, #003d99, #0066cc);
+        }
     </style>
     <!-- Load Phaser 3 via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
+    <button id="aqua-board-btn" type="button">BOARD RAFT 🛶</button>
     <script src="game.js"></script>
 </body>
 </html>

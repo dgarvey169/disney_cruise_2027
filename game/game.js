@@ -665,6 +665,8 @@ class GameScene extends Phaser.Scene {
 
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
+        window.gameScene = this;
+
         // AquaMouse boarding zone - show prompt, require Enter/tap
         this.nearRaft = false;
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
@@ -677,35 +679,23 @@ class GameScene extends Phaser.Scene {
         this.boardPromptText.setInteractive({ useHandCursor: true });
         this.boardPromptText.on('pointerdown', () => this.boardRaft());
 
-        // Mobile On-Screen Board Button (Fixed to HUD)
-        this.mobileBoardBtn = this.add.container(0, 0).setScrollFactor(0).setDepth(100).setVisible(false);
-        let btnBg = this.add.graphics();
-        btnBg.fillStyle(0x0066cc, 0.95);
-        btnBg.fillRoundedRect(-80, -25, 160, 50, 12);
-        btnBg.lineStyle(3, 0xffd700, 1);
-        btnBg.strokeRoundedRect(-80, -25, 160, 50, 12);
-
-        let btnText = this.add.text(0, 0, 'BOARD RAFT 🛶', {
-            fontSize: '15px',
-            fontStyle: 'bold',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-
-        this.mobileBoardBtn.add([btnBg, btnText]);
-        this.mobileBoardBtn.setSize(160, 50);
-        this.mobileBoardBtn.setInteractive(new Phaser.Geom.Rectangle(-80, -25, 160, 50), Phaser.Geom.Rectangle.Contains);
-        this.mobileBoardBtn.on('pointerdown', (pointer, localX, localY, event) => {
-            if (event && event.stopPropagation) event.stopPropagation();
-            this.boardRaft();
-        });
-
-        const updateBoardBtnPos = (w, h) => {
-            this.mobileBoardBtn.setPosition(w - 100, h - 130);
-        };
-        updateBoardBtnPos(this.scale.width, this.scale.height);
-        this.scale.on('resize', (gameSize) => {
-            updateBoardBtnPos(gameSize.width, gameSize.height);
-        });
+        // Connect DOM Board Button
+        const domBtn = document.getElementById('aqua-board-btn');
+        if (domBtn && !domBtn._hasBoardListener) {
+            domBtn._hasBoardListener = true;
+            const onBoardClick = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (window.gameScene && typeof window.gameScene.boardRaft === 'function') {
+                    window.gameScene.boardRaft();
+                }
+            };
+            domBtn.addEventListener('pointerdown', onBoardClick);
+            domBtn.addEventListener('touchstart', onBoardClick);
+            domBtn.addEventListener('click', onBoardClick);
+        }
 
         this.physics.add.overlap(this.player, this.liftZone, () => {
             this.nearRaft = true;
@@ -713,12 +703,22 @@ class GameScene extends Phaser.Scene {
 
         // Board the raft
         const boardRaft = () => {
-            if (!this.canBoardRaft() || this.ridingRaft) return;
+            if (this.ridingRaft) return;
             this.ridingRaft = true;
+
+            const dBtn = document.getElementById('aqua-board-btn');
+            if (dBtn) dBtn.style.display = 'none';
             if (this.boardPromptText) this.boardPromptText.setVisible(false);
-            if (this.mobileBoardBtn) this.mobileBoardBtn.setVisible(false);
-            this.player.body.allowGravity = false;
-            this.player.setVelocity(0, 0);
+
+            // Crucial: disable body collisions so platforms and decks do not fight the tween
+            if (this.player && this.player.body) {
+                this.player.body.enable = false;
+                this.player.setVelocity(0, 0);
+            }
+
+            // Snap player directly to raft seat
+            this.player.x = this.raft.x;
+            this.player.y = this.raft.y - 24;
 
             // 1. Lift Tween - player sits on top of raft
             this.tweens.add({
@@ -750,8 +750,11 @@ class GameScene extends Phaser.Scene {
                         onComplete: () => {
                             // 3. Splashdown & Hop Out
                             this.ridingRaft = false;
-                            this.player.body.allowGravity = true;
-                            this.player.setVelocity(-200, -300);
+                            if (this.player && this.player.body) {
+                                this.player.body.enable = true;
+                                this.player.body.allowGravity = true;
+                                this.player.setVelocity(-200, -300);
+                            }
                             this.raft.x = 1200;
                             this.raft.y = 750;
                         }
@@ -831,7 +834,7 @@ class GameScene extends Phaser.Scene {
         if (this.nearRaft) return true;
         if (this.player && this.raft) {
             let dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.raft.x, this.raft.y);
-            return dist < 100;
+            return dist < 140;
         }
         return false;
     }
@@ -860,14 +863,6 @@ class GameScene extends Phaser.Scene {
         let joyOrigin = { x: 0, y: 0 };
 
         this.input.on('pointerdown', (ptr) => {
-            // If tapping the on-screen board button, ignore generic jump
-            if (this.mobileBoardBtn && this.mobileBoardBtn.visible) {
-                let bounds = this.mobileBoardBtn.getBounds();
-                if (bounds.contains(ptr.x, ptr.y)) {
-                    return;
-                }
-            }
-
             const halfW = this.scale.width / 2;
             if (ptr.x < halfW) {
                 // Left side: spawn joystick at touch point
@@ -954,16 +949,13 @@ class GameScene extends Phaser.Scene {
 
         // AquaMouse boarding handling & UI visibility
         let canBoard = this.canBoardRaft();
+        const domBoardBtn = document.getElementById('aqua-board-btn');
         if (canBoard && !this.ridingRaft) {
             this.boardPromptText.setVisible(true);
-            if (this.mobileBoardBtn && (!this.sys.game.device.os.desktop || this.sys.game.device.input.touch)) {
-                this.mobileBoardBtn.setVisible(true);
-            }
+            if (domBoardBtn) domBoardBtn.style.display = 'block';
         } else {
             this.boardPromptText.setVisible(false);
-            if (this.mobileBoardBtn) {
-                this.mobileBoardBtn.setVisible(false);
-            }
+            if (domBoardBtn) domBoardBtn.style.display = 'none';
         }
 
         // Enter key boards the AquaMouse
