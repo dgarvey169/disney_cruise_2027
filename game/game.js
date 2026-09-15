@@ -1049,6 +1049,7 @@ class GameScene extends Phaser.Scene {
 
             let halfH = this.player.body.height / 2;
             let bottomY = this.player.y + halfH;
+            let prevBottomY = this.player.body.prev ? (this.player.body.prev.y + this.player.body.height) : bottomY;
 
             // --- STAIRCASE TRAVERSAL SYSTEM (Option A) ---
             // Stair 1: Deck 11 (floor y=1280) to Deck 12 (floor y=1000), x from 60 to 340. Slope: floorY = 1340 - x
@@ -1065,41 +1066,51 @@ class GameScene extends Phaser.Scene {
                     // Descending from Deck 12 onto Stair 1 (moving left)
                     if (this.player.x >= 310 && this.player.x <= 360 && bottomY >= 980 && bottomY <= 1025 && isLeft && !jumpPressed) {
                         this.currentStair = 'deck11_to_12';
-                        this.player.setVelocityY(0);
+                        let sY = 1340 - this.player.x;
+                        this.player.body.reset(this.player.x, sY - halfH);
+                        this.player.body.allowGravity = false;
                     }
                     // Descending from Deck 13 onto Stair 2 (moving right)
                     else if (this.player.x >= 2040 && this.player.x <= 2090 && bottomY >= 740 && bottomY <= 785 && isRight && !jumpPressed) {
                         this.currentStair = 'deck12_to_13';
-                        this.player.setVelocityY(0);
+                        let sY = 760 + (this.player.x - 2060);
+                        this.player.body.reset(this.player.x, sY - halfH);
+                        this.player.body.allowGravity = false;
                     }
                     // Mounting Stair 1 from Deck 11 base (facing right, pressing Up / Jump)
                     else if (this.player.x >= 40 && this.player.x <= 100 && bottomY >= 1265 && bottomY <= 1295 && isRight && (jumpPressed || isUp)) {
                         this.currentStair = 'deck11_to_12';
-                        this.player.setVelocityY(0);
+                        let sY = 1340 - this.player.x;
+                        this.player.body.reset(this.player.x, sY - halfH);
+                        this.player.body.allowGravity = false;
                         jumpPressed = false;
                         this.mobileInput.up = false;
                     }
                     // Mounting Stair 2 from Deck 12 base (facing left, pressing Up / Jump)
                     else if (this.player.x >= 2260 && this.player.x <= 2340 && bottomY >= 985 && bottomY <= 1015 && isLeft && (jumpPressed || isUp)) {
                         this.currentStair = 'deck12_to_13';
-                        this.player.setVelocityY(0);
+                        let sY = 760 + (this.player.x - 2060);
+                        this.player.body.reset(this.player.x, sY - halfH);
+                        this.player.body.allowGravity = false;
                         jumpPressed = false;
                         this.mobileInput.up = false;
                     }
                     // Landing on Stair 1 while airborne/falling (strictly above Deck 11 floor)
-                    else if (this.player.body.velocity.y > 0 && this.player.x >= 80 && this.player.x <= 330 && bottomY < 1260) {
+                    else if (this.player.body.velocity.y > 0 && this.player.x >= 65 && this.player.x <= 335 && bottomY < 1260) {
                         let sY = 1340 - this.player.x;
-                        if (bottomY >= sY - 6 && bottomY <= sY + 8) {
+                        if ((bottomY >= sY - 8 && bottomY <= sY + 25) || (prevBottomY <= sY && bottomY >= sY)) {
                             this.currentStair = 'deck11_to_12';
-                            this.player.setVelocityY(0);
+                            this.player.body.reset(this.player.x, sY - halfH);
+                            this.player.body.allowGravity = false;
                         }
                     }
                     // Landing on Stair 2 while airborne/falling (strictly above Deck 12 floor)
-                    else if (this.player.body.velocity.y > 0 && this.player.x >= 2070 && this.player.x <= 2280 && bottomY < 980) {
+                    else if (this.player.body.velocity.y > 0 && this.player.x >= 2065 && this.player.x <= 2295 && bottomY < 980) {
                         let sY = 760 + (this.player.x - 2060);
-                        if (bottomY >= sY - 6 && bottomY <= sY + 8) {
+                        if ((bottomY >= sY - 8 && bottomY <= sY + 25) || (prevBottomY <= sY && bottomY >= sY)) {
                             this.currentStair = 'deck12_to_13';
-                            this.player.setVelocityY(0);
+                            this.player.body.reset(this.player.x, sY - halfH);
+                            this.player.body.allowGravity = false;
                         }
                     }
                 }
@@ -1113,14 +1124,7 @@ class GameScene extends Phaser.Scene {
 
                 // 2. Process movement on stairs
                 if (this.currentStair === 'deck11_to_12') {
-                    // Step off down to Deck 11 if pressing Down near the bottom
-                    if (isDown && this.player.x <= 100) {
-                        this.player.y = 1280 - halfH;
-                        this.player.body.reset(this.player.x, this.player.y);
-                        this.player.body.allowGravity = true;
-                        this.player.setVelocityY(0);
-                        this.currentStair = null;
-                    } else if (jumpPressed) {
+                    if (jumpPressed) {
                         this.player.body.allowGravity = true;
                         this.player.setVelocityY(jumpPower);
                         this.currentStair = null;
@@ -1128,64 +1132,36 @@ class GameScene extends Phaser.Scene {
                         if (isLeft) this.player.setVelocityX(-speed);
                         else if (isRight) this.player.setVelocityX(speed);
                         else this.player.setVelocityX(0);
-                    } else {
-                        let targetFloorY = 1340 - this.player.x;
-                        if (isLeft) {
-                            if (this.player.x <= 65) {
-                                this.player.x = 60;
-                                this.player.y = 1280 - halfH;
-                                this.player.body.reset(this.player.x, this.player.y);
-                                this.player.body.allowGravity = true;
-                                this.player.setVelocityX(-speed);
-                                this.player.setVelocityY(0);
-                                this.currentStair = null;
-                            } else {
-                                this.player.setVelocityX(-speed);
-                                this.player.setVelocityY(speed); // slope is -1: moving left goes downwards
-                                if (Math.abs(this.player.y - (targetFloorY - halfH)) > 2) {
-                                    this.player.y = targetFloorY - halfH;
-                                    this.player.body.y = targetFloorY - this.player.body.height;
-                                    this.player.body.prev.y = this.player.body.y;
-                                }
-                                this.player.body.touching.down = true;
-                            }
-                        } else if (isRight) {
-                            if (this.player.x >= 340) {
-                                this.player.x = 340;
-                                this.player.y = 1000 - halfH;
-                                this.player.body.reset(this.player.x, this.player.y);
-                                this.player.body.allowGravity = true;
-                                this.player.setVelocityX(speed);
-                                this.player.setVelocityY(0);
-                                this.currentStair = null;
-                            } else {
-                                this.player.setVelocityX(speed);
-                                this.player.setVelocityY(-speed); // slope is -1: moving right goes upwards
-                                if (Math.abs(this.player.y - (targetFloorY - halfH)) > 2) {
-                                    this.player.y = targetFloorY - halfH;
-                                    this.player.body.y = targetFloorY - this.player.body.height;
-                                    this.player.body.prev.y = this.player.body.y;
-                                }
-                                this.player.body.touching.down = true;
-                            }
-                        } else {
-                            this.player.y = targetFloorY - halfH;
-                            this.player.body.y = targetFloorY - this.player.body.height;
-                            this.player.body.prev.y = this.player.body.y;
-                            this.player.setVelocityX(0);
+                    } else if (isLeft) {
+                        if (this.player.x <= 65) {
+                            this.player.body.reset(60, 1280 - halfH);
+                            this.player.body.allowGravity = true;
+                            this.player.setVelocityX(-speed);
                             this.player.setVelocityY(0);
+                            this.currentStair = null;
+                        } else {
+                            this.player.setVelocityX(-speed);
+                            this.player.setVelocityY(speed); // slope is -1: moving left goes downwards
                             this.player.body.touching.down = true;
                         }
+                    } else if (isRight) {
+                        if (this.player.x >= 340) {
+                            this.player.body.reset(340, 1000 - halfH);
+                            this.player.body.allowGravity = true;
+                            this.player.setVelocityX(speed);
+                            this.player.setVelocityY(0);
+                            this.currentStair = null;
+                        } else {
+                            this.player.setVelocityX(speed);
+                            this.player.setVelocityY(-speed); // slope is -1: moving right goes upwards
+                            this.player.body.touching.down = true;
+                        }
+                    } else {
+                        this.player.setVelocity(0, 0);
+                        this.player.body.touching.down = true;
                     }
                 } else if (this.currentStair === 'deck12_to_13') {
-                    // Step off down to Deck 12 if pressing Down near the bottom
-                    if (isDown && this.player.x >= 2260) {
-                        this.player.y = 1000 - halfH;
-                        this.player.body.reset(this.player.x, this.player.y);
-                        this.player.body.allowGravity = true;
-                        this.player.setVelocityY(0);
-                        this.currentStair = null;
-                    } else if (jumpPressed) {
+                    if (jumpPressed) {
                         this.player.body.allowGravity = true;
                         this.player.setVelocityY(jumpPower);
                         this.currentStair = null;
@@ -1193,54 +1169,33 @@ class GameScene extends Phaser.Scene {
                         if (isLeft) this.player.setVelocityX(-speed);
                         else if (isRight) this.player.setVelocityX(speed);
                         else this.player.setVelocityX(0);
-                    } else {
-                        let targetFloorY = 760 + (this.player.x - 2060);
-                        if (isRight) {
-                            if (this.player.x >= 2295) {
-                                this.player.x = 2300;
-                                this.player.y = 1000 - halfH;
-                                this.player.body.reset(this.player.x, this.player.y);
-                                this.player.body.allowGravity = true;
-                                this.player.setVelocityX(speed);
-                                this.player.setVelocityY(0);
-                                this.currentStair = null;
-                            } else {
-                                this.player.setVelocityX(speed);
-                                this.player.setVelocityY(speed); // slope is +1: moving right goes downwards
-                                if (Math.abs(this.player.y - (targetFloorY - halfH)) > 2) {
-                                    this.player.y = targetFloorY - halfH;
-                                    this.player.body.y = targetFloorY - this.player.body.height;
-                                    this.player.body.prev.y = this.player.body.y;
-                                }
-                                this.player.body.touching.down = true;
-                            }
-                        } else if (isLeft) {
-                            if (this.player.x <= 2060) {
-                                this.player.x = 2060;
-                                this.player.y = 760 - halfH;
-                                this.player.body.reset(this.player.x, this.player.y);
-                                this.player.body.allowGravity = true;
-                                this.player.setVelocityX(-speed);
-                                this.player.setVelocityY(0);
-                                this.currentStair = null;
-                            } else {
-                                this.player.setVelocityX(-speed);
-                                this.player.setVelocityY(-speed); // slope is +1: moving left goes upwards
-                                if (Math.abs(this.player.y - (targetFloorY - halfH)) > 2) {
-                                    this.player.y = targetFloorY - halfH;
-                                    this.player.body.y = targetFloorY - this.player.body.height;
-                                    this.player.body.prev.y = this.player.body.y;
-                                }
-                                this.player.body.touching.down = true;
-                            }
-                        } else {
-                            this.player.y = targetFloorY - halfH;
-                            this.player.body.y = targetFloorY - this.player.body.height;
-                            this.player.body.prev.y = this.player.body.y;
-                            this.player.setVelocityX(0);
+                    } else if (isRight) {
+                        if (this.player.x >= 2295) {
+                            this.player.body.reset(2300, 1000 - halfH);
+                            this.player.body.allowGravity = true;
+                            this.player.setVelocityX(speed);
                             this.player.setVelocityY(0);
+                            this.currentStair = null;
+                        } else {
+                            this.player.setVelocityX(speed);
+                            this.player.setVelocityY(speed); // slope is +1: moving right goes downwards
                             this.player.body.touching.down = true;
                         }
+                    } else if (isLeft) {
+                        if (this.player.x <= 2060) {
+                            this.player.body.reset(2060, 760 - halfH);
+                            this.player.body.allowGravity = true;
+                            this.player.setVelocityX(-speed);
+                            this.player.setVelocityY(0);
+                            this.currentStair = null;
+                        } else {
+                            this.player.setVelocityX(-speed);
+                            this.player.setVelocityY(-speed); // slope is +1: moving left goes upwards
+                            this.player.body.touching.down = true;
+                        }
+                    } else {
+                        this.player.setVelocity(0, 0);
+                        this.player.body.touching.down = true;
                     }
                 } else {
                     // Regular floor movement
