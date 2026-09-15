@@ -1695,6 +1695,15 @@ class GameScene extends Phaser.Scene {
         // Ice Cream Status Indicator Icon
         this.hudIceCreamIcon = this.add.image(890, 20, 'icecream_strawberry').setScale(0.8).setScrollFactor(0).setDepth(100).setVisible(false);
 
+        // Retro Capcom [MENU] Button
+        this.hudMenuBtn = this.add.text(0, 0, '[MENU]', {
+            fontSize: '10px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudMenuBtn.on('pointerover', () => this.hudMenuBtn.setFill('#FFFFFF'));
+        this.hudMenuBtn.on('pointerout', () => this.hudMenuBtn.setFill('#FFD700'));
+        this.hudMenuBtn.on('pointerdown', () => this.toggleInGameMenu());
+
         this.layoutHUD(this.scale.width, this.scale.height);
 
         // Player (Spawn in the middle of Deck 11)
@@ -2015,6 +2024,7 @@ class GameScene extends Phaser.Scene {
         let joyOrigin = { x: 0, y: 0 };
 
         this.input.on('pointerdown', (ptr) => {
+            if (this.isMenuOpen) return;
             const halfW = this.scale.width / 2;
             if (ptr.x < halfW) {
                 // Left side: spawn joystick at touch point
@@ -2060,9 +2070,16 @@ class GameScene extends Phaser.Scene {
                 this.mobileInput.down = false;
             }
         });
+
+        this.createInGameMenu();
     }
 
     update() {
+        if (this.isMenuOpen) {
+            this.player.setVelocity(0, 0);
+            return;
+        }
+
         let inWater = this.inWater || (this.water && this.physics.overlap(this.player, this.water));
         let speed = inWater ? 130 : 250;
         let jumpPower = inWater ? -420 : -550;
@@ -2426,6 +2443,230 @@ class GameScene extends Phaser.Scene {
         this.nearRaft = false;
     }
 
+    createInGameMenu() {
+        this.isMenuOpen = false;
+        this.menuSelectedIndex = 0;
+        this.menuItems = [
+            { text: 'CONTINUE', action: () => this.closeInGameMenu() },
+            { text: 'RESTART LEVEL', action: () => this.restartLevel() },
+            { text: 'CHANGE CHARACTER', action: () => this.scene.start('CharacterSelectScene') },
+            { text: 'TITLE SCREEN', action: () => this.scene.start('TitleScene') }
+        ];
+
+        this.menuContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(500).setVisible(false);
+
+        // Dark dimming overlay
+        this.menuOverlay = this.add.graphics();
+        this.menuContainer.add(this.menuOverlay);
+
+        // Capcom double-border box
+        this.menuBox = this.add.graphics();
+        this.menuContainer.add(this.menuBox);
+
+        // Header Title
+        this.menuTitle = this.add.text(0, 0, 'PAUSE MENU', {
+            fontSize: '14px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 4, align: 'center'
+        }).setOrigin(0.5);
+        this.menuContainer.add(this.menuTitle);
+
+        this.menuSub = this.add.text(0, 0, '★ DISNEY DESTINY ★', {
+            fontSize: '8px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2, align: 'center'
+        }).setOrigin(0.5);
+        this.menuContainer.add(this.menuSub);
+
+        // Cursor arrow
+        this.menuCursor = this.add.text(0, 0, '►', {
+            fontSize: '12px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        this.menuContainer.add(this.menuCursor);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+=4',
+            duration: 350,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Item text objects
+        this.menuTextObjects = [];
+        this.menuItems.forEach((item, index) => {
+            let txt = this.add.text(0, 0, item.text, {
+                fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+                stroke: '#000000', strokeThickness: 3
+            }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+
+            txt.on('pointerover', () => {
+                this.setMenuIndex(index);
+            });
+            txt.on('pointerdown', () => {
+                this.executeMenuItem(index);
+            });
+
+            this.menuContainer.add(txt);
+            this.menuTextObjects.push(txt);
+        });
+
+        // Prompt helper at bottom of box
+        this.menuHelper = this.add.text(0, 0, '[ ARROWS / ENTER OR TAP ]', {
+            fontSize: '8px', fill: '#B0C0D0', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2, align: 'center'
+        }).setOrigin(0.5);
+        this.menuContainer.add(this.menuHelper);
+
+        // Keyboard hotkeys
+        if (this.input.keyboard) {
+            this.input.keyboard.on('keydown-ESC', () => this.toggleInGameMenu());
+            this.input.keyboard.on('keydown-P', () => this.toggleInGameMenu());
+            this.input.keyboard.on('keydown-M', () => this.toggleInGameMenu());
+
+            this.input.keyboard.on('keydown-UP', () => {
+                if (this.isMenuOpen) this.navigateMenu(-1);
+            });
+            this.input.keyboard.on('keydown-W', () => {
+                if (this.isMenuOpen) this.navigateMenu(-1);
+            });
+            this.input.keyboard.on('keydown-DOWN', () => {
+                if (this.isMenuOpen) this.navigateMenu(1);
+            });
+            this.input.keyboard.on('keydown-S', () => {
+                if (this.isMenuOpen) this.navigateMenu(1);
+            });
+            this.input.keyboard.on('keydown-ENTER', () => {
+                if (this.isMenuOpen) this.executeMenuItem(this.menuSelectedIndex);
+            });
+            this.input.keyboard.on('keydown-SPACE', () => {
+                if (this.isMenuOpen) this.executeMenuItem(this.menuSelectedIndex);
+            });
+        }
+    }
+
+    toggleInGameMenu() {
+        if (this.isMenuOpen) {
+            this.closeInGameMenu();
+        } else {
+            this.openInGameMenu();
+        }
+    }
+
+    openInGameMenu() {
+        this.isMenuOpen = true;
+        this.menuSelectedIndex = 0;
+        this.player.setVelocity(0, 0);
+        this.layoutInGameMenu(this.scale.width, this.scale.height);
+        this.menuContainer.setVisible(true);
+        this.setMenuIndex(0);
+    }
+
+    closeInGameMenu() {
+        this.isMenuOpen = false;
+        if (this.menuContainer) {
+            this.menuContainer.setVisible(false);
+        }
+    }
+
+    navigateMenu(dir) {
+        let count = this.menuItems.length;
+        this.setMenuIndex((this.menuSelectedIndex + dir + count) % count);
+    }
+
+    setMenuIndex(index) {
+        this.menuSelectedIndex = index;
+        this.menuTextObjects.forEach((txt, i) => {
+            if (i === index) {
+                txt.setFill('#F8B800');
+                if (this.menuBoxCoords) {
+                    this.menuCursor.setPosition(this.menuBoxCoords.x + 36, txt.y);
+                }
+            } else {
+                txt.setFill('#FFFFFF');
+            }
+        });
+    }
+
+    executeMenuItem(index) {
+        if (this.menuItems[index] && this.menuItems[index].action) {
+            this.menuItems[index].action();
+        }
+    }
+
+    layoutInGameMenu(W, H) {
+        if (!this.menuContainer) return;
+
+        // Overlay fill
+        this.menuOverlay.clear();
+        this.menuOverlay.fillStyle(0x000000, 0.70);
+        this.menuOverlay.fillRect(0, 0, W, H);
+
+        let boxW = Math.min(360, W - 32);
+        let boxH = 220;
+        let boxX = W / 2 - boxW / 2;
+        let boxY = H / 2 - boxH / 2;
+        this.menuBoxCoords = { x: boxX, y: boxY, w: boxW, h: boxH };
+
+        // Capcom vintage double-border box
+        let mb = this.menuBox;
+        mb.clear();
+        mb.fillStyle(0x000000, 1);
+        mb.fillRect(boxX - 3, boxY - 3, boxW + 6, boxH + 6);
+        mb.fillStyle(0xFFFFFF, 1);
+        mb.fillRect(boxX - 1, boxY - 1, boxW + 2, boxH + 2);
+        mb.fillStyle(0x001030, 0.96);
+        mb.fillRect(boxX + 1, boxY + 1, boxW - 2, boxH - 2);
+
+        // Gold corner rivets
+        mb.fillStyle(0xF8B800, 1);
+        mb.fillRect(boxX + 2, boxY + 2, 4, 4);
+        mb.fillRect(boxX + boxW - 6, boxY + 2, 4, 4);
+        mb.fillRect(boxX + 2, boxY + boxH - 6, 4, 4);
+        mb.fillRect(boxX + boxW - 6, boxY + boxH - 6, 4, 4);
+
+        // Header separator line
+        mb.fillStyle(0x58B8F8, 1);
+        mb.fillRect(boxX + 16, boxY + 44, boxW - 32, 2);
+
+        this.menuTitle.setPosition(W / 2, boxY + 20);
+        this.menuSub.setPosition(W / 2, boxY + 34);
+
+        let startItemY = boxY + 68;
+        let itemSpacing = 28;
+        this.menuTextObjects.forEach((txt, i) => {
+            let itemY = startItemY + i * itemSpacing;
+            txt.setPosition(boxX + 54, itemY);
+            if (i === this.menuSelectedIndex) {
+                this.menuCursor.setPosition(boxX + 36, itemY);
+            }
+        });
+
+        this.menuHelper.setPosition(W / 2, boxY + boxH - 18);
+    }
+
+    restartLevel() {
+        this.closeInGameMenu();
+        // Clean physics reset at Deck 11 spawn (x: 700, y: 1200)
+        this.player.body.reset(700, 1200);
+        this.player.setVelocity(0, 0);
+        this.player.angle = 0;
+        this.ridingRaft = false;
+        this.onSlide = false;
+        this.inWater = false;
+        this.wasInWater = false;
+        this.currentStair = null;
+        this.player.body.allowGravity = true;
+
+        // Restore health nodes
+        if (this.hpNodes) {
+            this.hpNodes.forEach(node => node.setTexture('hp_node_full'));
+        }
+
+        // Camera flash & reposition
+        this.cameras.main.flash(300, 255, 255, 255);
+        this.cameras.main.centerOn(700, 1200);
+    }
+
     layoutHUD(W, H) {
         const insets = getSafeAreaInsets();
         const topOffset = insets.top;
@@ -2458,19 +2699,25 @@ class GameScene extends Phaser.Scene {
             });
         }
 
-        if (this.hudIceCreamIcon) this.hudIceCreamIcon.setPosition(W - rightPadding - 10, contentY);
-        if (this.hudScoreText) this.hudScoreText.setPosition(W - rightPadding - 120, contentY - 7);
-        if (this.hudCoinIcon) this.hudCoinIcon.setPosition(W - rightPadding - 135, contentY);
+        // Right side layout: [COIN] $0002500   [ICECREAM]   [MENU]
+        if (this.hudMenuBtn) this.hudMenuBtn.setPosition(W - rightPadding - 55, contentY - 7);
+        if (this.hudIceCreamIcon) this.hudIceCreamIcon.setPosition(W - rightPadding - 75, contentY);
+        if (this.hudScoreText) this.hudScoreText.setPosition(W - rightPadding - 180, contentY - 7);
+        if (this.hudCoinIcon) this.hudCoinIcon.setPosition(W - rightPadding - 195, contentY);
 
         if (this.hudLocation) {
             this.hudLocation.setPosition(W / 2, contentY);
-            if (W < 540) {
+            if (W < 600) {
                 this.hudLocation.setFontSize('7px');
-                this.hudLocation.setVisible(W >= 360);
+                this.hudLocation.setVisible(W >= 420);
             } else {
                 this.hudLocation.setFontSize('9px');
                 this.hudLocation.setVisible(true);
             }
+        }
+
+        if (this.isMenuOpen) {
+            this.layoutInGameMenu(W, H);
         }
     }
 }
