@@ -761,6 +761,167 @@ class BootScene extends Phaser.Scene {
         g.fillStyle(0xB89800, 1);
         g.fillRect(4, 5, 6, 4);
         g.generateTexture('coin_icon', 14, 14);
+        g.clear();
+
+        // 8-Bit Disney Destiny Profile (330x115)
+        // 1. Radar mast & beacon
+        g.fillStyle(0x000000, 1);
+        g.fillRect(250, 12, 3, 22);
+        g.fillRect(246, 16, 11, 2);
+        g.fillRect(248, 22, 7, 2);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(250, 10, 3, 3);
+
+        // 2. Twin Disney Funnels
+        // Aft Funnel (x: 110, y: 16)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(109, 15, 28, 24);
+        g.fillStyle(0xC81018, 1);
+        g.fillRect(111, 19, 24, 18);
+        g.fillStyle(0xF83838, 1);
+        g.fillRect(113, 20, 4, 16);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(110, 15, 26, 5);
+        g.fillStyle(0x404040, 1);
+        g.fillRect(112, 16, 22, 2);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(111, 28, 24, 2);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(122, 23, 4, 4);
+        g.fillRect(120, 21, 2, 2);
+        g.fillRect(125, 21, 2, 2);
+
+        // Forward Funnel (x: 180, y: 16)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(179, 15, 28, 24);
+        g.fillStyle(0xC81018, 1);
+        g.fillRect(181, 19, 24, 18);
+        g.fillStyle(0xF83838, 1);
+        g.fillRect(183, 20, 4, 16);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(180, 15, 26, 5);
+        g.fillStyle(0x404040, 1);
+        g.fillRect(182, 16, 22, 2);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(181, 28, 24, 2);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(192, 23, 4, 4);
+        g.fillRect(190, 21, 2, 2);
+        g.fillRect(195, 21, 2, 2);
+
+        // AquaMouse Water Slide Tube
+        g.fillStyle(0x000000, 1);
+        g.fillRect(137, 24, 43, 6);
+        g.fillStyle(0x00E8D8, 1);
+        g.fillRect(138, 25, 41, 4);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(140, 26, 37, 1);
+
+        // 3. Superstructure Decks
+        // Deck 3
+        g.fillStyle(0x000000, 1);
+        g.fillRect(79, 36, 185, 14);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(81, 38, 181, 10);
+        for (let x = 86; x < 255; x += 10) {
+            g.fillStyle(0x004888, 1);
+            g.fillRect(x, 40, 5, 4);
+            g.fillStyle(0x80D0F8, 1);
+            g.fillRect(x + 1, 41, 2, 2);
+        }
+
+        // Deck 2 (Bridge & Cabins)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(59, 48, 225, 14);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(61, 50, 221, 10);
+        g.fillStyle(0x003060, 1);
+        g.fillRect(260, 51, 18, 6);
+        g.fillStyle(0x50B0F8, 1);
+        g.fillRect(262, 52, 14, 3);
+        for (let x = 66; x < 255; x += 9) {
+            g.fillStyle(0x004888, 1);
+            g.fillRect(x, 52, 5, 5);
+            g.fillStyle(0x80D0F8, 1);
+            g.fillRect(x + 1, 53, 2, 2);
+        }
+
+        // Deck 1 (Promenade & Yellow Lifeboats)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(39, 60, 260, 15);
+        g.fillStyle(0xE0E8F0, 1);
+        g.fillRect(41, 62, 256, 11);
+        for (let bx = 65; bx < 250; bx += 16) {
+            g.fillStyle(0x000000, 1);
+            g.fillRect(bx, 64, 13, 6);
+            g.fillStyle(0xF8B800, 1);
+            g.fillRect(bx + 1, 65, 11, 4);
+            g.fillStyle(0xFFE880, 1);
+            g.fillRect(bx + 2, 65, 7, 1);
+        }
+
+        // 4. Main Hull
+        g.fillStyle(0x000000, 1);
+        g.beginPath();
+        g.moveTo(25, 73);
+        g.lineTo(305, 73);
+        g.lineTo(315, 85);
+        g.lineTo(310, 102);
+        g.lineTo(290, 105);
+        g.lineTo(40, 105);
+        g.lineTo(25, 95);
+        g.closePath();
+        g.fillPath();
+
+        g.fillStyle(0x001838, 1);
+        g.beginPath();
+        g.moveTo(27, 75);
+        g.lineTo(303, 75);
+        g.lineTo(312, 85);
+        g.lineTo(308, 101);
+        g.lineTo(288, 103);
+        g.lineTo(42, 103);
+        g.lineTo(27, 93);
+        g.closePath();
+        g.fillPath();
+
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(27, 75, 278, 2);
+
+        g.fillStyle(0xC81018, 1);
+        g.fillRect(40, 97, 268, 6);
+        g.fillStyle(0xF83838, 1);
+        g.fillRect(45, 97, 260, 2);
+
+        for (let row = 0; row < 2; row++) {
+            let py = 81 + row * 8;
+            for (let px = 45; px < 290; px += 12) {
+                g.fillStyle(0x000000, 1);
+                g.fillRect(px, py, 4, 4);
+                g.fillStyle(0x3888D8, 1);
+                g.fillRect(px + 1, py + 1, 2, 2);
+                g.fillStyle(0xFFFFFF, 1);
+                g.fillRect(px + 1, py + 1, 1, 1);
+            }
+        }
+
+        // Bow Filigree & Foam Wake
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(302, 77, 6, 2);
+        g.fillRect(304, 79, 4, 2);
+        g.fillRect(306, 81, 3, 2);
+
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(308, 100, 10, 3);
+        g.fillRect(312, 102, 8, 2);
+        g.fillRect(20, 100, 12, 3);
+        g.fillRect(15, 102, 10, 2);
+        g.fillStyle(0x58B8F8, 1);
+        g.fillRect(306, 103, 14, 2);
+        g.fillRect(18, 103, 16, 2);
+
+        g.generateTexture('title_ship', 330, 115);
+        g.clear();
 
         g.destroy();
     }
@@ -771,21 +932,88 @@ class BootScene extends Phaser.Scene {
 
 class TitleScene extends Phaser.Scene {
     constructor() { super('TitleScene'); }
+
     create() {
         this.bgGraphics = this.add.graphics();
-        this.titleBg = this.add.graphics();
+        this.waterGraphics = this.add.graphics();
+        this.titleBoxGraphics = this.add.graphics();
 
-        this.titleText = this.add.text(0, 0, 'DISNEY DESTINY ADVENTURE', {
-            fontSize: '18px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
-            align: 'center', stroke: '#000000', strokeThickness: 4
+        // 8-Bit Clouds
+        this.clouds = [];
+        for (let i = 0; i < 4; i++) {
+            let cx = 80 + i * 180;
+            let cy = 35 + (i % 2) * 30;
+            let cloud = this.add.image(cx, cy, 'cloud').setScale(0.85 + i * 0.1).setAlpha(0.85);
+            this.clouds.push({ sprite: cloud, speed: 0.25 + i * 0.12 });
+        }
+
+        // 8-Bit Sun
+        this.sun = this.add.image(100, 75, 'sun').setScale(0.9);
+
+        // 8-Bit Flying Seagulls
+        this.birds = [];
+        for (let i = 0; i < 3; i++) {
+            let bx = 220 + i * 160;
+            let by = 60 + (i % 2) * 35;
+            let bird = this.add.image(bx, by, 'bird').setScale(1.2);
+            this.birds.push(bird);
+            this.tweens.add({
+                targets: bird,
+                y: by - 8,
+                duration: 600 + i * 200,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+
+        // 8-Bit Disney Destiny Ship Sprite
+        this.ship = this.add.image(0, 0, 'title_ship');
+        this.tweens.add({
+            targets: this.ship,
+            y: '+=5',
+            duration: 1800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Title Box Texts
+        this.titleText = this.add.text(0, 0, 'DISNEY DESTINY', {
+            fontSize: '22px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            align: 'center', stroke: '#000000', strokeThickness: 5
         }).setOrigin(0.5);
 
-        this.startText = this.add.text(0, 0, 'PUSH START BUTTON', {
-            fontSize: '14px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+        this.subTitleText = this.add.text(0, 0, '★ CRUISE 2027 ★', {
+            fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3, align: 'center'
+        }).setOrigin(0.5);
+
+        // Push Start Button prompt
+        this.startText = this.add.text(0, 0, '► PUSH START BUTTON ◄', {
+            fontSize: '12px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.tweens.add({ targets: this.startText, alpha: 0.2, duration: 600, yoyo: true, repeat: -1 });
+        this.tweens.add({
+            targets: this.startText,
+            alpha: 0.15,
+            duration: 550,
+            yoyo: true,
+            repeat: -1
+        });
+
+        this.hintText = this.add.text(0, 0, '[ PRESS ENTER OR TAP SCREEN ]', {
+            fontSize: '9px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
+
+        this.creditsText = this.add.text(0, 0, '© 2027 GARVEY FAMILY • NES CAPCOM EDITION', {
+            fontSize: '8px', fill: '#B0C0D0', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
+
+        this.waveTimer = 0;
 
         this.renderScene(this.scale.width, this.scale.height);
 
@@ -793,123 +1021,231 @@ class TitleScene extends Phaser.Scene {
             this.renderScene(gameSize.width, gameSize.height);
         });
 
-        this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
+        const startSelection = () => {
+            this.cameras.main.flash(250, 255, 255, 255);
+            this.time.delayedCall(200, () => {
+                this.scene.start('CharacterSelectScene');
+            });
+        };
+
+        this.input.on('pointerdown', startSelection);
+        if (this.input.keyboard) {
+            this.input.keyboard.on('keydown-ENTER', startSelection);
+            this.input.keyboard.on('keydown-SPACE', startSelection);
+        }
+    }
+
+    update(time, delta) {
+        if (this.clouds) {
+            let W = this.scale.width;
+            for (let c of this.clouds) {
+                c.sprite.x += c.speed;
+                if (c.sprite.x > W + 70) c.sprite.x = -70;
+            }
+        }
+        this.waveTimer += (delta || 16) * 0.003;
+        this.drawWaves(this.scale.width, this.scale.height);
+    }
+
+    drawWaves(W, H) {
+        let g = this.waterGraphics;
+        g.clear();
+
+        let oceanY = H * 0.62;
+        let waveStep = Math.sin(this.waveTimer) * 4;
+        let waveStep2 = Math.cos(this.waveTimer * 1.2) * 4;
+
+        for (let y = oceanY + 12; y < H; y += 20) {
+            let offset = (y % 40 === 0) ? waveStep : waveStep2;
+            for (let x = 0; x < W + 32; x += 48) {
+                let wx = x + offset;
+                g.fillStyle(0xFFFFFF, 0.9);
+                g.fillRect(wx, y, 14, 2);
+                g.fillStyle(0x58B8F8, 0.9);
+                g.fillRect(wx - 4, y + 2, 22, 2);
+            }
+        }
     }
 
     renderScene(W, H) {
+        let insets = getSafeAreaInsets();
         let g = this.bgGraphics;
         g.clear();
 
-        // Caribbean sky gradient
-        g.fillGradientStyle(0x87CEEB, 0x87CEEB, 0x00BFFF, 0x00BFFF, 1);
-        g.fillRect(0, 0, W, H * 0.65);
+        // 8-Bit NES Banded Sky
+        let skyH = H * 0.62;
+        g.fillStyle(0x0050A0, 1);
+        g.fillRect(0, 0, W, skyH * 0.35);
+        g.fillStyle(0x0078F8, 1);
+        g.fillRect(0, skyH * 0.35, W, skyH * 0.35);
+        g.fillStyle(0x60B8F8, 1);
+        g.fillRect(0, skyH * 0.70, W, skyH * 0.30);
 
-        // Deep Caribbean ocean
-        g.fillGradientStyle(0x006994, 0x006994, 0x003d5c, 0x003d5c, 1);
-        g.fillRect(0, H * 0.65, W, H * 0.35);
+        // 8-Bit NES Ocean Bands
+        let oceanH = H - skyH;
+        g.fillStyle(0x0068A8, 1);
+        g.fillRect(0, skyH, W, oceanH * 0.25);
+        g.fillStyle(0x005088, 1);
+        g.fillRect(0, skyH + oceanH * 0.25, W, oceanH * 0.25);
+        g.fillStyle(0x003868, 1);
+        g.fillRect(0, skyH + oceanH * 0.50, W, oceanH * 0.25);
+        g.fillStyle(0x002048, 1);
+        g.fillRect(0, skyH + oceanH * 0.75, W, oceanH * 0.25);
 
-        // Ocean shimmer waves
-        g.fillStyle(0x007BA7, 0.5);
-        for (let i = 0; i < 12; i++) {
-            g.fillRect(i * (W/12), H * 0.65 + (i % 2) * 8, W / 12, 6);
-        }
+        // Sun positioning
+        let sunX = Math.min(W * 0.15, 120);
+        let sunY = Math.max(50, insets.top + 30);
+        this.sun.setPosition(sunX, sunY);
 
-        // Sun
-        let sunX = Math.min(W * 0.15, 140);
-        let sunY = Math.min(H * 0.18, 110);
-        g.fillStyle(0xFFD700, 1);
-        g.fillCircle(sunX, sunY, 50);
-        g.lineStyle(3, 0xFFEC8B, 0.7);
-        for (let a = 0; a < 360; a += 30) {
-            let rad = Phaser.Math.DegToRad(a);
-            g.beginPath();
-            g.moveTo(sunX + Math.cos(rad) * 55, sunY + Math.sin(rad) * 55);
-            g.lineTo(sunX + Math.cos(rad) * 75, sunY + Math.sin(rad) * 75);
-            g.strokePath();
-        }
+        // Disney Destiny Ship placement
+        let shipScale = W < 420 ? 0.9 : (W < 650 ? 1.05 : 1.25);
+        this.ship.setScale(shipScale);
+        let shipY = skyH - (28 * shipScale);
+        this.ship.setPosition(W / 2, shipY);
 
-        // Clouds
-        g.fillStyle(0xFFFFFF, 0.85);
-        [[W*0.35, H*0.12, 60], [W*0.6, H*0.08, 45], [W*0.8, H*0.15, 55]].forEach(([cx, cy, r]) => {
-            g.fillCircle(cx, cy, r);
-            g.fillCircle(cx + r*0.7, cy + 10, r * 0.7);
-            g.fillCircle(cx - r*0.6, cy + 10, r * 0.6);
-        });
+        // Title Box - Authentic Capcom 1px Vintage Double Border with Gold Rivets
+        let tb = this.titleBoxGraphics;
+        tb.clear();
 
-        // Disney Cruise Ship
-        let shipX = W * 0.5, shipY = H * 0.65;
-        let scale = Math.min(1, (W - 32) / 480);
+        let boxW = Math.min(560, W - 32);
+        let boxH = W < 420 ? 68 : 80;
+        let boxX = W / 2 - boxW / 2;
+        let boxY = Math.max(insets.top + 16, H * 0.10);
 
-        g.fillStyle(0x003366, 1);
-        g.fillRect(shipX - 200 * scale, shipY - 30 * scale, 400 * scale, 50 * scale);
-        g.fillStyle(0xFFFFFF, 1);
-        g.fillRect(shipX - 190 * scale, shipY - 90 * scale, 380 * scale, 60 * scale);
-        g.fillRect(shipX - 170 * scale, shipY - 140 * scale, 340 * scale, 52 * scale);
-        g.fillRect(shipX - 140 * scale, shipY - 185 * scale, 280 * scale, 47 * scale);
-        g.fillStyle(0xCC0000, 1);
-        g.fillRect(shipX - 200 * scale, shipY - 36 * scale, 400 * scale, 8 * scale);
-        g.fillStyle(0x87CEEB, 1);
-        for (let i = -3; i <= 3; i++) {
-            g.fillCircle(shipX + i * 50 * scale, shipY - 60 * scale, 7 * scale);
-            g.fillCircle(shipX + (i * 45 + 15) * scale, shipY - 112 * scale, 6 * scale);
-        }
-        // Mickey-eared funnel
-        g.fillStyle(0xCC0000, 1);
-        g.fillRect(shipX + 40 * scale, shipY - 235 * scale, 40 * scale, 50 * scale);
-        g.fillStyle(0x000000, 1);
-        g.fillCircle(shipX + 50 * scale, shipY - 248 * scale, 18 * scale);
-        g.fillCircle(shipX + 70 * scale, shipY - 248 * scale, 18 * scale);
-        g.fillCircle(shipX + 60 * scale, shipY - 230 * scale, 26 * scale);
-        // Bow
-        g.fillStyle(0xFFFFFF, 1);
-        g.fillTriangle(shipX + 190 * scale, shipY - 90 * scale, shipX + 240 * scale, shipY - 30 * scale, shipX + 190 * scale, shipY - 30 * scale);
-        g.fillStyle(0x003366, 1);
-        g.fillTriangle(shipX + 190 * scale, shipY - 30 * scale, shipX + 240 * scale, shipY - 30 * scale, shipX + 240 * scale, shipY + 20 * scale);
+        tb.fillStyle(0x000000, 1);
+        tb.fillRect(boxX - 3, boxY - 3, boxW + 6, boxH + 6);
+        tb.fillStyle(0xFFFFFF, 1);
+        tb.fillRect(boxX - 1, boxY - 1, boxW + 2, boxH + 2);
+        tb.fillStyle(0x001030, 0.95);
+        tb.fillRect(boxX + 1, boxY + 1, boxW - 2, boxH - 2);
 
-        // Title Box - Authentic Capcom 1px Vintage Border
-        this.titleBg.clear();
-        let boxW = Math.min(680, W - 32);
-        let boxH = W < 500 ? 64 : 76;
-        let boxY = Math.max(20, H * 0.18);
-        this.titleBg.fillStyle(0x001028, 0.85);
-        this.titleBg.fillRect(W/2 - boxW/2, boxY, boxW, boxH);
-        this.titleBg.lineStyle(2, 0xFFFFFF, 1);
-        this.titleBg.strokeRect(W/2 - boxW/2, boxY, boxW, boxH);
-        this.titleBg.lineStyle(1, 0x000000, 1);
-        this.titleBg.strokeRect(W/2 - boxW/2 - 2, boxY - 2, boxW + 4, boxH + 4);
+        tb.fillStyle(0xF8B800, 1);
+        tb.fillRect(boxX + 2, boxY + 2, 4, 4);
+        tb.fillRect(boxX + boxW - 6, boxY + 2, 4, 4);
+        tb.fillRect(boxX + 2, boxY + boxH - 6, 4, 4);
+        tb.fillRect(boxX + boxW - 6, boxY + boxH - 6, 4, 4);
 
-        let titleFontSize = W < 420 ? '11px' : (W < 600 ? '14px' : '18px');
-        this.titleText.setFontSize(titleFontSize).setPosition(W / 2, boxY + boxH / 2);
+        let titleSize = W < 420 ? '14px' : (W < 560 ? '18px' : '22px');
+        this.titleText.setFontSize(titleSize).setPosition(W / 2, boxY + (W < 420 ? 24 : 28));
+        this.subTitleText.setFontSize(W < 420 ? '9px' : '11px').setPosition(W / 2, boxY + (W < 420 ? 46 : 54));
 
-        let startFontSize = W < 420 ? '10px' : '14px';
-        this.startText.setFontSize(startFontSize).setPosition(W / 2, boxY + boxH + (W < 500 ? 25 : 36));
+        let startY = boxY + boxH + (W < 420 ? 20 : 28);
+        this.startText.setFontSize(W < 420 ? '10px' : '12px').setPosition(W / 2, startY);
+        this.hintText.setFontSize(W < 420 ? '8px' : '9px').setPosition(W / 2, startY + 22);
+
+        this.creditsText.setFontSize(W < 420 ? '7px' : '8px').setPosition(W / 2, H - Math.max(20, insets.bottom + 12));
     }
 }
 
 class CharacterSelectScene extends Phaser.Scene {
     constructor() { super('CharacterSelectScene'); }
+
     create() {
-        this.title = this.add.text(0, 0, 'SELECT PLAYER', {
-            fontSize: '20px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+        this.bgGraphics = this.add.graphics();
+        this.cardGraphics = this.add.graphics();
+        this.dialogueGraphics = this.add.graphics();
+
+        this.selectedHero = 'riley';
+
+        // Header Title
+        this.headerText = this.add.text(0, 0, 'SELECT HERO', {
+            fontSize: '18px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 4, align: 'center'
         }).setOrigin(0.5);
-        
-        this.riley = this.add.image(0, 0, 'riley').setScale(2).setInteractive({ useHandCursor: true });
-        this.rileyText = this.add.text(0, 0, '1P: RILEY (11)', {
-            fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+
+        this.headerSub = this.add.text(0, 0, '1P OR 2P CONTROLLER', {
+            fontSize: '9px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3, align: 'center'
+        }).setOrigin(0.5);
+
+        // Riley Elements
+        this.rileySprite = this.add.image(0, 0, 'riley').setScale(3).setInteractive({ useHandCursor: true });
+        this.rileyName = this.add.text(0, 0, '1P: RILEY', {
+            fontSize: '13px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
-        
-        this.amelia = this.add.image(0, 0, 'amelia').setScale(2).setInteractive({ useHandCursor: true });
-        this.ameliaText = this.add.text(0, 0, '2P: AMELIA (8)', {
-            fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+        this.rileyAge = this.add.text(0, 0, 'AGE: 11', {
+            fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
+        this.rileyRole = this.add.text(0, 0, '[ EDGE TWEEN ]', {
+            fontSize: '9px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
+
+        // Amelia Elements
+        this.ameliaSprite = this.add.image(0, 0, 'amelia').setScale(3).setInteractive({ useHandCursor: true });
+        this.ameliaName = this.add.text(0, 0, '2P: AMELIA', {
+            fontSize: '13px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        this.ameliaAge = this.add.text(0, 0, 'AGE: 8', {
+            fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
+        this.ameliaRole = this.add.text(0, 0, '[ OCEANEER CLUB ]', {
+            fontSize: '9px', fill: '#F85898', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
+
+        // Cursor Arrow
+        this.cursorArrow = this.add.text(0, 0, '►', {
+            fontSize: '16px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.subText = this.add.text(0, 0, 'CHOOSE YOUR HERO', {
+        this.tweens.add({
+            targets: this.cursorArrow,
+            x: '+=6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Bottom Capcom Dialogue Box Text
+        this.dialogueText = this.add.text(0, 0, '', {
+            fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2, align: 'center', wordWrap: { width: 440 }
+        }).setOrigin(0.5);
+
+        // Back Button
+        this.backBtn = this.add.text(0, 0, '◄ TITLE', {
             fontSize: '10px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+        this.backBtn.on('pointerdown', () => this.scene.start('TitleScene'));
+
+        this.startBtnPrompt = this.add.text(0, 0, 'PRESS ENTER OR TAP TO EMBARK', {
+            fontSize: '9px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5);
+        this.tweens.add({
+            targets: this.startBtnPrompt,
+            alpha: 0.2,
+            duration: 600,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Interactive Character Hover & Selection
+        this.rileySprite.on('pointerover', () => this.selectHero('riley'));
+        this.ameliaSprite.on('pointerover', () => this.selectHero('amelia'));
+
+        this.rileySprite.on('pointerdown', () => this.confirmSelection('riley'));
+        this.ameliaSprite.on('pointerdown', () => this.confirmSelection('amelia'));
+
+        if (this.input.keyboard) {
+            this.input.keyboard.on('keydown-LEFT', () => this.selectHero('riley'));
+            this.input.keyboard.on('keydown-A', () => this.selectHero('riley'));
+            this.input.keyboard.on('keydown-RIGHT', () => this.selectHero('amelia'));
+            this.input.keyboard.on('keydown-D', () => this.selectHero('amelia'));
+            this.input.keyboard.on('keydown-UP', () => this.selectHero(this.selectedHero === 'riley' ? 'amelia' : 'riley'));
+            this.input.keyboard.on('keydown-DOWN', () => this.selectHero(this.selectedHero === 'riley' ? 'amelia' : 'riley'));
+
+            this.input.keyboard.on('keydown-ENTER', () => this.confirmSelection(this.selectedHero));
+            this.input.keyboard.on('keydown-SPACE', () => this.confirmSelection(this.selectedHero));
+            this.input.keyboard.on('keydown-ESC', () => this.scene.start('TitleScene'));
+        }
 
         this.layout(this.scale.width, this.scale.height);
 
@@ -917,39 +1253,178 @@ class CharacterSelectScene extends Phaser.Scene {
             this.layout(gameSize.width, gameSize.height);
         });
 
-        this.riley.on('pointerover', () => this.riley.setTint(0xcccccc));
-        this.riley.on('pointerout', () => this.riley.clearTint());
-        this.amelia.on('pointerover', () => amelia.setTint(0xcccccc));
-        this.amelia.on('pointerout', () => amelia.clearTint());
+        this.selectHero('riley');
+    }
 
-        this.riley.on('pointerdown', () => this.scene.start('GameScene', { character: 'riley', name: 'Riley' }));
-        this.amelia.on('pointerdown', () => this.scene.start('GameScene', { character: 'amelia', name: 'Amelia' }));
+    selectHero(hero) {
+        this.selectedHero = hero;
+        if (hero === 'riley') {
+            this.rileyName.setFill('#F8B800');
+            this.ameliaName.setFill('#FFFFFF');
+            this.dialogueText.setText('"RILEY: LET\'S RACE UP TO DECK 11 & EXPLORE THE SHIP!"');
+            this.rileySprite.setTint(0xFFFFFF);
+            this.ameliaSprite.setTint(0x888888);
+        } else {
+            this.ameliaName.setFill('#F8B800');
+            this.rileyName.setFill('#FFFFFF');
+            this.dialogueText.setText('"AMELIA: READY FOR DECK 12 POOLS & ICE CREAM STANDS!"');
+            this.ameliaSprite.setTint(0xFFFFFF);
+            this.rileySprite.setTint(0x888888);
+        }
+        this.drawCards(this.scale.width, this.scale.height);
+    }
+
+    confirmSelection(hero) {
+        this.cameras.main.flash(300, 255, 255, 255);
+        this.time.delayedCall(200, () => {
+            let name = hero === 'riley' ? 'Riley' : 'Amelia';
+            this.scene.start('GameScene', { character: hero, name: name });
+        });
     }
 
     layout(W, H) {
-        const insets = getSafeAreaInsets();
-        const topY = Math.max(50, insets.top + 30);
-        this.title.setPosition(W / 2, topY);
+        let insets = getSafeAreaInsets();
+        let g = this.bgGraphics;
+        g.clear();
 
-        if (W < 520 && H > W) {
-            // Mobile Portrait: Stack characters vertically
-            let centerY1 = H * 0.38;
-            let centerY2 = H * 0.65;
-            this.riley.setPosition(W / 2, centerY1);
-            this.rileyText.setPosition(W / 2, centerY1 + 65);
-            this.amelia.setPosition(W / 2, centerY2);
-            this.ameliaText.setPosition(W / 2, centerY2 + 65);
-        } else {
-            // Landscape or Desktop: Side by side
-            let spacing = Math.min(160, W * 0.22);
-            let centerY = H * 0.52;
-            this.riley.setPosition(W / 2 - spacing, centerY);
-            this.rileyText.setPosition(W / 2 - spacing, centerY + 70);
-            this.amelia.setPosition(W / 2 + spacing, centerY);
-            this.ameliaText.setPosition(W / 2 + spacing, centerY + 70);
+        // Midnight NES Space/Tech Background
+        g.fillStyle(0x000818, 1);
+        g.fillRect(0, 0, W, H);
+
+        // 16x16 Subtle Retro Grid
+        g.lineStyle(1, 0x001838, 0.4);
+        for (let x = 0; x < W; x += 16) {
+            g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.strokePath();
+        }
+        for (let y = 0; y < H; y += 16) {
+            g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.strokePath();
         }
 
-        this.subText.setPosition(W / 2, H - Math.max(30, insets.bottom + 20));
+        // Header
+        let headerY = Math.max(30, insets.top + 22);
+        this.headerText.setPosition(W / 2, headerY);
+        this.headerSub.setPosition(W / 2, headerY + 20);
+
+        // Back button
+        this.backBtn.setPosition(Math.max(16, insets.left + 12), headerY);
+
+        let isPortrait = (W < 520 && H > W);
+        this.isPortrait = isPortrait;
+
+        if (isPortrait) {
+            let cardH = 120;
+            let cardW = Math.min(320, W - 40);
+            let y1 = headerY + 65;
+            let y2 = y1 + cardH + 16;
+
+            this.rileyCard = { x: W / 2 - cardW / 2, y: y1, w: cardW, h: cardH };
+            this.ameliaCard = { x: W / 2 - cardW / 2, y: y2, w: cardW, h: cardH };
+
+            this.rileySprite.setPosition(W / 2 - cardW / 2 + 50, y1 + 60);
+            this.rileyName.setPosition(W / 2 + 25, y1 + 35);
+            this.rileyAge.setPosition(W / 2 + 25, y1 + 58);
+            this.rileyRole.setPosition(W / 2 + 25, y1 + 80);
+
+            this.ameliaSprite.setPosition(W / 2 - cardW / 2 + 50, y2 + 60);
+            this.ameliaName.setPosition(W / 2 + 25, y2 + 35);
+            this.ameliaAge.setPosition(W / 2 + 25, y2 + 58);
+            this.ameliaRole.setPosition(W / 2 + 25, y2 + 80);
+
+            let dlgY = y2 + cardH + 18;
+            this.dialogueBox = { x: W / 2 - cardW / 2, y: dlgY, w: cardW, h: 52 };
+            this.dialogueText.setPosition(W / 2, dlgY + 26);
+            this.dialogueText.setWordWrapWidth(cardW - 24);
+
+            this.startBtnPrompt.setPosition(W / 2, dlgY + 66);
+        } else {
+            let cardW = Math.min(220, (W - 80) / 2);
+            let cardH = 180;
+            let centerY = H * 0.44;
+            let spacing = cardW / 2 + 16;
+
+            let x1 = W / 2 - spacing - cardW / 2;
+            let x2 = W / 2 + spacing - cardW / 2;
+            let cardY = centerY - cardH / 2;
+
+            this.rileyCard = { x: x1, y: cardY, w: cardW, h: cardH };
+            this.ameliaCard = { x: x2, y: cardY, w: cardW, h: cardH };
+
+            this.rileySprite.setPosition(x1 + cardW / 2, cardY + 65);
+            this.rileyName.setPosition(x1 + cardW / 2, cardY + 122);
+            this.rileyAge.setPosition(x1 + cardW / 2, cardY + 142);
+            this.rileyRole.setPosition(x1 + cardW / 2, cardY + 162);
+
+            this.ameliaSprite.setPosition(x2 + cardW / 2, cardY + 65);
+            this.ameliaName.setPosition(x2 + cardW / 2, cardY + 122);
+            this.ameliaAge.setPosition(x2 + cardW / 2, cardY + 142);
+            this.ameliaRole.setPosition(x2 + cardW / 2, cardY + 162);
+
+            let dlgW = Math.min(560, W - 40);
+            let dlgH = 46;
+            let dlgY = cardY + cardH + 20;
+            this.dialogueBox = { x: W / 2 - dlgW / 2, y: dlgY, w: dlgW, h: dlgH };
+            this.dialogueText.setPosition(W / 2, dlgY + dlgH / 2);
+            this.dialogueText.setWordWrapWidth(dlgW - 24);
+
+            this.startBtnPrompt.setPosition(W / 2, dlgY + dlgH + 22);
+        }
+
+        this.drawCards(W, H);
+    }
+
+    drawCards(W, H) {
+        if (!this.rileyCard || !this.ameliaCard) return;
+
+        let cg = this.cardGraphics;
+        cg.clear();
+
+        [
+            { hero: 'riley', box: this.rileyCard },
+            { hero: 'amelia', box: this.ameliaCard }
+        ].forEach(({ hero, box }) => {
+            let selected = (this.selectedHero === hero);
+            let { x, y, w, h } = box;
+
+            cg.fillStyle(0x000000, 1);
+            cg.fillRect(x - 3, y - 3, w + 6, h + 6);
+
+            cg.fillStyle(selected ? 0xF8B800 : 0xFFFFFF, 1);
+            cg.fillRect(x - 1, y - 1, w + 2, h + 2);
+
+            cg.fillStyle(selected ? 0x002058 : 0x001438, 0.95);
+            cg.fillRect(x + 1, y + 1, w - 2, h - 2);
+
+            cg.fillStyle(0xF8B800, 1);
+            cg.fillRect(x + 2, y + 2, 4, 4);
+            cg.fillRect(x + w - 6, y + 2, 4, 4);
+            cg.fillRect(x + 2, y + h - 6, 4, 4);
+            cg.fillRect(x + w - 6, y + h - 6, 4, 4);
+        });
+
+        if (this.selectedHero === 'riley') {
+            this.cursorArrow.setPosition(this.rileyCard.x - 16, this.rileyCard.y + (this.isPortrait ? 60 : 65));
+        } else {
+            this.cursorArrow.setPosition(this.ameliaCard.x - 16, this.ameliaCard.y + (this.isPortrait ? 60 : 65));
+        }
+
+        if (this.dialogueBox) {
+            let db = this.dialogueGraphics;
+            db.clear();
+            let { x, y, w, h } = this.dialogueBox;
+
+            db.fillStyle(0x000000, 1);
+            db.fillRect(x - 2, y - 2, w + 4, h + 4);
+            db.fillStyle(0xFFFFFF, 1);
+            db.fillRect(x - 1, y - 1, w + 2, h + 2);
+            db.fillStyle(0x001840, 0.95);
+            db.fillRect(x + 1, y + 1, w - 2, h - 2);
+
+            db.fillStyle(0xF8B800, 1);
+            db.fillRect(x + 2, y + 2, 3, 3);
+            db.fillRect(x + w - 5, y + 2, 3, 3);
+            db.fillRect(x + 2, y + h - 5, 3, 3);
+            db.fillRect(x + w - 5, y + h - 5, 3, 3);
+        }
     }
 }
 
