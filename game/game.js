@@ -1017,8 +1017,14 @@ class TitleScene extends Phaser.Scene {
 
         this.renderScene(this.scale.width, this.scale.height);
 
-        this.scale.on('resize', (gameSize) => {
-            this.renderScene(gameSize.width, gameSize.height);
+        const resizeHandler = (gameSize) => {
+            if (this.sys && this.sys.isActive()) {
+                this.renderScene(gameSize.width, gameSize.height);
+            }
+        };
+        this.scale.on('resize', resizeHandler);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', resizeHandler);
         });
 
         const startSelection = () => {
@@ -1249,8 +1255,14 @@ class CharacterSelectScene extends Phaser.Scene {
 
         this.layout(this.scale.width, this.scale.height);
 
-        this.scale.on('resize', (gameSize) => {
-            this.layout(gameSize.width, gameSize.height);
+        const resizeHandler = (gameSize) => {
+            if (this.sys && this.sys.isActive()) {
+                this.layout(gameSize.width, gameSize.height);
+            }
+        };
+        this.scale.on('resize', resizeHandler);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', resizeHandler);
         });
 
         this.selectHero('riley');
@@ -1477,10 +1489,20 @@ class GameScene extends Phaser.Scene {
             .setOrigin(0, 0)
             .setScrollFactor(0, 0.1);
 
-        this.scale.on('resize', (gameSize) => {
-            if (this.oceanBg) this.oceanBg.setSize(gameSize.width, 1400);
-            this.layoutHUD(gameSize.width, gameSize.height);
-        }); 
+        const resizeHandler = (gameSize) => {
+            if (this.sys && this.sys.isActive()) {
+                if (this.oceanBg) this.oceanBg.setSize(gameSize.width, 1400);
+                this.layoutHUD(gameSize.width, gameSize.height);
+            }
+        };
+        this.scale.on('resize', resizeHandler);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', resizeHandler);
+            if (this.cursorTween) {
+                this.cursorTween.stop();
+                this.cursorTween = null;
+            }
+        });
 
         // --- SHIP WALLS ---
         // Deck 11 wall (beneath y=1300 down to y=1420)
@@ -1699,10 +1721,12 @@ class GameScene extends Phaser.Scene {
         this.hudMenuBtn = this.add.text(0, 0, '[MENU]', {
             fontSize: '10px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
-        }).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        }).setOrigin(1, 0.5).setPadding(8, 8, 8, 8).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
         this.hudMenuBtn.on('pointerover', () => this.hudMenuBtn.setFill('#FFFFFF'));
         this.hudMenuBtn.on('pointerout', () => this.hudMenuBtn.setFill('#FFD700'));
         this.hudMenuBtn.on('pointerdown', () => this.toggleInGameMenu());
+
+        this.createInGameMenu();
 
         this.layoutHUD(this.scale.width, this.scale.height);
 
@@ -1719,6 +1743,7 @@ class GameScene extends Phaser.Scene {
         }
         this.player.setInteractive({ useHandCursor: true });
         this.player.on('pointerdown', () => {
+            if (this.isMenuOpen) return;
             if (this.canBoardRaft()) {
                 this.boardRaft();
             }
@@ -2070,8 +2095,6 @@ class GameScene extends Phaser.Scene {
                 this.mobileInput.down = false;
             }
         });
-
-        this.createInGameMenu();
     }
 
     update() {
@@ -2453,69 +2476,63 @@ class GameScene extends Phaser.Scene {
             { text: 'TITLE SCREEN', action: () => this.scene.start('TitleScene') }
         ];
 
-        this.menuContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(500).setVisible(false);
-
-        // Dark dimming overlay
-        this.menuOverlay = this.add.graphics();
-        this.menuContainer.add(this.menuOverlay);
-
-        // Capcom double-border box
-        this.menuBox = this.add.graphics();
-        this.menuContainer.add(this.menuBox);
+        // Direct scene GameObjects (no Container) for reliable touch & input handling
+        this.menuOverlay = this.add.graphics().setScrollFactor(0).setDepth(498).setVisible(false);
+        this.menuBox = this.add.graphics().setScrollFactor(0).setDepth(499).setVisible(false);
 
         // Header Title
         this.menuTitle = this.add.text(0, 0, 'PAUSE MENU', {
             fontSize: '14px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 4, align: 'center'
-        }).setOrigin(0.5);
-        this.menuContainer.add(this.menuTitle);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
 
         this.menuSub = this.add.text(0, 0, '★ DISNEY DESTINY ★', {
             fontSize: '8px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2, align: 'center'
-        }).setOrigin(0.5);
-        this.menuContainer.add(this.menuSub);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
 
         // Cursor arrow
         this.menuCursor = this.add.text(0, 0, '►', {
             fontSize: '12px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
-        }).setOrigin(0.5);
-        this.menuContainer.add(this.menuCursor);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
 
-        this.tweens.add({
-            targets: this.menuCursor,
-            x: '+=4',
-            duration: 350,
-            yoyo: true,
-            repeat: -1
-        });
-
-        // Item text objects
+        // Item text objects and touch hit areas
         this.menuTextObjects = [];
+        this.menuHitBoxes = [];
         this.menuItems.forEach((item, index) => {
             let txt = this.add.text(0, 0, item.text, {
                 fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
                 stroke: '#000000', strokeThickness: 3
-            }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
+            }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(500).setVisible(false).setInteractive({ useHandCursor: true });
 
-            txt.on('pointerover', () => {
+            let hit = this.add.rectangle(0, 0, 320, 32, 0x000000, 0.001)
+                .setOrigin(0, 0.5)
+                .setScrollFactor(0)
+                .setDepth(501)
+                .setVisible(false)
+                .setInteractive({ useHandCursor: true });
+
+            const triggerItem = () => {
                 this.setMenuIndex(index);
-            });
-            txt.on('pointerdown', () => {
                 this.executeMenuItem(index);
-            });
+            };
 
-            this.menuContainer.add(txt);
+            hit.on('pointerdown', triggerItem);
+            hit.on('pointerover', () => this.setMenuIndex(index));
+
+            txt.on('pointerdown', triggerItem);
+            txt.on('pointerover', () => this.setMenuIndex(index));
+
             this.menuTextObjects.push(txt);
+            this.menuHitBoxes.push(hit);
         });
 
         // Prompt helper at bottom of box
         this.menuHelper = this.add.text(0, 0, '[ ARROWS / ENTER OR TAP ]', {
             fontSize: '8px', fill: '#B0C0D0', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2, align: 'center'
-        }).setOrigin(0.5);
-        this.menuContainer.add(this.menuHelper);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
 
         // Keyboard hotkeys
         if (this.input.keyboard) {
@@ -2555,16 +2572,47 @@ class GameScene extends Phaser.Scene {
     openInGameMenu() {
         this.isMenuOpen = true;
         this.menuSelectedIndex = 0;
-        this.player.setVelocity(0, 0);
+        if (this.player && this.player.body) {
+            this.player.setVelocity(0, 0);
+        }
+        if (this.mobileInput) {
+            this.mobileInput.left = false;
+            this.mobileInput.right = false;
+            this.mobileInput.up = false;
+            this.mobileInput.down = false;
+        }
         this.layoutInGameMenu(this.scale.width, this.scale.height);
-        this.menuContainer.setVisible(true);
+        this.setMenuVisible(true);
         this.setMenuIndex(0);
     }
 
     closeInGameMenu() {
         this.isMenuOpen = false;
-        if (this.menuContainer) {
-            this.menuContainer.setVisible(false);
+        if (this.cursorTween) {
+            this.cursorTween.stop();
+            this.cursorTween = null;
+        }
+        this.setMenuVisible(false);
+    }
+
+    setMenuVisible(visible) {
+        if (this.menuOverlay) this.menuOverlay.setVisible(visible);
+        if (this.menuBox) this.menuBox.setVisible(visible);
+        if (this.menuTitle) this.menuTitle.setVisible(visible);
+        if (this.menuSub) this.menuSub.setVisible(visible);
+        if (this.menuCursor) this.menuCursor.setVisible(visible);
+        if (this.menuHelper) this.menuHelper.setVisible(visible);
+        if (this.menuTextObjects) {
+            this.menuTextObjects.forEach(t => {
+                t.setVisible(visible);
+                if (t.input) t.input.enabled = visible;
+            });
+        }
+        if (this.menuHitBoxes) {
+            this.menuHitBoxes.forEach(h => {
+                h.setVisible(visible);
+                if (h.input) h.input.enabled = visible;
+            });
         }
     }
 
@@ -2575,12 +2623,20 @@ class GameScene extends Phaser.Scene {
 
     setMenuIndex(index) {
         this.menuSelectedIndex = index;
+        if (!this.menuTextObjects || !this.menuBoxCoords) return;
         this.menuTextObjects.forEach((txt, i) => {
             if (i === index) {
                 txt.setFill('#F8B800');
-                if (this.menuBoxCoords) {
-                    this.menuCursor.setPosition(this.menuBoxCoords.x + 36, txt.y);
-                }
+                let cursorBaseX = this.menuBoxCoords.x + 36;
+                if (this.cursorTween) this.cursorTween.stop();
+                this.menuCursor.setPosition(cursorBaseX, txt.y);
+                this.cursorTween = this.tweens.add({
+                    targets: this.menuCursor,
+                    x: cursorBaseX + 4,
+                    duration: 350,
+                    yoyo: true,
+                    repeat: -1
+                });
             } else {
                 txt.setFill('#FFFFFF');
             }
@@ -2588,13 +2644,13 @@ class GameScene extends Phaser.Scene {
     }
 
     executeMenuItem(index) {
-        if (this.menuItems[index] && this.menuItems[index].action) {
+        if (this.menuItems && this.menuItems[index] && this.menuItems[index].action) {
             this.menuItems[index].action();
         }
     }
 
     layoutInGameMenu(W, H) {
-        if (!this.menuContainer) return;
+        if (!this.menuOverlay) return;
 
         // Overlay fill
         this.menuOverlay.clear();
@@ -2603,8 +2659,8 @@ class GameScene extends Phaser.Scene {
 
         let boxW = Math.min(360, W - 32);
         let boxH = 220;
-        let boxX = W / 2 - boxW / 2;
-        let boxY = H / 2 - boxH / 2;
+        let boxX = Math.round(W / 2 - boxW / 2);
+        let boxY = Math.round(H / 2 - boxH / 2);
         this.menuBoxCoords = { x: boxX, y: boxY, w: boxW, h: boxH };
 
         // Capcom vintage double-border box
@@ -2633,13 +2689,28 @@ class GameScene extends Phaser.Scene {
 
         let startItemY = boxY + 68;
         let itemSpacing = 28;
-        this.menuTextObjects.forEach((txt, i) => {
-            let itemY = startItemY + i * itemSpacing;
-            txt.setPosition(boxX + 54, itemY);
-            if (i === this.menuSelectedIndex) {
-                this.menuCursor.setPosition(boxX + 36, itemY);
-            }
-        });
+        let itemTextX = boxX + 54;
+        let hitBoxW = boxW - 40;
+
+        if (this.menuTextObjects) {
+            this.menuTextObjects.forEach((txt, i) => {
+                let itemY = startItemY + i * itemSpacing;
+                txt.setPosition(itemTextX, itemY);
+                if (this.menuHitBoxes && this.menuHitBoxes[i]) {
+                    let hit = this.menuHitBoxes[i];
+                    hit.setPosition(boxX + 20, itemY);
+                    hit.setSize(hitBoxW, 32);
+                    if (hit.input && hit.input.hitArea) {
+                        hit.input.hitArea.width = hitBoxW;
+                        hit.input.hitArea.height = 32;
+                    }
+                }
+                if (i === this.menuSelectedIndex) {
+                    let cursorBaseX = boxX + 36;
+                    this.menuCursor.setPosition(cursorBaseX, itemY);
+                }
+            });
+        }
 
         this.menuHelper.setPosition(W / 2, boxY + boxH - 18);
     }
@@ -2683,36 +2754,84 @@ class GameScene extends Phaser.Scene {
             this.hudBg.lineBetween(0, hudHeight + 2, W, hudHeight + 2);
         }
 
-        const leftPadding = Math.max(16, insets.left + 12);
-        const rightPadding = Math.max(16, insets.right + 12);
+        const leftPadding = Math.max(12, insets.left + 8);
+        const rightPadding = Math.max(12, insets.right + 8);
+        const isNarrow = W < 520;
+        const isVeryNarrow = W < 420;
 
-        if (this.hudPlayerIcon) this.hudPlayerIcon.setPosition(leftPadding, contentY);
-        if (this.hudPlayerName) this.hudPlayerName.setPosition(leftPadding + 18, contentY - 7);
+        // --- LEFT SIDE: Player Avatar & HP ---
+        if (this.hudPlayerIcon) {
+            this.hudPlayerIcon.setPosition(leftPadding + 8, contentY);
+        }
+        let curX = leftPadding + 22;
 
-        let nameRight = leftPadding + 18 + (this.hudPlayerName ? this.hudPlayerName.width : 45) + 12;
-        if (this.hudHpText) this.hudHpText.setPosition(nameRight, contentY - 7);
-        let hpRight = nameRight + (this.hudHpText ? this.hudHpText.width : 20) + 8;
+        if (this.hudPlayerName) {
+            if (isVeryNarrow) {
+                this.hudPlayerName.setVisible(false);
+            } else {
+                this.hudPlayerName.setVisible(true);
+                this.hudPlayerName.setFontSize(isNarrow ? '8px' : '10px');
+                this.hudPlayerName.setOrigin(0, 0.5);
+                this.hudPlayerName.setPosition(curX, contentY);
+                curX += this.hudPlayerName.width + (isNarrow ? 6 : 10);
+            }
+        }
+
+        if (this.hudHpText) {
+            this.hudHpText.setFontSize(isNarrow ? '8px' : '10px');
+            this.hudHpText.setOrigin(0, 0.5);
+            this.hudHpText.setPosition(curX, contentY);
+            curX += this.hudHpText.width + 6;
+        }
 
         if (this.hpNodes) {
+            const nodeSpacing = isNarrow ? 13 : 16;
             this.hpNodes.forEach((node, i) => {
-                node.setPosition(hpRight + (i * 16), contentY);
+                node.setScale(isNarrow ? 0.8 : 1.0);
+                node.setPosition(curX + (i * nodeSpacing) + 6, contentY);
             });
         }
 
-        // Right side layout: [COIN] $0002500   [ICECREAM]   [MENU]
-        if (this.hudMenuBtn) this.hudMenuBtn.setPosition(W - rightPadding - 55, contentY - 7);
-        if (this.hudIceCreamIcon) this.hudIceCreamIcon.setPosition(W - rightPadding - 75, contentY);
-        if (this.hudScoreText) this.hudScoreText.setPosition(W - rightPadding - 180, contentY - 7);
-        if (this.hudCoinIcon) this.hudCoinIcon.setPosition(W - rightPadding - 195, contentY);
+        // --- RIGHT SIDE: [MENU]  [ICECREAM]  $0002500 [COIN] ---
+        let rightX = W - rightPadding;
 
+        // [MENU] button anchored at top-right
+        if (this.hudMenuBtn) {
+            this.hudMenuBtn.setFontSize(isNarrow ? '9px' : '10px');
+            this.hudMenuBtn.setOrigin(1, 0.5);
+            this.hudMenuBtn.setPosition(rightX, contentY);
+            rightX -= (this.hudMenuBtn.width + (isNarrow ? 8 : 14));
+        }
+
+        // Ice cream indicator
+        if (this.hudIceCreamIcon) {
+            this.hudIceCreamIcon.setPosition(rightX - 8, contentY);
+            if (this.hudIceCreamIcon.visible) {
+                rightX -= (20 + (isNarrow ? 6 : 10));
+            }
+        }
+
+        // Currency score & coin icon
+        if (this.hudScoreText) {
+            this.hudScoreText.setFontSize(isNarrow ? '8px' : '10px');
+            this.hudScoreText.setOrigin(1, 0.5);
+            this.hudScoreText.setPosition(rightX, contentY);
+            rightX -= (this.hudScoreText.width + 6);
+        }
+
+        if (this.hudCoinIcon) {
+            this.hudCoinIcon.setScale(isNarrow ? 0.85 : 1.0);
+            this.hudCoinIcon.setPosition(rightX - 6, contentY);
+        }
+
+        // --- CENTER LOCATION BANNER ---
         if (this.hudLocation) {
             this.hudLocation.setPosition(W / 2, contentY);
-            if (W < 600) {
-                this.hudLocation.setFontSize('7px');
-                this.hudLocation.setVisible(W >= 420);
+            if (W < 640) {
+                this.hudLocation.setVisible(false);
             } else {
-                this.hudLocation.setFontSize('9px');
                 this.hudLocation.setVisible(true);
+                this.hudLocation.setFontSize('9px');
             }
         }
 
