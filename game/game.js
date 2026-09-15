@@ -398,68 +398,159 @@ class BootScene extends Phaser.Scene {
 
         let g = this.add.graphics();
         
-        // Deck (Cruise Ship Teak Wood)
-        g.fillStyle(0xC19A6B, 1); 
+        // --- 8-BIT ENVIRONMENT TEXTURES ---
+        // Deck (Cruise Ship 16x16 Teak Wood Tiles in 40x40 block)
+        g.clear();
+        g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 40, 40);
-        g.lineStyle(1, 0x8B4513, 0.5);
-        for(let i = 4; i < 40; i += 8) {
-            g.beginPath();
-            g.moveTo(0, i);
-            g.lineTo(40, i);
-            g.strokePath();
+        for (let p = 0; p < 4; p++) {
+            let py = p * 10;
+            g.fillStyle(0xB86818, 1);
+            g.fillRect(1, py + 1, 38, 8);
+            g.fillStyle(0xF8A848, 1);
+            g.fillRect(1, py + 1, 38, 2);
+            g.fillStyle(0x582000, 1);
+            g.fillRect(1, py + 7, 38, 2);
+            let seamX = (p % 2 === 0) ? 20 : 10;
+            g.fillStyle(0x000000, 1);
+            g.fillRect(seamX, py + 1, 2, 8);
+            g.fillStyle(0xF8D878, 1);
+            g.fillRect(seamX - 3, py + 4, 2, 2);
+            g.fillRect(seamX + 3, py + 4, 2, 2);
+            if (p % 2 !== 0) {
+                g.fillStyle(0x000000, 1);
+                g.fillRect(30, py + 1, 2, 8);
+                g.fillStyle(0xF8D878, 1);
+                g.fillRect(27, py + 4, 2, 2);
+                g.fillRect(33, py + 4, 2, 2);
+            }
         }
-        g.lineStyle(2, 0x5C4033, 1);
-        g.strokeRect(0, 0, 40, 40);
         g.generateTexture('deck', 40, 40);
         g.clear();
 
-        // Upgraded Pool (Funnel Vision style)
-        g.fillStyle(0xE0E0E0, 1); // White/Gray tiled lip
+        // 8-Bit Stair Step (40x20)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 0, 40, 20);
+        g.fillStyle(0xB86818, 1);
+        g.fillRect(1, 1, 38, 8);
+        g.fillStyle(0xF8A848, 1);
+        g.fillRect(1, 1, 38, 2);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(1, 9, 38, 2);
+        g.fillStyle(0x404850, 1);
+        g.fillRect(1, 11, 38, 8);
+        g.fillStyle(0x202830, 1);
+        g.fillRect(1, 17, 38, 2);
+        g.generateTexture('stair_step', 40, 20);
+        g.clear();
+
+        // Upgraded 8-Bit NES Pool Tile (40x40)
+        g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 40, 40);
-        g.fillStyle(0x00BFFF, 0.8); // Deep blue water
-        g.fillRect(4, 4, 32, 36);
-        // Water surface highlight
-        g.fillStyle(0xFFFFFF, 0.4);
-        g.fillRect(6, 6, 28, 4);
+        g.fillStyle(0xE4E8EC, 1);
+        g.fillRect(2, 2, 36, 6);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(2, 2, 36, 2);
+        g.fillStyle(0x8898A8, 1);
+        g.fillRect(2, 6, 36, 2);
+        g.fillStyle(0x003888, 1);
+        g.fillRect(2, 8, 36, 30);
+        g.fillStyle(0x00A8E8, 1);
+        g.fillRect(4, 10, 32, 26);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(6, 12, 12, 2);
+        g.fillRect(22, 12, 10, 2);
+        g.fillRect(10, 18, 8, 2);
+        g.fillRect(24, 24, 8, 2);
+        g.fillRect(8, 28, 14, 2);
+        g.fillStyle(0x0068C8, 0.7);
+        g.fillRect(4, 20, 32, 1);
+        g.fillRect(4, 30, 32, 1);
+        g.fillRect(20, 10, 1, 26);
         g.generateTexture('pool', 40, 40);
         g.clear();
 
-        // Thin Transparent Railing (shorter by one rung)
-        g.fillStyle(0xFFFFFF, 0.5); // Semi-transparent white
-        g.fillRect(0, 15, 40, 4);  // Top rail (handrail)
-        g.fillRect(0, 30, 40, 2); // Mid rail 1
-        g.fillRect(0, 15, 4, 25); // Left post
-        g.fillRect(36, 15, 4, 25); // Right post
+        // 8-Bit Retro Cruise Ship Railing (40x40)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 8, 40, 6);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(0, 9, 40, 4);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(0, 9, 40, 1);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 14, 4, 26);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(1, 14, 2, 26);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(36, 14, 4, 26);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(37, 14, 2, 26);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(4, 24, 32, 3);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(4, 25, 32, 1);
+        g.fillStyle(0x0058A8, 0.45);
+        g.fillRect(4, 14, 32, 10);
+        g.fillRect(4, 27, 32, 13);
+        g.fillStyle(0xFFFFFF, 0.6);
+        g.fillRect(8, 15, 2, 8);
+        g.fillRect(12, 17, 2, 6);
+        g.fillRect(24, 28, 2, 8);
+        g.fillRect(28, 30, 2, 6);
         g.generateTexture('railing', 40, 40);
         g.clear();
 
-        g.fillStyle(0x8B0000, 1);
+        // 8-Bit Cabin/Lounge Door (40x60)
+        g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 40, 60);
+        g.fillStyle(0x203858, 1);
+        g.fillRect(2, 2, 36, 56);
+        g.fillStyle(0x002048, 1);
+        g.fillRect(5, 5, 30, 50);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(9, 9, 22, 18);
+        g.fillStyle(0x58B8F8, 1);
+        g.fillRect(11, 11, 18, 14);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(12, 12, 4, 12);
+        g.fillRect(18, 12, 2, 8);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(7, 34, 4, 8);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(7, 34, 2, 2);
+        g.fillStyle(0x001430, 1);
+        g.fillRect(9, 44, 22, 8);
+        g.fillStyle(0x003068, 1);
+        g.fillRect(10, 45, 20, 6);
         g.generateTexture('door', 40, 60);
         g.clear();
 
-        g.fillStyle(0xFFFFFF, 0.9);
-        g.lineStyle(2, 0x0000FF, 1);
+        // Tube Platform
+        g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 80, 20);
-        g.strokeRect(0, 0, 80, 20);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(2, 2, 76, 16);
+        g.fillStyle(0x0058F8, 1);
+        g.fillRect(4, 4, 72, 12);
         g.generateTexture('tube', 80, 20);
         g.clear();
 
-        // Slide Tube (AquaMouse)
-        g.fillStyle(0x87CEFA, 0.6); // Light transparent blue
+        // 8-Bit AquaMouse Transparent Slide Tube (40x40)
+        g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 40, 40);
-        g.lineStyle(4, 0xFF4500, 0.8); // Orange/Red stripe
-        g.beginPath();
-        g.moveTo(0, 40);
-        g.lineTo(40, 0);
-        g.strokePath();
-        g.lineStyle(4, 0xFFD700, 0.8); // Yellow stripe
-        g.beginPath();
-        g.moveTo(0, 0);
-        g.lineTo(40, 40);
-        g.strokePath();
-        g.lineStyle(2, 0x00BFFF, 1); // Border
-        g.strokeRect(0, 0, 40, 40);
+        g.fillStyle(0x58B8F8, 0.7);
+        g.fillRect(2, 2, 36, 36);
+        g.fillStyle(0xFFFFFF, 0.75);
+        g.fillRect(4, 4, 32, 2);
+        g.fillRect(4, 34, 32, 2);
+        g.fillStyle(0xE83818, 1);
+        for (let i = 0; i < 40; i += 4) {
+            g.fillRect(i, 40 - i - 3, 4, 3);
+        }
+        g.fillStyle(0xF8B800, 1);
+        for (let i = 0; i < 40; i += 4) {
+            g.fillRect(i, i, 4, 3);
+        }
         g.generateTexture('slide_tube', 40, 40);
         g.clear();
 
@@ -468,17 +559,35 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('btn', 80, 80);
         g.clear();
 
-        // Ice Cream Stand
-        g.fillStyle(0xFFFFFF, 1); // White base
-        g.fillRect(0, 20, 60, 40);
-        g.fillStyle(0xFFC0CB, 1); // Pink awning
-        g.fillRect(0, 0, 60, 20);
+        // 8-Bit "Eye Scream Treats" Stand (60x60)
         g.fillStyle(0x000000, 1);
-        g.fillRect(10, 20, 40, 20); // Counter window
+        g.fillRect(0, 0, 60, 60);
+        for (let a = 0; a < 6; a++) {
+            g.fillStyle((a % 2 === 0) ? 0xF85898 : 0xFFFFFF, 1);
+            g.fillRect(2 + a * 9, 2, 9, 18);
+        }
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 20, 60, 3);
+        g.fillStyle(0xF0F0F0, 1);
+        g.fillRect(4, 23, 52, 34);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(10, 25, 40, 18);
+        g.fillStyle(0x002848, 1);
+        g.fillRect(12, 27, 36, 14);
+        g.fillStyle(0xE0E0E0, 1);
+        g.fillRect(16, 29, 12, 10);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(20, 36, 4, 3);
+        g.fillStyle(0xB87828, 1);
+        g.fillRect(4, 43, 52, 4);
+        g.fillStyle(0xF85898, 1);
+        g.fillRect(8, 50, 44, 7);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(10, 52, 40, 3);
         g.generateTexture('icecream_stand', 60, 60);
         g.clear();
 
-        // Ice Cream Cones (Multiple Flavors)
+        // 8-Bit Ice Cream Cones (30x30)
         const flavors = [
             { key: 'strawberry', color: 0xFF69B4 },
             { key: 'chocolate', color: 0x8B4513 },
@@ -486,74 +595,155 @@ class BootScene extends Phaser.Scene {
             { key: 'mint', color: 0x98FF98 }
         ];
         for (let flavor of flavors) {
-            g.fillStyle(0xD2B48C, 1); // Cone
-            g.fillTriangle(15, 30, 5, 15, 25, 15);
+            g.fillStyle(0x000000, 1);
+            g.fillRect(8, 2, 14, 14);
+            g.fillRect(10, 16, 10, 12);
             g.fillStyle(flavor.color, 1);
-            g.fillCircle(15, 12, 10);
+            g.fillRect(9, 3, 12, 12);
+            g.fillStyle(0xFFFFFF, 1);
+            g.fillRect(10, 4, 3, 3);
+            g.fillStyle(0xD2B48C, 1);
+            g.fillRect(11, 16, 8, 10);
+            g.fillStyle(0xA07040, 1);
+            g.fillRect(12, 19, 6, 2);
+            g.fillRect(13, 23, 4, 2);
             g.generateTexture('icecream_' + flavor.key, 30, 30);
             g.clear();
         }
 
-        // Raft
-        g.fillStyle(0xFFFF00, 1); // Yellow raft
-        g.fillRoundedRect(0, 0, 40, 20, 8);
-        g.fillStyle(0x000000, 0.2); // Inner hole
-        g.fillRoundedRect(5, 5, 30, 10, 4);
+        // 8-Bit AquaMouse Raft (40x20)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 0, 40, 20);
+        g.fillStyle(0xF8E800, 1);
+        g.fillRect(2, 2, 36, 16);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(4, 3, 32, 2);
+        g.fillStyle(0xB89800, 1);
+        g.fillRect(2, 15, 36, 3);
+        g.fillStyle(0x000000, 1);
+        g.fillRect(8, 6, 24, 8);
+        g.fillStyle(0x303840, 1);
+        g.fillRect(9, 7, 22, 6);
+        g.fillStyle(0xD82000, 1);
+        g.fillRect(3, 8, 3, 4);
+        g.fillRect(34, 8, 3, 4);
         g.generateTexture('raft', 40, 20);
         g.clear();
 
-        // Sun
-        g.fillStyle(0xFFD700, 1);
-        g.fillCircle(40, 40, 40);
+        // 8-Bit Retro Sun (80x80)
+        g.fillStyle(0x000000, 1);
+        g.fillCircle(40, 40, 34);
+        g.fillStyle(0xF8A800, 1);
+        g.fillCircle(40, 40, 32);
+        g.fillStyle(0xFCE838, 1);
+        g.fillCircle(40, 40, 28);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(32, 32, 6);
+        for (let a = 0; a < 8; a++) {
+            let rad = (a * Math.PI) / 4;
+            let rx = 40 + Math.cos(rad) * 36;
+            let ry = 40 + Math.sin(rad) * 36;
+            g.fillStyle(0xF8A800, 1);
+            g.fillRect(rx - 3, ry - 3, 6, 6);
+            g.fillStyle(0xFCE838, 1);
+            g.fillRect(rx - 2, ry - 2, 4, 4);
+        }
         g.generateTexture('sun', 80, 80);
         g.clear();
 
-        // Cloud
-        g.fillStyle(0xFFFFFF, 0.8);
-        g.fillCircle(30, 30, 30);
-        g.fillCircle(60, 20, 20);
-        g.fillCircle(80, 30, 30);
-        g.fillCircle(55, 40, 25);
+        // 8-Bit Stepped Cloud (110x60)
+        g.fillStyle(0x000000, 1);
+        g.fillCircle(30, 32, 26);
+        g.fillCircle(58, 24, 22);
+        g.fillCircle(82, 32, 26);
+        g.fillRect(15, 34, 80, 24);
+        g.fillStyle(0xE0E8F0, 1);
+        g.fillCircle(30, 32, 24);
+        g.fillCircle(58, 24, 20);
+        g.fillCircle(82, 32, 24);
+        g.fillRect(16, 35, 78, 20);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillCircle(28, 28, 20);
+        g.fillCircle(56, 20, 17);
+        g.fillCircle(80, 28, 20);
+        g.fillRect(18, 30, 72, 16);
         g.generateTexture('cloud', 110, 60);
         g.clear();
 
-        // Bird (V shape)
-        g.lineStyle(2, 0x000000, 1);
-        g.beginPath();
-        g.moveTo(0, 10);
-        g.lineTo(10, 20);
-        g.lineTo(20, 10);
-        g.strokePath();
+        // 8-Bit Flying Seagull (20x20)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(2, 6, 6, 3);
+        g.fillRect(6, 9, 8, 3);
+        g.fillRect(12, 6, 6, 3);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(3, 7, 4, 1);
+        g.fillRect(7, 10, 6, 1);
+        g.fillRect(13, 7, 4, 1);
+        g.fillStyle(0xF8A800, 1);
+        g.fillRect(9, 12, 2, 2);
         g.generateTexture('bird', 20, 20);
         g.clear();
 
-        // Ship Wall (White with red stripe and spaced out portholes)
-        g.fillStyle(0xFFFFFF, 1);
+        // 8-Bit Ship Wall (480x120) with Capcom NES Portholes & Racing Stripe
+        g.fillStyle(0xE8ECF0, 1);
         g.fillRect(0, 0, 480, 120);
-        g.fillStyle(0x000000, 0.1); // subtle line for deck separation
+        g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 480, 4);
-        g.fillStyle(0xFF0000, 1);
-        g.fillRect(0, 110, 480, 10); // Red stripe
-        
-        // Portholes (Pair of them in the middle of this 480px block)
-        g.fillStyle(0x444444, 1);
-        g.fillCircle(200, 60, 20);
-        g.fillCircle(280, 60, 20);
-        
-        g.fillStyle(0x87CEEB, 1);
-        g.fillCircle(200, 60, 16);
-        g.fillCircle(280, 60, 16);
-        
+        g.fillStyle(0xB0B8C0, 1);
+        for (let r = 8; r < 480; r += 24) {
+            g.fillStyle(0x000000, 1);
+            g.fillRect(r, 6, 4, 4);
+            g.fillStyle(0xFFFFFF, 1);
+            g.fillRect(r + 1, 6, 2, 2);
+        }
+        g.fillStyle(0xD0D8E0, 1);
+        for (let x = 120; x < 480; x += 120) {
+            g.fillRect(x, 4, 2, 102);
+        }
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 104, 480, 14);
+        g.fillStyle(0xC81018, 1);
+        g.fillRect(0, 106, 480, 8);
+        g.fillStyle(0xF8B800, 1);
+        g.fillRect(0, 114, 480, 2);
+        [200, 280].forEach(px => {
+            g.fillStyle(0x000000, 1);
+            g.fillCircle(px, 55, 22);
+            g.fillStyle(0xB8C0C8, 1);
+            g.fillCircle(px, 55, 20);
+            g.fillStyle(0x606870, 1);
+            g.fillCircle(px, 55, 17);
+            g.fillStyle(0x000000, 1);
+            g.fillCircle(px, 55, 15);
+            g.fillStyle(0x3888D8, 1);
+            g.fillCircle(px, 55, 13);
+            g.fillStyle(0x88D0F8, 1);
+            g.fillRect(px - 9, 46, 6, 12);
+            g.fillStyle(0xFFFFFF, 1);
+            g.fillRect(px - 7, 48, 2, 8);
+        });
         g.generateTexture('ship_wall', 480, 120);
         g.clear();
 
-        // Ocean Background
-        g.fillStyle(0x006994, 1); // Deep blue ocean
-        g.fillRect(0, 0, 800, 300);
-        // Add some wave details
-        g.fillStyle(0x007BA7, 1);
-        for(let w = 0; w < 20; w++) {
-            g.fillRect(Math.random() * 800, Math.random() * 300, 40, 5);
+        // 8-Bit Retro Ocean Background (800x300)
+        const oceanBands = [
+            { y: 0, h: 40, color: 0x0068A8 },
+            { y: 40, h: 60, color: 0x005088 },
+            { y: 100, h: 80, color: 0x003868 },
+            { y: 180, h: 120, color: 0x002048 }
+        ];
+        oceanBands.forEach(b => {
+            g.fillStyle(b.color, 1);
+            g.fillRect(0, b.y, 800, b.h);
+        });
+        for (let y = 10; y < 280; y += 18) {
+            let offset = (y % 36 === 0) ? 0 : 25;
+            for (let x = offset; x < 800; x += 50) {
+                g.fillStyle(0xFFFFFF, 0.9);
+                g.fillRect(x + 4, y, 10, 2);
+                g.fillStyle(0x58B8F8, 1);
+                g.fillRect(x, y + 2, 18, 2);
+            }
         }
         g.generateTexture('ocean_bg', 800, 300);
 
@@ -765,7 +955,7 @@ class GameScene extends Phaser.Scene {
             for (let i = 0; i < steps; i++) {
                 let sx = startX + (i * 40 * dirX);
                 let sy = startY + (i * 40 * dirY);
-                this.add.image(sx, sy, 'deck').setScale(1, 0.5); // Visual step
+                this.add.image(sx, sy, 'stair_step'); // Authentic 8-bit beveled step
                 this.add.image(sx, sy - 20, 'railing').setDepth(10);
             }
         };
