@@ -746,6 +746,44 @@ class BootScene extends Phaser.Scene {
             }
         }
         g.generateTexture('ocean_bg', 800, 300);
+        g.clear();
+
+        // 8-Bit Capcom HP Hit-Point Node Full (14x14)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 0, 14, 14);
+        g.fillStyle(0x182848, 1);
+        g.fillRect(1, 1, 12, 12);
+        g.fillStyle(0x00F8A0, 1);
+        g.fillRect(2, 2, 10, 10);
+        g.fillStyle(0x00C870, 1);
+        g.fillRect(2, 7, 10, 5);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(3, 3, 3, 3);
+        g.generateTexture('hp_node_full', 14, 14);
+        g.clear();
+
+        // 8-Bit Capcom HP Hit-Point Node Empty (14x14)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(0, 0, 14, 14);
+        g.fillStyle(0x404850, 1);
+        g.fillRect(1, 1, 12, 12);
+        g.fillStyle(0x101418, 1);
+        g.fillRect(2, 2, 10, 10);
+        g.generateTexture('hp_node_empty', 14, 14);
+        g.clear();
+
+        // 8-Bit Gold Coin Icon (14x14)
+        g.fillStyle(0x000000, 1);
+        g.fillRect(2, 0, 10, 14);
+        g.fillRect(0, 2, 14, 10);
+        g.fillStyle(0xF8D800, 1);
+        g.fillRect(2, 1, 10, 12);
+        g.fillRect(1, 2, 12, 10);
+        g.fillStyle(0xFFFFFF, 1);
+        g.fillRect(3, 3, 3, 3);
+        g.fillStyle(0xB89800, 1);
+        g.fillRect(4, 5, 6, 4);
+        g.generateTexture('coin_icon', 14, 14);
 
         g.destroy();
     }
@@ -823,26 +861,30 @@ class TitleScene extends Phaser.Scene {
         g.fillStyle(0x003366, 1);
         g.fillTriangle(shipX + 190, shipY - 30, shipX + 240, shipY - 30, shipX + 240, shipY + 20);
 
-        // Title
+        // Title Box - Authentic Capcom 1px Vintage Border
         let titleBg = this.add.graphics();
-        titleBg.fillStyle(0x000000, 0.45);
-        titleBg.fillRoundedRect(W/2 - 300, H * 0.3 - 40, 600, 70, 16);
+        titleBg.fillStyle(0x001028, 0.85);
+        titleBg.fillRect(W/2 - 340, H * 0.22, 680, 76);
+        titleBg.lineStyle(2, 0xFFFFFF, 1);
+        titleBg.strokeRect(W/2 - 340, H * 0.22, 680, 76);
+        titleBg.lineStyle(1, 0x000000, 1);
+        titleBg.strokeRect(W/2 - 342, H * 0.22 - 2, 684, 80);
 
-        let title = this.add.text(W / 2, H * 0.3, '🌊 Disney Destiny Adventure 🌊', {
-            fontSize: '32px', fill: '#ffffff', fontFamily: 'Arial',
-            fontStyle: 'bold', align: 'center', stroke: '#002244', strokeThickness: 4
+        let title = this.add.text(W / 2, H * 0.28, 'DISNEY DESTINY ADVENTURE', {
+            fontSize: '18px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            align: 'center', stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
-        let startText = this.add.text(W / 2, H * 0.42, 'Tap or Click to Start', {
-            fontSize: '22px', fill: '#FFD700', fontFamily: 'Arial', fontStyle: 'bold',
-            stroke: '#000', strokeThickness: 3
+        let startText = this.add.text(W / 2, H * 0.44, 'PUSH START BUTTON', {
+            fontSize: '14px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.tweens.add({ targets: startText, alpha: 0.3, duration: 800, yoyo: true, repeat: -1 });
+        this.tweens.add({ targets: startText, alpha: 0.2, duration: 600, yoyo: true, repeat: -1 });
 
         this.scale.on('resize', (gameSize) => {
-            title.setPosition(gameSize.width / 2, gameSize.height * 0.3);
-            startText.setPosition(gameSize.width / 2, gameSize.height * 0.42);
+            title.setPosition(gameSize.width / 2, gameSize.height * 0.28);
+            startText.setPosition(gameSize.width / 2, gameSize.height * 0.44);
         });
 
         this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
@@ -852,20 +894,35 @@ class TitleScene extends Phaser.Scene {
 class CharacterSelectScene extends Phaser.Scene {
     constructor() { super('CharacterSelectScene'); }
     create() {
-        let title = this.add.text(this.cameras.main.centerX, 100, 'Select Your Character', { fontSize: '32px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
+        let title = this.add.text(this.cameras.main.centerX, 80, 'SELECT PLAYER', {
+            fontSize: '20px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 4, align: 'center'
+        }).setOrigin(0.5);
         
         let riley = this.add.image(this.cameras.main.centerX - 150, this.cameras.main.centerY, 'riley').setScale(2).setInteractive({ useHandCursor: true });
-        let rileyText = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 65, 'Riley (11)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let rileyText = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 70, '1P: RILEY (11)', {
+            fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
         
         let amelia = this.add.image(this.cameras.main.centerX + 150, this.cameras.main.centerY, 'amelia').setScale(2).setInteractive({ useHandCursor: true });
-        let ameliaText = this.add.text(this.cameras.main.centerX + 150, this.cameras.main.centerY + 65, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let ameliaText = this.add.text(this.cameras.main.centerX + 150, this.cameras.main.centerY + 70, '2P: AMELIA (8)', {
+            fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+
+        let subText = this.add.text(this.cameras.main.centerX, 480, 'CHOOSE YOUR HERO', {
+            fontSize: '10px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5);
 
         this.scale.on('resize', (gameSize) => {
-            title.setPosition(gameSize.width / 2, 100);
+            title.setPosition(gameSize.width / 2, 80);
             riley.setPosition(gameSize.width / 2 - 150, gameSize.height / 2);
-            rileyText.setPosition(gameSize.width / 2 - 150, gameSize.height / 2 + 65);
+            rileyText.setPosition(gameSize.width / 2 - 150, gameSize.height / 2 + 70);
             amelia.setPosition(gameSize.width / 2 + 150, gameSize.height / 2);
-            ameliaText.setPosition(gameSize.width / 2 + 150, gameSize.height / 2 + 65);
+            ameliaText.setPosition(gameSize.width / 2 + 150, gameSize.height / 2 + 70);
+            subText.setPosition(gameSize.width / 2, gameSize.height - 60);
         });
 
         riley.on('pointerover', () => riley.setTint(0xcccccc));
@@ -969,11 +1026,11 @@ class GameScene extends Phaser.Scene {
         platforms.create(1790, 1300, 'deck').setScale(30.5, 1).refreshBody(); 
         
         doors.create(400, 1250, 'door'); 
-        this.add.text(360, 1190, 'Senses Spa', { fontSize: '14px', fill: '#000' });
+        this.add.text(350, 1190, 'SENSES SPA', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         
         doors.create(2100, 1250, 'door');
-        this.add.text(2030, 1190, 'Marceline Market', { fontSize: '14px', fill: '#000' });
-        this.add.text(950, 1050, 'Funnel Vision', { fontSize: '24px', fill: '#fff', backgroundColor: '#000', padding: 10 });
+        this.add.text(2010, 1190, 'MARCELINE MARKET', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        this.add.text(930, 1050, 'FUNNEL VISION', { fontSize: '11px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 8, y: 6 }, fontFamily: '"Press Start 2P", monospace', stroke: '#0058F8', strokeThickness: 3 });
         
         // Movie Screen
         let screenBg = this.add.graphics();
@@ -1000,7 +1057,7 @@ class GameScene extends Phaser.Scene {
 
         const iceCreamStands = this.physics.add.staticGroup();
         iceCreamStands.create(1500, 1250, 'icecream_stand');
-        this.add.text(1460, 1200, 'Eye Scream Treats', { fontSize: '14px', fill: '#000', backgroundColor: '#FFB6C1', padding: 4 });
+        this.add.text(1430, 1190, 'EYE SCREAM TREATS', { fontSize: '9px', fill: '#F85898', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         // Stairs up to Deck 12 (right-up)
         createStaircase(60, 1290, 7, 1, -1);
@@ -1016,11 +1073,11 @@ class GameScene extends Phaser.Scene {
         platforms.create(1800, 1040, 'deck').setScale(5, 1).setVisible(false).refreshBody(); // Toy Story floor
         platforms.create(2160, 1020, 'deck').setScale(13, 1).refreshBody();    // right of Toy Story
 
-        this.add.text(600, 950, 'Quiet Cove', { fontSize: '14px', fill: '#000' });
-        this.add.text(1700, 950, 'Toy Story Splash', { fontSize: '14px', fill: '#000' });
+        this.add.text(590, 950, 'QUIET COVE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        this.add.text(1680, 950, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         doors.create(2000, 970, 'door');
-        this.add.text(1960, 910, 'Hero Zone', { fontSize: '14px', fill: '#000' });
+        this.add.text(1960, 910, 'HERO ZONE', { fontSize: '9px', fill: '#E83818', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         // Stairs up to Deck 13 (left-up)
         createStaircase(2300, 1010, 6, -1, -1);
@@ -1034,27 +1091,25 @@ class GameScene extends Phaser.Scene {
         platforms.create(1265, 780, 'deck').setScale(40, 1).refreshBody();     // right of splashdown → reaches x=2065
 
         // AquaMouse Splashdown Pool
-        this.add.text(350, 710, 'Splashdown', { fontSize: '14px', fill: '#000' });
+        this.add.text(340, 710, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
-        this.add.text(1200, 720, 'AquaMouse Entrance', { fontSize: '16px', fill: '#000' });
+        this.add.text(1170, 715, 'AQUAMOUSE ENTRANCE', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         
         // AquaMouse Raft Lift
         this.raft = this.physics.add.sprite(1200, 750, 'raft');
         this.raft.body.allowGravity = false;
         this.raft.setImmovable(true);
         
-        // Wait, if ridingRaft logic goes in overlap, we can do it here. We need it to be bound after player creation though. 
-        // We can create the raft and a zone here, but overlap with player must happen after player is created.
         let liftZone = this.add.zone(1200, 750, 80, 80);
         this.physics.world.enable(liftZone);
         liftZone.body.allowGravity = false;
         
         this.ridingRaft = false;
-        this.liftZone = liftZone; // save reference for collider later
+        this.liftZone = liftZone;
 
         // Top Deck of AquaMouse
         platforms.create(750, 360, 'deck').setScale(2.5, 1).refreshBody();
-        this.add.text(700, 310, 'AquaMouse Top!', { fontSize: '16px', fill: '#000' });
+        this.add.text(670, 310, 'AQUAMOUSE LAUNCH', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         // --- RAILINGS ---
         // Foreground transparent railings
@@ -1107,9 +1162,50 @@ class GameScene extends Phaser.Scene {
 
         // Removed duplicate pool
 
-        // UI
-        this.add.text(16, 16, `Playing as: ${this.characterName}`, { fontSize: '20px', fill: '#000' }).setScrollFactor(0);
-        this.add.text(16, 40, 'Climb to the top of the AquaMouse and slide down!', { fontSize: '16px', fill: '#333' }).setScrollFactor(0);
+        // --- TOP-MOUNTED CAPCOM RETRO HUD (960x42) ---
+        this.score = 2500;
+        this.hudBg = this.add.graphics().setScrollFactor(0).setDepth(99);
+        this.hudBg.fillStyle(0x001024, 0.9);
+        this.hudBg.fillRect(0, 0, 960, 42);
+        this.hudBg.lineStyle(2, 0xFFFFFF, 1);
+        this.hudBg.lineBetween(0, 42, 960, 42);
+        this.hudBg.lineStyle(1, 0x000000, 1);
+        this.hudBg.lineBetween(0, 44, 960, 44);
+
+        // Player Avatar Icon & Name
+        let playerIconKey = this.selectedCharacter === 'riley' ? 'riley_idle' : 'amelia_idle';
+        this.hudPlayerIcon = this.add.image(24, 21, playerIconKey).setScale(0.7).setScrollFactor(0).setDepth(100);
+        this.hudPlayerName = this.add.text(42, 14, this.characterName.toUpperCase(), {
+            fontSize: '10px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setScrollFactor(0).setDepth(100);
+
+        // Retro HP Hit-Point Nodes
+        this.add.text(135, 14, 'HP', {
+            fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setScrollFactor(0).setDepth(100);
+        this.hpNodes = [];
+        for (let i = 0; i < 4; i++) {
+            let node = this.add.image(175 + i * 18, 20, 'hp_node_full').setScrollFactor(0).setDepth(100);
+            this.hpNodes.push(node);
+        }
+
+        // Center Location Banner
+        this.hudLocation = this.add.text(480, 20, '[ DECK 11: MAIN POOL ]', {
+            fontSize: '9px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+
+        // Right Zero-Padded Currency/Score Counter: $0002500
+        this.add.image(740, 20, 'coin_icon').setScrollFactor(0).setDepth(100);
+        this.hudScoreText = this.add.text(755, 14, '$0002500', {
+            fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setScrollFactor(0).setDepth(100);
+
+        // Ice Cream Status Indicator Icon
+        this.hudIceCreamIcon = this.add.image(890, 20, 'icecream_strawberry').setScale(0.8).setScrollFactor(0).setDepth(100).setVisible(false);
 
         // Player (Spawn in the middle of Deck 11)
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
@@ -1169,9 +1265,10 @@ class GameScene extends Phaser.Scene {
         this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
         const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
-        const promptLabel = isTouch ? 'Tap to board AquaMouse! 🛶' : 'Press ENTER or click to board! 🛶';
+        const promptLabel = isTouch ? '[ TAP TO BOARD AQUAMOUSE! ]' : '[ ENTER: BOARD AQUAMOUSE! ]';
         this.boardPromptText = this.add.text(1200, 700, promptLabel, {
-            fontSize: '14px', fill: '#fff', backgroundColor: '#0055aa', padding: { x: 8, y: 5 }, fontStyle: 'bold'
+            fontSize: '10px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 10, y: 8 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5).setDepth(25).setVisible(false);
         this.boardPromptText.setInteractive({ useHandCursor: true });
         this.boardPromptText.on('pointerdown', () => this.boardRaft());
@@ -1227,6 +1324,7 @@ class GameScene extends Phaser.Scene {
                         onComplete: () => {
                             // 3. Splashdown & Hop Out
                             this.ridingRaft = false;
+                            this.score += 1500;
                             if (this.player && this.player.body) {
                                 this.player.body.enable = true;
                                 this.player.body.allowGravity = true;
@@ -1269,19 +1367,27 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, iceCreamStands, () => {
             if (!this.hasIceCream) {
                 this.hasIceCream = true;
+                this.score += 500;
                 
                 // Change flavor
                 let flavor = this.iceCreamFlavors[this.currentFlavorIndex];
                 this.iceCreamSprite.setTexture('icecream_' + flavor);
+                if (this.hudIceCreamIcon) {
+                    this.hudIceCreamIcon.setTexture('icecream_' + flavor).setVisible(true);
+                }
                 this.currentFlavorIndex = (this.currentFlavorIndex + 1) % this.iceCreamFlavors.length;
                 
                 this.iceCreamSprite.setVisible(true);
                 
-                let yumText = this.add.text(this.player.x, this.player.y - 40, 'Yummy!', { fontSize: '16px', fill: '#ff0000', fontStyle: 'bold' });
+                let yumText = this.add.text(this.player.x, this.player.y - 40, '+500 PTS!', {
+                    fontSize: '11px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+                    stroke: '#000000', strokeThickness: 3
+                });
                 
                 this.time.delayedCall(5000, () => {
                     this.hasIceCream = false;
                     this.iceCreamSprite.setVisible(false);
+                    if (this.hudIceCreamIcon) this.hudIceCreamIcon.setVisible(false);
                 });
                 
                 this.tweens.add({
@@ -1794,6 +1900,34 @@ class GameScene extends Phaser.Scene {
             this.cat.setScale(1, 1);
             this.mouse.x = 930;
             this.cat.x = 900; 
+        }
+
+        // Update Capcom Retro Location Banner
+        let loc = 'DECK 11: MAIN POOL';
+        if (this.onSlide) {
+            loc = 'AQUAMOUSE: TUBE SLIDE!';
+        } else if (this.ridingRaft) {
+            loc = 'AQUAMOUSE: RIDING RAFT!';
+        } else if (inWater) {
+            loc = 'SWIMMING: POOL';
+        } else if (this.currentStair !== null) {
+            loc = 'STAIRWAY TRAVERSAL';
+        } else if (this.player.y < 850) {
+            loc = 'DECK 13: AQUAMOUSE';
+        } else if (this.player.y < 1100) {
+            loc = (this.player.x > 1850) ? 'DECK 12: HERO ZONE' : 'DECK 12: QUIET COVE';
+        } else {
+            loc = (this.player.x > 1950) ? 'DECK 11: MARCELINE MARKET' : ((this.player.x < 500) ? 'DECK 11: SENSES SPA' : 'DECK 11: MAIN POOL');
+        }
+        let locFormatted = `[ ${loc} ]`;
+        if (this.hudLocation && this.hudLocation.text !== locFormatted) {
+            this.hudLocation.setText(locFormatted);
+        }
+
+        // Update Zero-Padded Score Counter ($0002500)
+        let scoreStr = '$' + String(this.score).padStart(7, '0');
+        if (this.hudScoreText && this.hudScoreText.text !== scoreStr) {
+            this.hudScoreText.setText(scoreStr);
         }
 
         // Reset per-frame states
