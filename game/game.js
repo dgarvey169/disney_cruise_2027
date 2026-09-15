@@ -1,17 +1,38 @@
+// Dynamic safe-area detection helper for notch/island/curved screens
+function getSafeAreaInsets() {
+    let top = 0, left = 0, right = 0, bottom = 0;
+    try {
+        const div = document.createElement('div');
+        div.style.paddingTop = 'env(safe-area-inset-top, 0px)';
+        div.style.paddingLeft = 'env(safe-area-inset-left, 0px)';
+        div.style.paddingRight = 'env(safe-area-inset-right, 0px)';
+        div.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)';
+        div.style.position = 'fixed';
+        div.style.left = '-9999px';
+        div.style.top = '-9999px';
+        div.style.visibility = 'hidden';
+        document.body.appendChild(div);
+        const style = window.getComputedStyle(div);
+        top = parseFloat(style.paddingTop) || 0;
+        left = parseFloat(style.paddingLeft) || 0;
+        right = parseFloat(style.paddingRight) || 0;
+        bottom = parseFloat(style.paddingBottom) || 0;
+        document.body.removeChild(div);
+    } catch (e) {}
+    return { top, left, right, bottom };
+}
+
 // Game Configuration
 const config = {
     type: Phaser.AUTO,
     parent: 'game-container',
-    width: 960,
-    height: 540,
     backgroundColor: '#87CEEB',
     pixelArt: true,
     roundPixels: true,
     scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 960,
-        height: 540
+        mode: Phaser.Scale.RESIZE,
+        width: '100%',
+        height: '100%'
     },
     physics: {
         default: 'arcade',
@@ -795,9 +816,33 @@ class BootScene extends Phaser.Scene {
 class TitleScene extends Phaser.Scene {
     constructor() { super('TitleScene'); }
     create() {
-        const W = this.scale.width;
-        const H = this.scale.height;
-        let g = this.add.graphics();
+        this.bgGraphics = this.add.graphics();
+        this.titleBg = this.add.graphics();
+
+        this.titleText = this.add.text(0, 0, 'DISNEY DESTINY ADVENTURE', {
+            fontSize: '18px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            align: 'center', stroke: '#000000', strokeThickness: 4
+        }).setOrigin(0.5);
+
+        this.startText = this.add.text(0, 0, 'PUSH START BUTTON', {
+            fontSize: '14px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+
+        this.tweens.add({ targets: this.startText, alpha: 0.2, duration: 600, yoyo: true, repeat: -1 });
+
+        this.renderScene(this.scale.width, this.scale.height);
+
+        this.scale.on('resize', (gameSize) => {
+            this.renderScene(gameSize.width, gameSize.height);
+        });
+
+        this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
+    }
+
+    renderScene(W, H) {
+        let g = this.bgGraphics;
+        g.clear();
 
         // Caribbean sky gradient
         g.fillGradientStyle(0x87CEEB, 0x87CEEB, 0x00BFFF, 0x00BFFF, 1);
@@ -814,14 +859,16 @@ class TitleScene extends Phaser.Scene {
         }
 
         // Sun
+        let sunX = Math.min(W * 0.15, 140);
+        let sunY = Math.min(H * 0.18, 110);
         g.fillStyle(0xFFD700, 1);
-        g.fillCircle(W * 0.15, H * 0.18, 50);
+        g.fillCircle(sunX, sunY, 50);
         g.lineStyle(3, 0xFFEC8B, 0.7);
         for (let a = 0; a < 360; a += 30) {
             let rad = Phaser.Math.DegToRad(a);
             g.beginPath();
-            g.moveTo(W * 0.15 + Math.cos(rad) * 55, H * 0.18 + Math.sin(rad) * 55);
-            g.lineTo(W * 0.15 + Math.cos(rad) * 75, H * 0.18 + Math.sin(rad) * 75);
+            g.moveTo(sunX + Math.cos(rad) * 55, sunY + Math.sin(rad) * 55);
+            g.lineTo(sunX + Math.cos(rad) * 75, sunY + Math.sin(rad) * 75);
             g.strokePath();
         }
 
@@ -835,103 +882,118 @@ class TitleScene extends Phaser.Scene {
 
         // Disney Cruise Ship
         let shipX = W * 0.5, shipY = H * 0.65;
+        let scale = Math.min(1, (W - 32) / 480);
+
         g.fillStyle(0x003366, 1);
-        g.fillRect(shipX - 200, shipY - 30, 400, 50);
+        g.fillRect(shipX - 200 * scale, shipY - 30 * scale, 400 * scale, 50 * scale);
         g.fillStyle(0xFFFFFF, 1);
-        g.fillRect(shipX - 190, shipY - 90, 380, 60);
-        g.fillRect(shipX - 170, shipY - 140, 340, 52);
-        g.fillRect(shipX - 140, shipY - 185, 280, 47);
+        g.fillRect(shipX - 190 * scale, shipY - 90 * scale, 380 * scale, 60 * scale);
+        g.fillRect(shipX - 170 * scale, shipY - 140 * scale, 340 * scale, 52 * scale);
+        g.fillRect(shipX - 140 * scale, shipY - 185 * scale, 280 * scale, 47 * scale);
         g.fillStyle(0xCC0000, 1);
-        g.fillRect(shipX - 200, shipY - 36, 400, 8);
+        g.fillRect(shipX - 200 * scale, shipY - 36 * scale, 400 * scale, 8 * scale);
         g.fillStyle(0x87CEEB, 1);
         for (let i = -3; i <= 3; i++) {
-            g.fillCircle(shipX + i * 50, shipY - 60, 7);
-            g.fillCircle(shipX + i * 45 + 15, shipY - 112, 6);
+            g.fillCircle(shipX + i * 50 * scale, shipY - 60 * scale, 7 * scale);
+            g.fillCircle(shipX + (i * 45 + 15) * scale, shipY - 112 * scale, 6 * scale);
         }
         // Mickey-eared funnel
         g.fillStyle(0xCC0000, 1);
-        g.fillRect(shipX + 40, shipY - 235, 40, 50);
+        g.fillRect(shipX + 40 * scale, shipY - 235 * scale, 40 * scale, 50 * scale);
         g.fillStyle(0x000000, 1);
-        g.fillCircle(shipX + 50, shipY - 248, 18);
-        g.fillCircle(shipX + 70, shipY - 248, 18);
-        g.fillCircle(shipX + 60, shipY - 230, 26);
+        g.fillCircle(shipX + 50 * scale, shipY - 248 * scale, 18 * scale);
+        g.fillCircle(shipX + 70 * scale, shipY - 248 * scale, 18 * scale);
+        g.fillCircle(shipX + 60 * scale, shipY - 230 * scale, 26 * scale);
         // Bow
         g.fillStyle(0xFFFFFF, 1);
-        g.fillTriangle(shipX + 190, shipY - 90, shipX + 240, shipY - 30, shipX + 190, shipY - 30);
+        g.fillTriangle(shipX + 190 * scale, shipY - 90 * scale, shipX + 240 * scale, shipY - 30 * scale, shipX + 190 * scale, shipY - 30 * scale);
         g.fillStyle(0x003366, 1);
-        g.fillTriangle(shipX + 190, shipY - 30, shipX + 240, shipY - 30, shipX + 240, shipY + 20);
+        g.fillTriangle(shipX + 190 * scale, shipY - 30 * scale, shipX + 240 * scale, shipY - 30 * scale, shipX + 240 * scale, shipY + 20 * scale);
 
         // Title Box - Authentic Capcom 1px Vintage Border
-        let titleBg = this.add.graphics();
-        titleBg.fillStyle(0x001028, 0.85);
-        titleBg.fillRect(W/2 - 340, H * 0.22, 680, 76);
-        titleBg.lineStyle(2, 0xFFFFFF, 1);
-        titleBg.strokeRect(W/2 - 340, H * 0.22, 680, 76);
-        titleBg.lineStyle(1, 0x000000, 1);
-        titleBg.strokeRect(W/2 - 342, H * 0.22 - 2, 684, 80);
+        this.titleBg.clear();
+        let boxW = Math.min(680, W - 32);
+        let boxH = W < 500 ? 64 : 76;
+        let boxY = Math.max(20, H * 0.18);
+        this.titleBg.fillStyle(0x001028, 0.85);
+        this.titleBg.fillRect(W/2 - boxW/2, boxY, boxW, boxH);
+        this.titleBg.lineStyle(2, 0xFFFFFF, 1);
+        this.titleBg.strokeRect(W/2 - boxW/2, boxY, boxW, boxH);
+        this.titleBg.lineStyle(1, 0x000000, 1);
+        this.titleBg.strokeRect(W/2 - boxW/2 - 2, boxY - 2, boxW + 4, boxH + 4);
 
-        let title = this.add.text(W / 2, H * 0.28, 'DISNEY DESTINY ADVENTURE', {
-            fontSize: '18px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
-            align: 'center', stroke: '#000000', strokeThickness: 4
-        }).setOrigin(0.5);
+        let titleFontSize = W < 420 ? '11px' : (W < 600 ? '14px' : '18px');
+        this.titleText.setFontSize(titleFontSize).setPosition(W / 2, boxY + boxH / 2);
 
-        let startText = this.add.text(W / 2, H * 0.44, 'PUSH START BUTTON', {
-            fontSize: '14px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
-            stroke: '#000000', strokeThickness: 3
-        }).setOrigin(0.5);
-
-        this.tweens.add({ targets: startText, alpha: 0.2, duration: 600, yoyo: true, repeat: -1 });
-
-        this.scale.on('resize', (gameSize) => {
-            title.setPosition(gameSize.width / 2, gameSize.height * 0.28);
-            startText.setPosition(gameSize.width / 2, gameSize.height * 0.44);
-        });
-
-        this.input.on('pointerdown', () => this.scene.start('CharacterSelectScene'));
+        let startFontSize = W < 420 ? '10px' : '14px';
+        this.startText.setFontSize(startFontSize).setPosition(W / 2, boxY + boxH + (W < 500 ? 25 : 36));
     }
 }
 
 class CharacterSelectScene extends Phaser.Scene {
     constructor() { super('CharacterSelectScene'); }
     create() {
-        let title = this.add.text(this.cameras.main.centerX, 80, 'SELECT PLAYER', {
+        this.title = this.add.text(0, 0, 'SELECT PLAYER', {
             fontSize: '20px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 4, align: 'center'
         }).setOrigin(0.5);
         
-        let riley = this.add.image(this.cameras.main.centerX - 150, this.cameras.main.centerY, 'riley').setScale(2).setInteractive({ useHandCursor: true });
-        let rileyText = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 70, '1P: RILEY (11)', {
+        this.riley = this.add.image(0, 0, 'riley').setScale(2).setInteractive({ useHandCursor: true });
+        this.rileyText = this.add.text(0, 0, '1P: RILEY (11)', {
             fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
         
-        let amelia = this.add.image(this.cameras.main.centerX + 150, this.cameras.main.centerY, 'amelia').setScale(2).setInteractive({ useHandCursor: true });
-        let ameliaText = this.add.text(this.cameras.main.centerX + 150, this.cameras.main.centerY + 70, '2P: AMELIA (8)', {
+        this.amelia = this.add.image(0, 0, 'amelia').setScale(2).setInteractive({ useHandCursor: true });
+        this.ameliaText = this.add.text(0, 0, '2P: AMELIA (8)', {
             fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        let subText = this.add.text(this.cameras.main.centerX, 480, 'CHOOSE YOUR HERO', {
+        this.subText = this.add.text(0, 0, 'CHOOSE YOUR HERO', {
             fontSize: '10px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5);
 
+        this.layout(this.scale.width, this.scale.height);
+
         this.scale.on('resize', (gameSize) => {
-            title.setPosition(gameSize.width / 2, 80);
-            riley.setPosition(gameSize.width / 2 - 150, gameSize.height / 2);
-            rileyText.setPosition(gameSize.width / 2 - 150, gameSize.height / 2 + 70);
-            amelia.setPosition(gameSize.width / 2 + 150, gameSize.height / 2);
-            ameliaText.setPosition(gameSize.width / 2 + 150, gameSize.height / 2 + 70);
-            subText.setPosition(gameSize.width / 2, gameSize.height - 60);
+            this.layout(gameSize.width, gameSize.height);
         });
 
-        riley.on('pointerover', () => riley.setTint(0xcccccc));
-        riley.on('pointerout', () => riley.clearTint());
-        amelia.on('pointerover', () => amelia.setTint(0xcccccc));
-        amelia.on('pointerout', () => amelia.clearTint());
+        this.riley.on('pointerover', () => this.riley.setTint(0xcccccc));
+        this.riley.on('pointerout', () => this.riley.clearTint());
+        this.amelia.on('pointerover', () => amelia.setTint(0xcccccc));
+        this.amelia.on('pointerout', () => amelia.clearTint());
 
-        riley.on('pointerdown', () => this.scene.start('GameScene', { character: 'riley', name: 'Riley' }));
-        amelia.on('pointerdown', () => this.scene.start('GameScene', { character: 'amelia', name: 'Amelia' }));
+        this.riley.on('pointerdown', () => this.scene.start('GameScene', { character: 'riley', name: 'Riley' }));
+        this.amelia.on('pointerdown', () => this.scene.start('GameScene', { character: 'amelia', name: 'Amelia' }));
+    }
+
+    layout(W, H) {
+        const insets = getSafeAreaInsets();
+        const topY = Math.max(50, insets.top + 30);
+        this.title.setPosition(W / 2, topY);
+
+        if (W < 520 && H > W) {
+            // Mobile Portrait: Stack characters vertically
+            let centerY1 = H * 0.38;
+            let centerY2 = H * 0.65;
+            this.riley.setPosition(W / 2, centerY1);
+            this.rileyText.setPosition(W / 2, centerY1 + 65);
+            this.amelia.setPosition(W / 2, centerY2);
+            this.ameliaText.setPosition(W / 2, centerY2 + 65);
+        } else {
+            // Landscape or Desktop: Side by side
+            let spacing = Math.min(160, W * 0.22);
+            let centerY = H * 0.52;
+            this.riley.setPosition(W / 2 - spacing, centerY);
+            this.rileyText.setPosition(W / 2 - spacing, centerY + 70);
+            this.amelia.setPosition(W / 2 + spacing, centerY);
+            this.ameliaText.setPosition(W / 2 + spacing, centerY + 70);
+        }
+
+        this.subText.setPosition(W / 2, H - Math.max(30, insets.bottom + 20));
     }
 }
 
@@ -985,7 +1047,8 @@ class GameScene extends Phaser.Scene {
             .setScrollFactor(0, 0.1);
 
         this.scale.on('resize', (gameSize) => {
-            this.oceanBg.setSize(gameSize.width, 1400);
+            if (this.oceanBg) this.oceanBg.setSize(gameSize.width, 1400);
+            this.layoutHUD(gameSize.width, gameSize.height);
         }); 
 
         // --- SHIP WALLS ---
@@ -1162,15 +1225,9 @@ class GameScene extends Phaser.Scene {
 
         // Removed duplicate pool
 
-        // --- TOP-MOUNTED CAPCOM RETRO HUD (960x42) ---
+        // --- TOP-MOUNTED CAPCOM RETRO HUD ---
         this.score = 2500;
         this.hudBg = this.add.graphics().setScrollFactor(0).setDepth(99);
-        this.hudBg.fillStyle(0x001024, 0.9);
-        this.hudBg.fillRect(0, 0, 960, 42);
-        this.hudBg.lineStyle(2, 0xFFFFFF, 1);
-        this.hudBg.lineBetween(0, 42, 960, 42);
-        this.hudBg.lineStyle(1, 0x000000, 1);
-        this.hudBg.lineBetween(0, 44, 960, 44);
 
         // Player Avatar Icon & Name
         let playerIconKey = this.selectedCharacter === 'riley' ? 'riley_idle' : 'amelia_idle';
@@ -1181,7 +1238,7 @@ class GameScene extends Phaser.Scene {
         }).setScrollFactor(0).setDepth(100);
 
         // Retro HP Hit-Point Nodes
-        this.add.text(135, 14, 'HP', {
+        this.hudHpText = this.add.text(135, 14, 'HP', {
             fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setScrollFactor(0).setDepth(100);
@@ -1198,7 +1255,7 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
         // Right Zero-Padded Currency/Score Counter: $0002500
-        this.add.image(740, 20, 'coin_icon').setScrollFactor(0).setDepth(100);
+        this.hudCoinIcon = this.add.image(740, 20, 'coin_icon').setScrollFactor(0).setDepth(100);
         this.hudScoreText = this.add.text(755, 14, '$0002500', {
             fontSize: '10px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
@@ -1206,6 +1263,8 @@ class GameScene extends Phaser.Scene {
 
         // Ice Cream Status Indicator Icon
         this.hudIceCreamIcon = this.add.image(890, 20, 'icecream_strawberry').setScale(0.8).setScrollFactor(0).setDepth(100).setVisible(false);
+
+        this.layoutHUD(this.scale.width, this.scale.height);
 
         // Player (Spawn in the middle of Deck 11)
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
@@ -1934,6 +1993,54 @@ class GameScene extends Phaser.Scene {
         this.wasInWater = inWater;
         this.inWater = false;
         this.nearRaft = false;
+    }
+
+    layoutHUD(W, H) {
+        const insets = getSafeAreaInsets();
+        const topOffset = insets.top;
+        const hudHeight = 42 + topOffset;
+        const contentY = topOffset + 21;
+
+        if (this.hudBg) {
+            this.hudBg.clear();
+            this.hudBg.fillStyle(0x001024, 0.92);
+            this.hudBg.fillRect(0, 0, W, hudHeight);
+            this.hudBg.lineStyle(2, 0xFFFFFF, 1);
+            this.hudBg.lineBetween(0, hudHeight, W, hudHeight);
+            this.hudBg.lineStyle(1, 0x000000, 1);
+            this.hudBg.lineBetween(0, hudHeight + 2, W, hudHeight + 2);
+        }
+
+        const leftPadding = Math.max(16, insets.left + 12);
+        const rightPadding = Math.max(16, insets.right + 12);
+
+        if (this.hudPlayerIcon) this.hudPlayerIcon.setPosition(leftPadding, contentY);
+        if (this.hudPlayerName) this.hudPlayerName.setPosition(leftPadding + 18, contentY - 7);
+
+        let nameRight = leftPadding + 18 + (this.hudPlayerName ? this.hudPlayerName.width : 45) + 12;
+        if (this.hudHpText) this.hudHpText.setPosition(nameRight, contentY - 7);
+        let hpRight = nameRight + (this.hudHpText ? this.hudHpText.width : 20) + 8;
+
+        if (this.hpNodes) {
+            this.hpNodes.forEach((node, i) => {
+                node.setPosition(hpRight + (i * 16), contentY);
+            });
+        }
+
+        if (this.hudIceCreamIcon) this.hudIceCreamIcon.setPosition(W - rightPadding - 10, contentY);
+        if (this.hudScoreText) this.hudScoreText.setPosition(W - rightPadding - 120, contentY - 7);
+        if (this.hudCoinIcon) this.hudCoinIcon.setPosition(W - rightPadding - 135, contentY);
+
+        if (this.hudLocation) {
+            this.hudLocation.setPosition(W / 2, contentY);
+            if (W < 540) {
+                this.hudLocation.setFontSize('7px');
+                this.hudLocation.setVisible(W >= 360);
+            } else {
+                this.hudLocation.setFontSize('9px');
+                this.hudLocation.setVisible(true);
+            }
+        }
     }
 }
 
