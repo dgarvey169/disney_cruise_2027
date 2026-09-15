@@ -29,3 +29,16 @@
   - **Stair 1**: Connects Deck 11 (floor `y = 1280`) to Deck 12 (floor `y = 1000`) between `x = 60` and `x = 340`. Slope equation: `floorY = 1340 - x`.
   - **Stair 2**: Connects Deck 12 (floor `y = 1000`) to Deck 13 (floor `y = 760`) between `x = 2060` and `x = 2300`. Slope equation: `floorY = 760 + (x - 2060)`.
 
+# Feature Roadmap & Design Memory
+
+- **DuckTales (NES / Capcom 8-Bit) Aesthetic Direction (Issue #11)**:
+  - **Sprite & Palette Constraints**: Authentic late-80s Capcom NES aesthetic with black-bordered sprites, crisp 8-bit styling, and strict NES PPU-style color palette limits (four 3-color background palettes and four 3-color sprite palettes).
+  - **Tile Grid Discipline**: Strict 16×16 px tile structures for all ship deck environments, props, platforms, and hull textures.
+  - **Capcom Retro HUD & UI**: Top-mounted HUD featuring retro HP health spheres/nodes, zero-padded score/currency counters (`$0000000`), vintage 1px border dialogue boxes, and uppercase bitmap/pixel typography (e.g., `Press Start 2P`).
+  - **Rendering & Viewport**: Canvas rendered with `image-rendering: pixelated; crisp-edges;`, dynamic 16:9 viewport with `object-fit: contain`, and touch/mobile layouts respecting `env(safe-area-inset-*)`.
+
+- **Bespoke Character Levels & Storylines (Issue #12)**:
+  - **Character Themes**: Custom levels aboard the Disney Destiny tailored to each playable character: Riley (age 11: Edge Tween Club, Hero Zone sports & interactive obstacle courses) and Amelia (age 8: Oceaneer Club, Bibbidi Bobbidi Boutique makeover mini-game).
+  - **Storyboarding First**: Storyboards, narrative arcs, and level progression flows must be collaboratively drafted and aligned before breaking out into implementation sub-tasks.
+
+

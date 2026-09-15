@@ -60,12 +60,19 @@ Massive zig-zag platforming layout. Dynamic resize — fills any screen size or 
 - Parallax sky, clouds, sun, birds, and deep ocean extending the full world height
 - Dynamic resize: `Phaser.Scale.RESIZE` — snaps to browser window on resize or orientation change
 
-### 🔲 Kid's Clubs *(Pending)*
+### 🔲 Kid's Clubs *(Pending - Tracked in Issue #12)*
 - Edge (if Riley) / Oceaneer's Club (if Amelia)
 
 ### 🔲 Theaters *(Pending)*
 - Movie theater and grand Walt Disney Theatre
 
-### 🔲 Boutique — Amelia only *(Pending)*
+### 🔲 Boutique — Amelia only *(Pending - Tracked in Issue #12)*
 - Bibbidi Bobbidi Boutique makeover mini-game
 - Customize dress color & style, hair style, crown, and scepter
+
+## 5. Visual Direction & Style Roadmap (Tracked in Issue #11)
+- **Inspiration:** Capcom NES era (*DuckTales* 1989, *Mega Man*).
+- **Style:** 8-bit pixel art styling, black-bordered sprites, high-contrast NES PPU palettes, and 16×16 tile grid discipline.
+- **HUD & Typography:** Retro health spheres, zero-padded currency/score counter (`$0000000`), uppercase bitmap font (`Press Start 2P`), vintage dialogue boxes.
+- **Display:** Sharp pixelated canvas scaling (`image-rendering: pixelated; crisp-edges;`).
+

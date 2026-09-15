@@ -3,7 +3,7 @@
 > **Repository:** `dgarvey169/disney_cruise_2027`  
 > **Workspace Path:** `/home/drew/Projects/Gemini_Projects/disney_cruise_2027`  
 > **Active Branch:** `main`  
-> **Last Updated:** September 4, 2026
+> **Last Updated:** September 14, 2026
 
 ---
 
@@ -74,7 +74,8 @@ The game is a Phaser 3 browser-based platformer. All changes are on the `main` b
   - Slide follows a spline curve from top deck → splashdown pool on Deck 13.
 - **Mobile Controls:** Floating joystick — touch left half of screen to spawn joystick at finger position, drag to move. Tap right half of screen with a second finger to jump. Replaces old fixed D-pad buttons.
 
-### Known Pending Items (from GDD)
-- Kid's Clubs: Edge (Riley) / Oceaneer's Club (Amelia)
-- Theaters: Movie theater and Walt Disney Theatre
-- Boutique mini-game (Amelia only)
+### Known Pending Items & Feature Roadmap
+- **DuckTales (NES) Graphics & UI Overhaul:** Tracked in Issue #11. Capcom 8-bit styling, black-bordered sprites, PPU palette limits, 16×16 tile grid, retro HP health spheres, padded zero score display, pixelated canvas rendering.
+- **Bespoke Character Levels & Storylines:** Tracked in Issue #12. Placeholder for dedicated character levels (Riley: Edge / Hero Zone; Amelia: Oceaneer Club / Bibbidi Bobbidi Boutique makeover mini-game). Storyboards and narrative flow to be drafted before scoping sub-tasks.
+- **Theaters (Pending):** Movie theater and grand Walt Disney Theatre.
+
