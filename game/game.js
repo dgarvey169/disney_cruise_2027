@@ -27,98 +27,376 @@ const config = {
 
 class BootScene extends Phaser.Scene {
     constructor() { super('BootScene'); }
-    preload() {
+    generatePixelTexture(key, width, height, pixelRows, palette, pixelSize = 2) {
         let g = this.add.graphics();
-        
-        // Riley (Blue)
-        g.fillStyle(0xffdcb1, 1); // Skin
-        g.fillRect(8, 4, 16, 14); // Head
-        g.fillStyle(0xA0522D, 1); // Light Brown Hair
-        g.fillRect(6, 2, 20, 6);  // Top hair
-        g.fillRect(6, 8, 6, 12);  // Left hair
-        g.fillRect(20, 8, 6, 12); // Right hair
-        g.fillStyle(0x0000ff, 1); // Blue Shirt
-        g.fillRect(8, 18, 16, 16); // Body
-        g.fillStyle(0xffdcb1, 1); // Arms
-        g.fillRect(4, 18, 4, 14); // Left arm
-        g.fillRect(24, 18, 4, 14); // Right arm
-        g.fillStyle(0x000080, 1); // Dark Blue Pants
-        g.fillRect(8, 34, 6, 14); // Left leg
-        g.fillRect(18, 34, 6, 14); // Right leg
-        g.generateTexture('riley', 32, 48);
-        g.clear();
-
-        // Amelia (Pink)
-        g.fillStyle(0xffdcb1, 1); // Skin
-        g.fillRect(8, 4, 16, 12); // Head
-        g.fillStyle(0xA0522D, 1); // Light Brown Hair
-        g.fillRect(6, 2, 20, 6);  // Top hair
-        g.fillRect(6, 8, 5, 10);  // Left hair
-        g.fillRect(21, 8, 5, 10); // Right hair
-        g.fillStyle(0xff69b4, 1); // Pink Dress
-        g.fillRect(8, 16, 16, 14); // Body
-        g.fillRect(4, 26, 24, 6); // Skirt flare
-        g.fillStyle(0xffdcb1, 1); // Arms
-        g.fillRect(4, 16, 4, 10); // Left arm
-        g.fillRect(24, 16, 4, 10); // Right arm
-        g.fillStyle(0xffdcb1, 1); // Legs
-        g.fillRect(10, 32, 4, 8); // Left leg
-        g.fillRect(18, 32, 4, 8); // Right leg
-        g.generateTexture('amelia', 32, 40);
-        g.clear();
-        
-        // Floaties colors: Red, Yellow, Green, Purple
-        const floatieColors = [0xFF0000, 0xFFFF00, 0x00FF00, 0x800080];
-
-        for (let i = 0; i < floatieColors.length; i++) {
-            let color = floatieColors[i];
-
-            // Riley Swim
-            g.fillStyle(0xffdcb1, 1); // Skin
-            g.fillRect(8, 4, 16, 14); // Head
-            g.fillStyle(0xA0522D, 1); // Light Brown Hair
-            g.fillRect(6, 2, 20, 6);  
-            g.fillRect(6, 8, 6, 12);  
-            g.fillRect(20, 8, 6, 12); 
-            g.fillStyle(0x0000ff, 1); // Blue Shirt
-            g.fillRect(8, 18, 16, 16); 
-            g.fillStyle(0xffdcb1, 1); // Arms raised
-            g.fillRect(2, 8, 4, 14); 
-            g.fillRect(26, 8, 4, 14); 
-            // Inner tube
-            g.fillStyle(color, 1);
-            g.fillRoundedRect(2, 22, 28, 12, 6);
-            g.fillStyle(0xFFFFFF, 1);
-            g.fillRect(6, 22, 4, 12);
-            g.fillRect(22, 22, 4, 12);
-            g.fillStyle(0x000080, 1); // Dark Blue Pants
-            g.fillRect(8, 34, 16, 10); 
-            g.generateTexture('riley_swim_' + i, 32, 48);
-            g.clear();
-
-            // Amelia Swim
-            g.fillStyle(0xffdcb1, 1); // Skin
-            g.fillRect(8, 4, 16, 12); // Head
-            g.fillStyle(0xA0522D, 1); // Light Brown Hair
-            g.fillRect(6, 2, 20, 6);  
-            g.fillRect(6, 8, 5, 10);  
-            g.fillRect(21, 8, 5, 10); 
-            g.fillStyle(0xff69b4, 1); // Pink Dress
-            g.fillRect(8, 16, 16, 14); 
-            g.fillStyle(0xffdcb1, 1); // Arms raised
-            g.fillRect(2, 8, 4, 10); 
-            g.fillRect(26, 8, 4, 10); 
-            // Inner tube
-            g.fillStyle(color, 1);
-            g.fillRoundedRect(2, 22, 28, 12, 6);
-            g.fillStyle(0xFFFFFF, 1);
-            g.fillRect(6, 22, 4, 12);
-            g.fillRect(22, 22, 4, 12);
-            g.fillStyle(0xff69b4, 1);
-            g.fillRect(6, 34, 20, 6);
-            g.generateTexture('amelia_swim_' + i, 32, 40);
-            g.clear();
+        for (let y = 0; y < pixelRows.length; y++) {
+            let row = pixelRows[y];
+            for (let x = 0; x < row.length; x++) {
+                let ch = row[x];
+                if (ch !== '.' && palette[ch] !== undefined) {
+                    g.fillStyle(palette[ch], 1);
+                    g.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                }
+            }
         }
+        g.generateTexture(key, width, height);
+        g.destroy();
+    }
+
+    preload() {
+        // --- 8-BIT CAPCOM NES CHARACTER PALETTES & FRAMES ---
+        const RILEY_PALETTE = {
+            'B': 0x000000,
+            'S': 0xFCD8A8,
+            's': 0xD89060,
+            'H': 0x783C00,
+            'h': 0x482000,
+            'C': 0x0068F8,
+            'c': 0x0038A8,
+            'D': 0x001868,
+            'W': 0xFFFFFF,
+            'R': 0xFC3800
+        };
+
+        const AMELIA_PALETTE = {
+            'B': 0x000000,
+            'S': 0xFCD8A8,
+            's': 0xD89060,
+            'H': 0xB87828,
+            'h': 0x784818,
+            'P': 0xF85898,
+            'p': 0xB81858,
+            'W': 0xFFFFFF
+        };
+
+        const riley_idle = [
+            ".....BBBB.......",
+            "...BBCCCCBB.....",
+            "..BCCCCCCCCBB...",
+            "..BCCCCCCCCCB...",
+            "..BBBBBBBBBBB...",
+            "...BHHHHHHHB....",
+            "..BSSSSSSSSB....",
+            "..BSWBSSWBSSB...",
+            "..BSSSSSSSSB....",
+            "..BSSWWSBSSB....",
+            "...BSSSSSB......",
+            "...BBBBBBB......",
+            "..BCCCCCCCB.....",
+            ".BCCCCCCCCCB....",
+            ".BCCCWCCCCB.....",
+            ".BCCCCCCCCCB....",
+            "..BBBBBBBBB.....",
+            "..BDDDDDDDDB....",
+            "..BDDD.BDDDB....",
+            "..BDDB..BDDB....",
+            "..BSSB..BSSB....",
+            "..BSSB..BSSB....",
+            ".BWWWB..BWWWB...",
+            "BBBBB...BBBBB..."
+        ];
+
+        const riley_walk_0 = [
+            ".....BBBB.......",
+            "...BBCCCCBB.....",
+            "..BCCCCCCCCBB...",
+            "..BCCCCCCCCCB...",
+            "..BBBBBBBBBBB...",
+            "...BHHHHHHHB....",
+            "..BSSSSSSSSB....",
+            "..BSWBSSWBSSB...",
+            "..BSSSSSSSSB....",
+            "..BSSWWSBSSB....",
+            "...BSSSSSB......",
+            "...BBBBBBB......",
+            "..BCCCCCCCB.....",
+            ".BCCCCCCCCCB....",
+            ".BCCCWCCCCB.....",
+            ".BCCCCCCCCCB....",
+            "..BBBBBBBBB.....",
+            "..BDDDDDDDDB....",
+            ".BDDDB..BDDDB...",
+            ".BSSB....BSSB...",
+            ".BSSB.....BSSB..",
+            "BWWWB......BWWWB",
+            "BBBBB......BBBBB",
+            "................"
+        ];
+
+        const riley_walk_1 = [
+            ".....BBBB.......",
+            "...BBCCCCBB.....",
+            "..BCCCCCCCCBB...",
+            "..BCCCCCCCCCB...",
+            "..BBBBBBBBBBB...",
+            "...BHHHHHHHB....",
+            "..BSSSSSSSSB....",
+            "..BSWBSSWBSSB...",
+            "..BSSSSSSSSB....",
+            "..BSSWWSBSSB....",
+            "...BSSSSSB......",
+            "...BBBBBBB......",
+            "..BCCCCCCCB.....",
+            ".BCCCCCCCCCB....",
+            ".BCCCWCCCCB.....",
+            ".BCCCCCCCCCB....",
+            "..BBBBBBBBB.....",
+            "..BDDDDDDDDB....",
+            "..BDDD.BDDDB....",
+            "..BDDB..BDDB....",
+            "..BSSB..BSSB....",
+            "..BSSB..BSSB....",
+            ".BWWWB..BWWWB...",
+            "BBBBB...BBBBB..."
+        ];
+
+        const riley_walk_2 = [
+            ".....BBBB.......",
+            "...BBCCCCBB.....",
+            "..BCCCCCCCCBB...",
+            "..BCCCCCCCCCB...",
+            "..BBBBBBBBBBB...",
+            "...BHHHHHHHB....",
+            "..BSSSSSSSSB....",
+            "..BSWBSSWBSSB...",
+            "..BSSSSSSSSB....",
+            "..BSSWWSBSSB....",
+            "...BSSSSSB......",
+            "...BBBBBBB......",
+            "..BCCCCCCCB.....",
+            ".BCCCCCCCCCB....",
+            ".BCCCWCCCCB.....",
+            ".BCCCCCCCCCB....",
+            "..BBBBBBBBB.....",
+            "..BDDDDDDDDB....",
+            "...BDDDB..BDDDB.",
+            "...BSSB....BSSB.",
+            "..BSSB.....BSSB.",
+            ".BWWWB......BWWW",
+            ".BBBBB......BBBB",
+            "................"
+        ];
+
+        const riley_jump = [
+            ".....BBBB.......",
+            "...BBCCCCBB.....",
+            "..BCCCCCCCCBB...",
+            "..BCCCCCCCCCB...",
+            "..BBBBBBBBBBB...",
+            "...BHHHHHHHB....",
+            "..BSSSSSSSSB....",
+            "..BSWBSSWBSSB...",
+            "..BSSSSSSSSB....",
+            "..BSSWWSBSSB....",
+            "...BSSSSSB......",
+            "..BBCCCCCCCB....",
+            ".BCCCCCCCCCB....",
+            "BCCCCWCCCCB.....",
+            ".BCCCCCCCCCB....",
+            "..BBBBBBBBB.....",
+            "..BDDDDDDDDB....",
+            "..BDDDDDDDDB....",
+            ".BDDB...BDDB....",
+            ".BSSB...BSSB....",
+            ".BWWWB..BWWWB...",
+            "..BBBB...BBBB...",
+            "................",
+            "................"
+        ];
+
+        const riley_swim = [
+            ".....BBBB.......",
+            "...BBCCCCBB.....",
+            "..BCCCCCCCCBB...",
+            "..BCCCCCCCCCB...",
+            "..BBBBBBBBBBB...",
+            "...BHHHHHHHB....",
+            "..BSSSSSSSSB....",
+            "..BSWBSSWBSSB...",
+            "..BSSSSSSSSB....",
+            "..BSSWWSBSSB....",
+            "...BSSSSSB......",
+            "..BSSSSSSSB.....",
+            ".BSSBCCCCBSSB...",
+            "BFFFFFFFFFFFFB..",
+            "BFfWWFFFfWWfFB..",
+            "BffffffffffffB..",
+            ".BBBBBBBBBBBB...",
+            "...BDDDB.BDDDB..",
+            "...BSSB...BSSB..",
+            "...BWWWB.BWWWB..",
+            "....BBB...BBB...",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const amelia_idle = [
+            "....BBBBBB......",
+            "..BBHHHHHHBB....",
+            ".BHHHHHHHHHHB...",
+            ".BHHPPBBHHHBB...",
+            "..BPPWPPBBSSB...",
+            "..BHHBBSSSSSB...",
+            "..BSSSSSSSSSB...",
+            "..BSWBSSWBSB....",
+            "..BSSSSSSSSB....",
+            "..BSSWWSSB......",
+            "...BSSSSB.......",
+            "...BPPPPB.......",
+            "..BPPPPPPB......",
+            ".BPPPWPPPPB.....",
+            ".BPPPPPPPPB.....",
+            "BPPPPPPPPPPB....",
+            "BBBBBBBBBBBB....",
+            "..BSSB..BSSB....",
+            "..BSSB..BSSB....",
+            ".BWWWB..BWWWB..."
+        ];
+
+        const amelia_walk_0 = [
+            "....BBBBBB......",
+            "..BBHHHHHHBB....",
+            ".BHHHHHHHHHHB...",
+            ".BHHPPBBHHHBB...",
+            "..BPPWPPBBSSB...",
+            "..BHHBBSSSSSB...",
+            "..BSSSSSSSSSB...",
+            "..BSWBSSWBSB....",
+            "..BSSSSSSSSB....",
+            "..BSSWWSSB......",
+            "...BSSSSB.......",
+            "...BPPPPB.......",
+            "..BPPPPPPB......",
+            ".BPPPWPPPPB.....",
+            ".BPPPPPPPPB.....",
+            "BPPPPPPPPPPB....",
+            "BBBBBBBBBBBB....",
+            ".BSSB....BSSB...",
+            ".BSSB.....BSSB..",
+            "BWWWB......BWWWB"
+        ];
+
+        const amelia_walk_1 = [
+            "....BBBBBB......",
+            "..BBHHHHHHBB....",
+            ".BHHHHHHHHHHB...",
+            ".BHHPPBBHHHBB...",
+            "..BPPWPPBBSSB...",
+            "..BHHBBSSSSSB...",
+            "..BSSSSSSSSSB...",
+            "..BSWBSSWBSB....",
+            "..BSSSSSSSSB....",
+            "..BSSWWSSB......",
+            "...BSSSSB.......",
+            "...BPPPPB.......",
+            "..BPPPPPPB......",
+            ".BPPPWPPPPB.....",
+            ".BPPPPPPPPB.....",
+            "BPPPPPPPPPPB....",
+            "BBBBBBBBBBBB....",
+            "..BSSB..BSSB....",
+            "..BSSB..BSSB....",
+            ".BWWWB..BWWWB..."
+        ];
+
+        const amelia_walk_2 = [
+            "....BBBBBB......",
+            "..BBHHHHHHBB....",
+            ".BHHHHHHHHHHB...",
+            ".BHHPPBBHHHBB...",
+            "..BPPWPPBBSSB...",
+            "..BHHBBSSSSSB...",
+            "..BSSSSSSSSSB...",
+            "..BSWBSSWBSB....",
+            "..BSSSSSSSSB....",
+            "..BSSWWSSB......",
+            "...BSSSSB.......",
+            "...BPPPPB.......",
+            "..BPPPPPPB......",
+            ".BPPPWPPPPB.....",
+            ".BPPPPPPPPB.....",
+            "BPPPPPPPPPPB....",
+            "BBBBBBBBBBBB....",
+            "...BSSB..BSSB...",
+            "..BSSB....BSSB..",
+            ".BWWWB....BWWWB."
+        ];
+
+        const amelia_jump = [
+            "....BBBBBB......",
+            "..BBHHHHHHBB....",
+            ".BHHHHHHHHHHB...",
+            ".BHHPPBBHHHBB...",
+            "..BPPWPPBBSSB...",
+            "..BHHBBSSSSSB...",
+            "..BSSSSSSSSSB...",
+            "..BSWBSSWBSB....",
+            "..BSSSSSSSSB....",
+            "..BSSWWSSB......",
+            "...BSSSSB.......",
+            "..BBPPPPPB......",
+            ".BPPPPPPPPB.....",
+            "BPPPPPWPPPPB....",
+            ".BPPPPPPPPB.....",
+            "BBBBBBBBBBBB....",
+            "..BSSB..BSSB....",
+            ".BWWWB..BWWWB...",
+            "..BBBB...BBBB...",
+            "................"
+        ];
+
+        const amelia_swim = [
+            "....BBBBBB......",
+            "..BBHHHHHHBB....",
+            ".BHHHHHHHHHHB...",
+            ".BHHPPBBHHHBB...",
+            "..BPPWPPBBSSB...",
+            "..BHHBBSSSSSB...",
+            "..BSSSSSSSSSB...",
+            "..BSWBSSWBSB....",
+            "..BSSSSSSSSB....",
+            "..BSSWWSSB......",
+            "...BSSSSB.......",
+            "..BSSSSSSB......",
+            ".BSSBPPPBSSB....",
+            "BFFFFFFFFFFFFB..",
+            "BFfWWFFFfWWfFB..",
+            "BffffffffffffB..",
+            ".BBBBBBBBBBBB...",
+            "...BSSB...BSSB..",
+            "...BWWWB.BWWWB..",
+            "....BBB...BBB..."
+        ];
+
+        // Generate Riley Textures (32x48)
+        this.generatePixelTexture('riley', 32, 48, riley_idle, RILEY_PALETTE, 2);
+        this.generatePixelTexture('riley_idle', 32, 48, riley_idle, RILEY_PALETTE, 2);
+        this.generatePixelTexture('riley_walk_0', 32, 48, riley_walk_0, RILEY_PALETTE, 2);
+        this.generatePixelTexture('riley_walk_1', 32, 48, riley_walk_1, RILEY_PALETTE, 2);
+        this.generatePixelTexture('riley_walk_2', 32, 48, riley_walk_2, RILEY_PALETTE, 2);
+        this.generatePixelTexture('riley_jump', 32, 48, riley_jump, RILEY_PALETTE, 2);
+
+        // Generate Amelia Textures (32x40)
+        this.generatePixelTexture('amelia', 32, 40, amelia_idle, AMELIA_PALETTE, 2);
+        this.generatePixelTexture('amelia_idle', 32, 40, amelia_idle, AMELIA_PALETTE, 2);
+        this.generatePixelTexture('amelia_walk_0', 32, 40, amelia_walk_0, AMELIA_PALETTE, 2);
+        this.generatePixelTexture('amelia_walk_1', 32, 40, amelia_walk_1, AMELIA_PALETTE, 2);
+        this.generatePixelTexture('amelia_walk_2', 32, 40, amelia_walk_2, AMELIA_PALETTE, 2);
+        this.generatePixelTexture('amelia_jump', 32, 40, amelia_jump, AMELIA_PALETTE, 2);
+
+        // Generate Floatie variations
+        const floatieColors = [0xFF0000, 0xFFFF00, 0x00E000, 0x9400D3];
+        const floatieShades = [0x990000, 0xCC9900, 0x008800, 0x550055];
+        for (let i = 0; i < floatieColors.length; i++) {
+            let rPal = Object.assign({}, RILEY_PALETTE, { 'F': floatieColors[i], 'f': floatieShades[i] });
+            this.generatePixelTexture('riley_swim_' + i, 32, 48, riley_swim, rPal, 2);
+
+            let aPal = Object.assign({}, AMELIA_PALETTE, { 'F': floatieColors[i], 'f': floatieShades[i] });
+            this.generatePixelTexture('amelia_swim_' + i, 32, 40, amelia_swim, aPal, 2);
+        }
+
+        let g = this.add.graphics();
         
         // Deck (Cruise Ship Teak Wood)
         g.fillStyle(0xC19A6B, 1); 
@@ -386,18 +664,18 @@ class CharacterSelectScene extends Phaser.Scene {
     create() {
         let title = this.add.text(this.cameras.main.centerX, 100, 'Select Your Character', { fontSize: '32px', fill: '#000', fontFamily: 'Arial', align: 'center' }).setOrigin(0.5);
         
-        let riley = this.add.image(this.cameras.main.centerX - 150, this.cameras.main.centerY, 'riley').setInteractive({ useHandCursor: true });
-        let rileyText = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 50, 'Riley (11)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let riley = this.add.image(this.cameras.main.centerX - 150, this.cameras.main.centerY, 'riley').setScale(2).setInteractive({ useHandCursor: true });
+        let rileyText = this.add.text(this.cameras.main.centerX - 150, this.cameras.main.centerY + 65, 'Riley (11)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
         
-        let amelia = this.add.image(this.cameras.main.centerX + 150, this.cameras.main.centerY, 'amelia').setInteractive({ useHandCursor: true });
-        let ameliaText = this.add.text(this.cameras.main.centerX + 150, this.cameras.main.centerY + 50, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
+        let amelia = this.add.image(this.cameras.main.centerX + 150, this.cameras.main.centerY, 'amelia').setScale(2).setInteractive({ useHandCursor: true });
+        let ameliaText = this.add.text(this.cameras.main.centerX + 150, this.cameras.main.centerY + 65, 'Amelia (8)', { fontSize: '20px', fill: '#000', fontFamily: 'Arial' }).setOrigin(0.5);
 
         this.scale.on('resize', (gameSize) => {
             title.setPosition(gameSize.width / 2, 100);
             riley.setPosition(gameSize.width / 2 - 150, gameSize.height / 2);
-            rileyText.setPosition(gameSize.width / 2 - 150, gameSize.height / 2 + 50);
+            rileyText.setPosition(gameSize.width / 2 - 150, gameSize.height / 2 + 65);
             amelia.setPosition(gameSize.width / 2 + 150, gameSize.height / 2);
-            ameliaText.setPosition(gameSize.width / 2 + 150, gameSize.height / 2 + 50);
+            ameliaText.setPosition(gameSize.width / 2 + 150, gameSize.height / 2 + 65);
         });
 
         riley.on('pointerover', () => riley.setTint(0xcccccc));
@@ -647,10 +925,48 @@ class GameScene extends Phaser.Scene {
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
         this.player.setBounce(0.0);
         this.player.setCollideWorldBounds(true);
+        if (this.selectedCharacter === 'riley') {
+            this.player.body.setSize(22, 44);
+            this.player.body.setOffset(5, 4);
+        } else {
+            this.player.body.setSize(22, 38);
+            this.player.body.setOffset(5, 2);
+        }
         this.player.setInteractive({ useHandCursor: true });
         this.player.on('pointerdown', () => {
             if (this.canBoardRaft()) {
                 this.boardRaft();
+            }
+        });
+
+        // Register 8-bit Character Animations
+        ['riley', 'amelia'].forEach(c => {
+            if (!this.anims.exists(c + '_idle')) {
+                this.anims.create({
+                    key: c + '_idle',
+                    frames: [{ key: c + '_idle' }],
+                    frameRate: 1
+                });
+            }
+            if (!this.anims.exists(c + '_walk')) {
+                this.anims.create({
+                    key: c + '_walk',
+                    frames: [
+                        { key: c + '_walk_0' },
+                        { key: c + '_walk_1' },
+                        { key: c + '_walk_2' },
+                        { key: c + '_walk_1' }
+                    ],
+                    frameRate: 8,
+                    repeat: -1
+                });
+            }
+            if (!this.anims.exists(c + '_jump')) {
+                this.anims.create({
+                    key: c + '_jump',
+                    frames: [{ key: c + '_jump' }],
+                    frameRate: 1
+                });
             }
         });
 
@@ -970,6 +1286,7 @@ class GameScene extends Phaser.Scene {
             this.player.setVelocity(0, 0);
         } else if (this.ridingRaft) {
             // Player is seated on raft - position controlled by tween, no physics movement
+            this.player.anims.play(this.selectedCharacter + '_idle', true);
         } else {
             let isLeft = (this.cursors.left && this.cursors.left.isDown) || 
                          (this.wasd && this.wasd.left && this.wasd.left.isDown) || 
@@ -1031,13 +1348,15 @@ class GameScene extends Phaser.Scene {
             }
 
             if (inWater) {
+                if (this.player.anims && this.player.anims.isPlaying) {
+                    this.player.anims.stop();
+                }
                 this.player.setTexture(this.selectedCharacter + '_swim_' + this.currentFloatieColor);
                 this.player.angle = (Math.sin(this.time.now / 150) * 10);
                 if (this.player.body.velocity.y > 160) {
                     this.player.body.setVelocityY(160);
                 }
             } else {
-                this.player.setTexture(this.selectedCharacter);
                 this.player.angle = 0;
             }
 
@@ -1230,6 +1549,24 @@ class GameScene extends Phaser.Scene {
                 if (jumpPressed) {
                     this.player.setVelocityY(jumpPower);
                     this.mobileInput.up = false;
+                }
+            }
+
+            // Flip facing direction based on horizontal movement
+            if (isLeft) {
+                this.player.setFlipX(true);
+            } else if (isRight) {
+                this.player.setFlipX(false);
+            }
+
+            // Play animations when out of water
+            if (!inWater) {
+                if (!this.player.body.touching.down && this.currentStair === null) {
+                    this.player.anims.play(this.selectedCharacter + '_jump', true);
+                } else if (Math.abs(this.player.body.velocity.x) > 10 || (this.currentStair !== null && (isLeft || isRight))) {
+                    this.player.anims.play(this.selectedCharacter + '_walk', true);
+                } else {
+                    this.player.anims.play(this.selectedCharacter + '_idle', true);
                 }
             }
         }
