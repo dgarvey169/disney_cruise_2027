@@ -2100,6 +2100,19 @@ class GameScene extends Phaser.Scene {
     update() {
         if (this.isMenuOpen) {
             this.player.setVelocity(0, 0);
+            if (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+                this.executeMenuAction(this.menuSelectedIndex);
+            } else if (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+                this.executeMenuAction(this.menuSelectedIndex);
+            } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+                this.navigateMenu(-1);
+            } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+                this.navigateMenu(1);
+            } else if (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.up)) {
+                this.navigateMenu(-1);
+            } else if (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.down)) {
+                this.navigateMenu(1);
+            }
             return;
         }
 
@@ -2469,12 +2482,17 @@ class GameScene extends Phaser.Scene {
     createInGameMenu() {
         this.isMenuOpen = false;
         this.menuSelectedIndex = 0;
+        this.lastMenuActionTime = 0;
         this.menuItems = [
             { text: 'CONTINUE', action: () => this.closeInGameMenu() },
             { text: 'RESTART LEVEL', action: () => this.restartLevel() },
             { text: 'CHANGE CHARACTER', action: () => this.scene.start('CharacterSelectScene') },
             { text: 'TITLE SCREEN', action: () => this.scene.start('TitleScene') }
         ];
+
+        if (this.input.keyboard && !this.enterKey) {
+            this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        }
 
         // Direct scene GameObjects (no Container) for reliable touch & input handling
         this.menuOverlay = this.add.graphics().setScrollFactor(0).setDepth(498).setVisible(false);
@@ -2497,35 +2515,23 @@ class GameScene extends Phaser.Scene {
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
 
-        // Item text objects and touch hit areas
+        // Item text objects
         this.menuTextObjects = [];
-        this.menuHitBoxes = [];
         this.menuItems.forEach((item, index) => {
             let txt = this.add.text(0, 0, item.text, {
                 fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
                 stroke: '#000000', strokeThickness: 3
             }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(500).setVisible(false).setInteractive({ useHandCursor: true });
 
-            let hit = this.add.rectangle(0, 0, 320, 32, 0x000000, 0.001)
-                .setOrigin(0, 0.5)
-                .setScrollFactor(0)
-                .setDepth(501)
-                .setVisible(false)
-                .setInteractive({ useHandCursor: true });
-
             const triggerItem = () => {
-                this.setMenuIndex(index);
-                this.executeMenuItem(index);
+                this.executeMenuAction(index);
             };
 
-            hit.on('pointerdown', triggerItem);
-            hit.on('pointerover', () => this.setMenuIndex(index));
-
             txt.on('pointerdown', triggerItem);
+            txt.on('pointerup', triggerItem);
             txt.on('pointerover', () => this.setMenuIndex(index));
 
             this.menuTextObjects.push(txt);
-            this.menuHitBoxes.push(hit);
         });
 
         // Prompt helper at bottom of box
@@ -2534,7 +2540,51 @@ class GameScene extends Phaser.Scene {
             stroke: '#000000', strokeThickness: 2, align: 'center'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
 
-        // Keyboard hotkeys
+        // Global pointer listener on scene input for 100% reliable mobile touch hit detection
+        this.input.on('pointerdown', (ptr) => {
+            if (this.isMenuOpen) {
+                let idx = this.getMenuItemAt(ptr.x, ptr.y);
+                if (idx !== -1) {
+                    this.executeMenuAction(idx);
+                }
+            }
+        });
+        this.input.on('pointerup', (ptr) => {
+            if (this.isMenuOpen) {
+                let idx = this.getMenuItemAt(ptr.x, ptr.y);
+                if (idx !== -1) {
+                    this.executeMenuAction(idx);
+                }
+            }
+        });
+
+        // Native DOM keyboard listener (guarantees Enter, Space, Arrows work regardless of canvas focus state)
+        const onNativeKeyDown = (e) => {
+            if (!this.sys || !this.sys.isActive()) return;
+            if (e.key === 'Escape' || e.key === 'p' || e.key === 'P' || e.key === 'm' || e.key === 'M') {
+                e.preventDefault();
+                this.toggleInGameMenu();
+                return;
+            }
+            if (this.isMenuOpen) {
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                    e.preventDefault();
+                    this.navigateMenu(-1);
+                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    this.navigateMenu(1);
+                } else if (e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13 || e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    this.executeMenuAction(this.menuSelectedIndex);
+                }
+            }
+        };
+        window.addEventListener('keydown', onNativeKeyDown);
+        this.events.once('shutdown', () => {
+            window.removeEventListener('keydown', onNativeKeyDown);
+        });
+
+        // Phaser keyboard hotkeys
         if (this.input.keyboard) {
             this.input.keyboard.on('keydown-ESC', () => this.toggleInGameMenu());
             this.input.keyboard.on('keydown-P', () => this.toggleInGameMenu());
@@ -2553,12 +2603,35 @@ class GameScene extends Phaser.Scene {
                 if (this.isMenuOpen) this.navigateMenu(1);
             });
             this.input.keyboard.on('keydown-ENTER', () => {
-                if (this.isMenuOpen) this.executeMenuItem(this.menuSelectedIndex);
+                if (this.isMenuOpen) this.executeMenuAction(this.menuSelectedIndex);
             });
             this.input.keyboard.on('keydown-SPACE', () => {
-                if (this.isMenuOpen) this.executeMenuItem(this.menuSelectedIndex);
+                if (this.isMenuOpen) this.executeMenuAction(this.menuSelectedIndex);
             });
         }
+    }
+
+    getMenuItemAt(x, y) {
+        if (!this.isMenuOpen || !this.menuBoxCoords) return -1;
+        let b = this.menuBoxCoords;
+        if (x < b.x + 8 || x > b.x + b.w - 8) return -1;
+        let startY = b.y + 68;
+        let itemSpacing = 30;
+        for (let i = 0; i < this.menuItems.length; i++) {
+            let cy = startY + i * itemSpacing;
+            if (y >= cy - 15 && y <= cy + 15) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    executeMenuAction(index) {
+        let now = Date.now();
+        if (this.lastMenuActionTime && (now - this.lastMenuActionTime < 350)) return;
+        this.lastMenuActionTime = now;
+        this.setMenuIndex(index);
+        this.executeMenuItem(index);
     }
 
     toggleInGameMenu() {
@@ -2606,12 +2679,6 @@ class GameScene extends Phaser.Scene {
             this.menuTextObjects.forEach(t => {
                 t.setVisible(visible);
                 if (t.input) t.input.enabled = visible;
-            });
-        }
-        if (this.menuHitBoxes) {
-            this.menuHitBoxes.forEach(h => {
-                h.setVisible(visible);
-                if (h.input) h.input.enabled = visible;
             });
         }
     }
@@ -2688,23 +2755,16 @@ class GameScene extends Phaser.Scene {
         this.menuSub.setPosition(W / 2, boxY + 34);
 
         let startItemY = boxY + 68;
-        let itemSpacing = 28;
+        let itemSpacing = 30;
         let itemTextX = boxX + 54;
-        let hitBoxW = boxW - 40;
+        let rowW = boxW - 64;
 
         if (this.menuTextObjects) {
             this.menuTextObjects.forEach((txt, i) => {
                 let itemY = startItemY + i * itemSpacing;
                 txt.setPosition(itemTextX, itemY);
-                if (this.menuHitBoxes && this.menuHitBoxes[i]) {
-                    let hit = this.menuHitBoxes[i];
-                    hit.setPosition(boxX + 20, itemY);
-                    hit.setSize(hitBoxW, 32);
-                    if (hit.input && hit.input.hitArea) {
-                        hit.input.hitArea.width = hitBoxW;
-                        hit.input.hitArea.height = 32;
-                    }
-                }
+                txt.setFixedSize(rowW, 30);
+                txt.setPadding(0, 8, 0, 8);
                 if (i === this.menuSelectedIndex) {
                     let cursorBaseX = boxX + 36;
                     this.menuCursor.setPosition(cursorBaseX, itemY);
