@@ -2983,12 +2983,10 @@ class GameScene extends Phaser.Scene {
                         this.currentStair = null;
                         this.currentDeck = 'deck11';
                         this.groundY = 1270;
-                        this.player.body.reset(this.player.x, 1270 - halfH);
                     } else if (this.currentStair === 'deck12_to_13') {
                         this.currentStair = null;
                         this.currentDeck = 'deck12';
                         this.groundY = 990;
-                        this.player.body.reset(this.player.x, 990 - halfH);
                     }
                 }
 
@@ -2998,29 +2996,21 @@ class GameScene extends Phaser.Scene {
                     if (this.player.x >= 310 && this.player.x <= 360 && this.groundY >= 960 && this.groundY <= 1010 && isLeft) {
                         this.currentStair = 'deck11_to_12';
                         this.groundY = 1340 - this.player.x;
-                        this.player.body.reset(this.player.x, this.groundY - halfH);
-                        this.player.body.allowGravity = false;
                     }
                     // Descending from Deck 13 onto Stair 2 (moving right)
                     else if (this.player.x >= 2040 && this.player.x <= 2090 && this.groundY >= 720 && this.groundY <= 780 && isRight) {
                         this.currentStair = 'deck12_to_13';
                         this.groundY = 760 + (this.player.x - 2060);
-                        this.player.body.reset(this.player.x, this.groundY - halfH);
-                        this.player.body.allowGravity = false;
                     }
                     // Mounting Stair 1 from Deck 11 base (facing right, pressing Up)
                     else if (this.player.x >= 40 && this.player.x <= 100 && this.groundY >= 1240 && this.groundY <= 1290 && isRight && isUp) {
                         this.currentStair = 'deck11_to_12';
                         this.groundY = 1340 - this.player.x;
-                        this.player.body.reset(this.player.x, this.groundY - halfH);
-                        this.player.body.allowGravity = false;
                     }
                     // Mounting Stair 2 from Deck 12 base (facing left, pressing Up)
                     else if (this.player.x >= 2260 && this.player.x <= 2340 && this.groundY >= 960 && this.groundY <= 1015 && isLeft && isUp) {
                         this.currentStair = 'deck12_to_13';
                         this.groundY = 760 + (this.player.x - 2060);
-                        this.player.body.reset(this.player.x, this.groundY - halfH);
-                        this.player.body.allowGravity = false;
                     }
                     // Continuous Collision Detection (CCD) for Airborne Landings on Stairs
                     else if (this.isJumping && this.jumpV < 0 && this.player.x >= 65 && this.player.x <= 335) {
@@ -3031,8 +3021,6 @@ class GameScene extends Phaser.Scene {
                             this.isJumping = false;
                             this.jumpZ = 0;
                             this.jumpV = 0;
-                            this.player.body.reset(this.player.x, sY - halfH);
-                            this.player.body.allowGravity = false;
                         }
                     } else if (this.isJumping && this.jumpV < 0 && this.player.x >= 2065 && this.player.x <= 2295) {
                         let sY = 760 + (this.player.x - 2060);
@@ -3042,8 +3030,6 @@ class GameScene extends Phaser.Scene {
                             this.isJumping = false;
                             this.jumpZ = 0;
                             this.jumpV = 0;
-                            this.player.body.reset(this.player.x, sY - halfH);
-                            this.player.body.allowGravity = false;
                         }
                     }
                 }
@@ -3051,63 +3037,47 @@ class GameScene extends Phaser.Scene {
                 // 2. Process movement on stairs (Lockstep 45° velocity integration)
                 if (this.currentStair === 'deck11_to_12') {
                     if (isLeft) {
-                        if (this.player.x <= 65) {
+                        this.player.x -= speed * dt;
+                        if (this.player.x <= 60) {
                             this.currentStair = null;
                             this.currentDeck = 'deck11';
+                            this.player.x = 60;
                             this.groundY = 1280;
-                            this.player.body.reset(60, 1280 - halfH);
-                            this.player.setVelocityX(-speed);
-                            this.player.setVelocityY(0);
                         } else {
-                            this.player.setVelocityX(-speed);
-                            this.player.setVelocityY(speed); // slope is -1: moving left goes downwards
                             this.groundY = 1340 - this.player.x;
                         }
                     } else if (isRight) {
+                        this.player.x += speed * dt;
                         if (this.player.x >= 340) {
                             this.currentStair = null;
                             this.currentDeck = 'deck12';
+                            this.player.x = 340;
                             this.groundY = 1000;
-                            this.player.body.reset(340, 1000 - halfH);
-                            this.player.setVelocityX(speed);
-                            this.player.setVelocityY(0);
                         } else {
-                            this.player.setVelocityX(speed);
-                            this.player.setVelocityY(-speed); // slope is -1: moving right goes upwards
                             this.groundY = 1340 - this.player.x;
                         }
-                    } else {
-                        this.player.setVelocity(0, 0);
                     }
                 } else if (this.currentStair === 'deck12_to_13') {
                     if (isRight) {
-                        if (this.player.x >= 2295) {
+                        this.player.x += speed * dt;
+                        if (this.player.x >= 2300) {
                             this.currentStair = null;
                             this.currentDeck = 'deck12';
+                            this.player.x = 2300;
                             this.groundY = 1000;
-                            this.player.body.reset(2300, 1000 - halfH);
-                            this.player.setVelocityX(speed);
-                            this.player.setVelocityY(0);
                         } else {
-                            this.player.setVelocityX(speed);
-                            this.player.setVelocityY(speed); // slope is +1: moving right goes downwards
                             this.groundY = 760 + (this.player.x - 2060);
                         }
                     } else if (isLeft) {
+                        this.player.x -= speed * dt;
                         if (this.player.x <= 2060) {
                             this.currentStair = null;
                             this.currentDeck = 'deck13';
+                            this.player.x = 2060;
                             this.groundY = 760;
-                            this.player.body.reset(2060, 760 - halfH);
-                            this.player.setVelocityX(-speed);
-                            this.player.setVelocityY(0);
                         } else {
-                            this.player.setVelocityX(-speed);
-                            this.player.setVelocityY(-speed); // slope is +1: moving left goes upwards
                             this.groundY = 760 + (this.player.x - 2060);
                         }
-                    } else {
-                        this.player.setVelocity(0, 0);
                     }
                 } else {
                     // Regular deck movement in 2.5D
@@ -3124,8 +3094,7 @@ class GameScene extends Phaser.Scene {
                         vy *= 0.7071;
                     }
 
-                    this.player.setVelocityX(vx);
-                    this.player.setVelocityY(0);
+                    this.player.x += vx * dt;
                     this.groundY += vy * dt;
 
                     // Clamp groundY and player.x to current deck corridor
@@ -3146,17 +3115,14 @@ class GameScene extends Phaser.Scene {
                     vy *= 0.7071;
                 }
 
-                this.player.setVelocityX(vx);
-                this.player.setVelocityY(0);
+                this.player.x += vx * dt;
                 this.groundY += vy * dt;
                 this.clampToDeckCorridor(true);
             }
 
             // --- APPLY VISUAL Y POSITION & BODY SYNCHRONIZATION ---
-            if (this.currentStair === null || this.isJumping) {
-                this.player.y = this.groundY - this.jumpZ;
-                this.player.body.updateFromGameObject();
-            }
+            this.player.y = this.groundY - this.jumpZ;
+            this.player.body.reset(this.player.x, this.player.y);
 
             // Ground Shadow Update
             if (this.playerShadow) {
@@ -3194,7 +3160,7 @@ class GameScene extends Phaser.Scene {
                 this.player.angle = 0;
                 if (this.isJumping) {
                     this.player.anims.play(this.selectedCharacter + '_jump', true);
-                } else if (Math.abs(this.player.body.velocity.x) > 10 || (this.currentStair === null && (isUp || isDown)) || (this.currentStair !== null && (isLeft || isRight))) {
+                } else if (this.currentStair !== null ? (isLeft || isRight) : (isLeft || isRight || isUp || isDown)) {
                     this.player.anims.play(this.selectedCharacter + '_walk', true);
                 } else {
                     this.player.anims.play(this.selectedCharacter + '_idle', true);
