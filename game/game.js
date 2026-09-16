@@ -714,6 +714,314 @@ class BootScene extends Phaser.Scene {
         this.generatePixelTexture('fv_wave_0', 64, 16, fv_wave_0, FV_PALETTE, 2);
         this.generatePixelTexture('fv_wave_1', 64, 16, fv_wave_1, FV_PALETTE, 2);
 
+        // --- 8-BIT AMBIENT NPC PALETTES & FRAMES ---
+        const NPC_OFFICER_PALETTE = {
+            'B': 0x000000,
+            'W': 0xFFFFFF,
+            'G': 0xF8B800,
+            'S': 0xFCD8A8,
+            's': 0xD89060,
+            'N': 0x001858,
+            'H': 0x482000
+        };
+
+        const NPC_TOURIST_PALETTE = {
+            'B': 0x000000,
+            'S': 0xFCD8A8,
+            's': 0xD89060,
+            'R': 0xFC3800,
+            'Y': 0xF8B800,
+            'K': 0xB88040,
+            'H': 0x783C00,
+            'W': 0xFFFFFF,
+            'T': 0x00B8B8
+        };
+
+        const NPC_LOUNGE_PALETTE = {
+            'B': 0x000000,
+            'W': 0xFFFFFF,
+            'U': 0x0068F8,
+            'S': 0xFCD8A8,
+            's': 0xD89060,
+            'H': 0x482000,
+            'R': 0xFC3800,
+            'Y': 0xF8B800,
+            'G': 0x00A840,
+            'C': 0x583000
+        };
+
+        const NPC_SWIMMER_PALETTE = {
+            'B': 0x000000,
+            'S': 0xFCD8A8,
+            'H': 0x783C00,
+            'Y': 0xF8B800,
+            'O': 0xFC5800,
+            'W': 0xFFFFFF,
+            'C': 0x00A8F8,
+            'R': 0xFC3800
+        };
+
+        const npc_officer_idle = [
+            ".....BBBBBB.....",
+            "..BBBWGGGGWBBB..",
+            ".BWGGGGGGGGGGWB.",
+            ".BBBBBBBBBBBBBB.",
+            "....BBBBBBBB....",
+            "..BSSSSSSSSSSB..",
+            "..BSWBSSSSWBSB..",
+            "..BSSSSSSSSSSB..",
+            "...BSBHHHHBSB...",
+            "....BBBBBBBB....",
+            "...BWWGGGGWWB...",
+            "..BWWGGGGGGWWB..",
+            ".BWWWGBNNBGWWWB.",
+            ".BWWWGBNNBGWWWB.",
+            ".BWWWGBBBBGWWWB.",
+            "..BWWWWWWWWWWB..",
+            "...BGGWWWWGGB...",
+            "....BNNNNNNNB...",
+            "....BNNNBNNNB...",
+            "....BNNNBNNNB...",
+            "....BNNNBNNNB...",
+            "....BNNNBNNNB...",
+            "...BBBBBBBBBBB..",
+            "...BBBBB.BBBBB.."
+        ];
+
+        const npc_officer_walk_0 = [
+            ".....BBBBBB.....",
+            "..BBBWGGGGWBBB..",
+            ".BWGGGGGGGGGGWB.",
+            ".BBBBBBBBBBBBBB.",
+            "....BBBBBBBB....",
+            "..BSSSSSSSSSSB..",
+            "..BSWBSSSSWBSB..",
+            "..BSSSSSSSSSSB..",
+            "...BSBHHHHBSB...",
+            "....BBBBBBBB....",
+            "...BWWGGGGWWB...",
+            "..BWWGGGGGGWWB..",
+            ".BWWWGBNNBGWWWB.",
+            ".BWWWGBNNBGWWWB.",
+            ".BWWWGBBBBGWWWB.",
+            "..BWWWWWWWWWWB..",
+            "...BGGWWWWGGB...",
+            "....BNNNNNNNB...",
+            "...BNNNNBNNNB...",
+            "..BNNNNB.BNNNB..",
+            ".BNNNNB...BNNNB.",
+            "BNNNNB.....BNNB.",
+            "BBBBB.......BBBB",
+            "BBBB.........BBB"
+        ];
+
+        const npc_officer_walk_1 = [
+            ".....BBBBBB.....",
+            "..BBBWGGGGWBBB..",
+            ".BWGGGGGGGGGGWB.",
+            ".BBBBBBBBBBBBBB.",
+            "....BBBBBBBB....",
+            "..BSSSSSSSSSSB..",
+            "..BSWBSSSSWBSB..",
+            "..BSSSSSSSSSSB..",
+            "...BSBHHHHBSB...",
+            "....BBBBBBBB....",
+            "...BWWGGGGWWB...",
+            "..BWWGGGGGGWWB..",
+            ".BWWWGBNNBGWWWB.",
+            ".BWWWGBNNBGWWWB.",
+            ".BWWWGBBBBGWWWB.",
+            "..BWWWWWWWWWWB..",
+            "...BGGWWWWGGB...",
+            "....BNNNNNNNB...",
+            "....BNNNBNNNNB..",
+            "...BNNNB.BNNNNB.",
+            "..BNNNB...BNNNNB",
+            "..BNNB.....BNNNB",
+            ".BBBB.......BBBB",
+            ".BBB.........BBB"
+        ];
+
+        const npc_tourist_idle = [
+            "......YYYY......",
+            "....YYYYYYYY....",
+            "..YYYYYYYYYYYY..",
+            ".YYYYYYYYYYYYYY.",
+            ".BBBBBBBBBBBBBB.",
+            "..BSSSSSSSSSSB..",
+            "..BSBBSSSSBBSB..",
+            "..BSBBSSSSBBSB..",
+            "...BSSSSSSSSB...",
+            "....BSSSSSSB....",
+            "...BRYRYRYRYB...",
+            "..BRYRYRYRYRYB..",
+            ".BRRRYYYRRRYYYB.",
+            ".BRRYYWWYYRRYYB.",
+            "..BRYRYRYRYRYB..",
+            "...BRYRYRYRYB...",
+            "....BBBBBBBB....",
+            "....BKKKKKKB....",
+            "....BKKKBKKB....",
+            "....BSSB.BSSB...",
+            "....BSSB.BSSB...",
+            "....BSSB.BSSB...",
+            "...BWWWB.BWWWB..",
+            "...BBBBB.BBBBB.."
+        ];
+
+        const npc_tourist_walk_0 = [
+            "......YYYY......",
+            "....YYYYYYYY....",
+            "..YYYYYYYYYYYY..",
+            ".YYYYYYYYYYYYYY.",
+            ".BBBBBBBBBBBBBB.",
+            "..BSSSSSSSSSSB..",
+            "..BSBBSSSSBBSB..",
+            "..BSBBSSSSBBSB..",
+            "...BSSSSSSSSB...",
+            "....BSSSSSSB....",
+            "...BRYRYRYRYB...",
+            "..BRYRYRYRYRYB..",
+            ".BRRRYYYRRRYYYB.",
+            ".BRRYYWWYYRRYYB.",
+            "..BRYRYRYRYRYB..",
+            "...BRYRYRYRYB...",
+            "....BBBBBBBB....",
+            "....BKKKKKKB....",
+            "...BKKKKBKKKB...",
+            "..BSSSB...BSSSB.",
+            ".BSSSB.....BSSSB",
+            "BSSSB.......BSSB",
+            "BBBB.........BBB",
+            "BBB...........BB"
+        ];
+
+        const npc_tourist_walk_1 = [
+            "......YYYY......",
+            "....YYYYYYYY....",
+            "..YYYYYYYYYYYY..",
+            ".YYYYYYYYYYYYYY.",
+            ".BBBBBBBBBBBBBB.",
+            "..BSSSSSSSSSSB..",
+            "..BSBBSSSSBBSB..",
+            "..BSBBSSSSBBSB..",
+            "...BSSSSSSSSB...",
+            "....BSSSSSSB....",
+            "...BRYRYRYRYB...",
+            "..BRYRYRYRYRYB..",
+            ".BRRRYYYRRRYYYB.",
+            ".BRRYYWWYYRRYYB.",
+            "..BRYRYRYRYRYB..",
+            "...BRYRYRYRYB...",
+            "....BBBBBBBB....",
+            "....BKKKKKKB....",
+            "...BKKKBKKKKB...",
+            "..BSSSB...BSSSB.",
+            ".BSSSB.....BSSSB",
+            ".BSSB.......BSSB",
+            ".BBB.........BBB",
+            "..BB.........BBB"
+        ];
+
+        const npc_lounge_chair = [
+            "....WWWWWWWWWWWWWWWWWW....",
+            "...WUWUWUWUWUWUWUWUWUWW...",
+            "..WUWUWUWUWUWUWUWUWUWUWW..",
+            ".WUWUWUWUWUWUWUWUWUWUWUWW.",
+            ".WUWUWUWUWUWUWUWUWUWUWUWW.",
+            "BBBBBBBBBBBBBBBBBBBBBBBBBB",
+            "C........................C",
+            "C........................C",
+            "C...CCCCCCCCCCCCCCCCCC...C",
+            "C...C................C...C",
+            "C...C................C...C",
+            "BB.BB................BB.BB"
+        ];
+
+        const npc_lounger_0 = [
+            "....YYYYYY................",
+            "...YYYYYYYY...............",
+            "..YYYYYYYYYY..............",
+            "..YSBBSBSSSY..............",
+            "..YSBBSBSSSS..............",
+            "..YSSSSSSSSS..............",
+            "..YSSRRRRRSS..............",
+            ".YYSRRRRRRRR....GG..YY....",
+            ".YYSRRRRRRRR...GGGGYYYY...",
+            "WUWUWUWUWUWUWW.RRRR.YY....",
+            "WUWUWUWUWUWUWW..SS..SS....",
+            "BBBBBBBBBBBBBBBBBBBBBBBBBB",
+            "C...C................C...C",
+            "BB.BB................BB.BB"
+        ];
+
+        const npc_lounger_1 = [
+            "....YYYYYY................",
+            "...YYYYYYYY...............",
+            "..YYYYYYYYYY..............",
+            "..YSBBSBSSSY...GG..YY.....",
+            "..YSBBSBSSSS..GGGGYYYY....",
+            "..YSSSSSSSSS..RRRR.YY.....",
+            "..YSSRRRRRSS...SS..SS.....",
+            ".YYSRRRRRRRR..............",
+            ".YYSRRRRRRRR..............",
+            "WUWUWUWUWUWUWW............",
+            "WUWUWUWUWUWUWW............",
+            "BBBBBBBBBBBBBBBBBBBBBBBBBB",
+            "C...C................C...C",
+            "BB.BB................BB.BB"
+        ];
+
+        const npc_swimmer_0 = [
+            ".....BBBBBB.......",
+            "...BBHHHHHHBB.....",
+            "..BHHSSSSSSHHB....",
+            "..BSCCCSSCCCSSB...",
+            "..BSSSSSSSSSSSB...",
+            "...BSSSSSSSSSB....",
+            "....BYYYYYYYB.BOB.",
+            "..BYYYYYYYYYYYBOOB",
+            ".BYWWYYYYYYYYYBOOB",
+            "BYWWWWYYYYYYYYBOB.",
+            ".BYYYYYYYYYYYB....",
+            "..BYYYYYYYYYB.....",
+            "...BBBBBBBBB......",
+            "..CC..CCCCC..CC...",
+            ".CCCC.......CCCC..",
+            ".................."
+        ];
+
+        const npc_swimmer_1 = [
+            ".....BBBBBB.......",
+            "...BBHHHHHHBB.....",
+            "..BHHSSSSSSHHB....",
+            "..BSWWSSSWWSSB....",
+            "..BSSSSSSSSSSSB...",
+            "...BSSSSSSSSSB....",
+            "....BYYYYYYYB.BOB.",
+            "..BYYYYYYYYYYYBOOB",
+            ".BYWWYYYYYYYYYBOOB",
+            "BYWWWWYYYYYYYYBOB.",
+            ".BYYYYYYYYYYYB.W..",
+            "..BYYYYYYYYYB.WW..",
+            "...BBBBBBBBB......",
+            ".CCCC.......CCCC..",
+            "..CC..CCCCC..CC...",
+            ".................."
+        ];
+
+        this.generatePixelTexture('npc_officer_idle', 32, 48, npc_officer_idle, NPC_OFFICER_PALETTE, 2);
+        this.generatePixelTexture('npc_officer_walk_0', 32, 48, npc_officer_walk_0, NPC_OFFICER_PALETTE, 2);
+        this.generatePixelTexture('npc_officer_walk_1', 32, 48, npc_officer_walk_1, NPC_OFFICER_PALETTE, 2);
+        this.generatePixelTexture('npc_tourist_idle', 32, 48, npc_tourist_idle, NPC_TOURIST_PALETTE, 2);
+        this.generatePixelTexture('npc_tourist_walk_0', 32, 48, npc_tourist_walk_0, NPC_TOURIST_PALETTE, 2);
+        this.generatePixelTexture('npc_tourist_walk_1', 32, 48, npc_tourist_walk_1, NPC_TOURIST_PALETTE, 2);
+        this.generatePixelTexture('npc_lounge_chair', 52, 24, npc_lounge_chair, NPC_LOUNGE_PALETTE, 2);
+        this.generatePixelTexture('npc_lounger_0', 52, 28, npc_lounger_0, NPC_LOUNGE_PALETTE, 2);
+        this.generatePixelTexture('npc_lounger_1', 52, 28, npc_lounger_1, NPC_LOUNGE_PALETTE, 2);
+        this.generatePixelTexture('npc_swimmer_0', 36, 32, npc_swimmer_0, NPC_SWIMMER_PALETTE, 2);
+        this.generatePixelTexture('npc_swimmer_1', 36, 32, npc_swimmer_1, NPC_SWIMMER_PALETTE, 2);
+
         let g = this.add.graphics();
 
         // 8-Bit Funnel Vision Jumbotron Scanlines & Glass Highlight (200x120)
@@ -2116,6 +2424,73 @@ class GameScene extends Phaser.Scene {
             }
         });
 
+        // Register Ambient NPC Animations
+        if (!this.anims.exists('npc_officer_walk')) {
+            this.anims.create({
+                key: 'npc_officer_walk',
+                frames: [
+                    { key: 'npc_officer_walk_0' },
+                    { key: 'npc_officer_idle' },
+                    { key: 'npc_officer_walk_1' },
+                    { key: 'npc_officer_idle' }
+                ],
+                frameRate: 6,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('npc_officer_idle')) {
+            this.anims.create({
+                key: 'npc_officer_idle',
+                frames: [{ key: 'npc_officer_idle' }],
+                frameRate: 1
+            });
+        }
+        if (!this.anims.exists('npc_tourist_walk')) {
+            this.anims.create({
+                key: 'npc_tourist_walk',
+                frames: [
+                    { key: 'npc_tourist_walk_0' },
+                    { key: 'npc_tourist_idle' },
+                    { key: 'npc_tourist_walk_1' },
+                    { key: 'npc_tourist_idle' }
+                ],
+                frameRate: 6,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('npc_tourist_idle')) {
+            this.anims.create({
+                key: 'npc_tourist_idle',
+                frames: [{ key: 'npc_tourist_idle' }],
+                frameRate: 1
+            });
+        }
+        if (!this.anims.exists('npc_lounger_relax')) {
+            this.anims.create({
+                key: 'npc_lounger_relax',
+                frames: [
+                    { key: 'npc_lounger_0', duration: 3200 },
+                    { key: 'npc_lounger_1', duration: 1200 }
+                ],
+                frameRate: 1,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('npc_swimmer_bob')) {
+            this.anims.create({
+                key: 'npc_swimmer_bob',
+                frames: [
+                    { key: 'npc_swimmer_0', duration: 800 },
+                    { key: 'npc_swimmer_1', duration: 800 }
+                ],
+                frameRate: 1,
+                repeat: -1
+            });
+        }
+
+        // Initialize Ambient NPCs
+        this.createAmbientNPCs();
+
         this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
         window.gameScene = this;
@@ -2760,6 +3135,9 @@ class GameScene extends Phaser.Scene {
         // Dynamic Funnel Vision Screen Animation
         this.updateFunnelVision(this.time.now, this.game.loop.delta);
 
+        // Ambient Deck NPCs Movement & Interactions
+        this.updateAmbientNPCs(this.time.now, this.game.loop.delta);
+
         // Update Capcom Retro Location Banner
         let loc = 'DECK 11: MAIN POOL';
         if (this.onSlide) {
@@ -3174,6 +3552,344 @@ class GameScene extends Phaser.Scene {
                     idleStar.wobblePhase = Math.random() * 10;
                     idleStar.setAlpha(1.0);
                     idleStar.setVisible(true);
+                }
+            }
+        }
+    }
+
+    createAmbientNPCs() {
+        this.ambientNPCs = [];
+
+        // 1. Reusable 8-bit Capcom Speech Bubble
+        this.npcSpeechBox = this.add.graphics().setDepth(25).setVisible(false);
+        this.npcSpeechText = this.add.text(0, 0, '', {
+            fontSize: '7px',
+            fill: '#F8B800',
+            fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000',
+            strokeThickness: 1,
+            align: 'center',
+            wordWrap: { width: 140 }
+        }).setOrigin(0, 0).setDepth(26).setVisible(false);
+        this.npcCurrentSpeaker = null;
+        this.npcSpeechEndTime = 0;
+
+        // 2. Spawn Walking Deck NPCs
+        // Officer Davis (Deck 11 - outside Senses Spa / pool approach)
+        let off1 = this.add.sprite(550, 1256, 'npc_officer_idle').setDepth(9);
+        off1.anims.play('npc_officer_walk');
+        this.ambientNPCs.push({
+            name: 'Officer Davis',
+            type: 'walker',
+            sprite: off1,
+            minX: 430,
+            maxX: 760,
+            speed: 30,
+            dir: 1,
+            state: 'walk',
+            pauseTimer: 0,
+            walkAnim: 'npc_officer_walk',
+            idleAnim: 'npc_officer_idle',
+            quotes: [
+                'WELCOME TO DECK 11!',
+                'SMOOTH SAILING TODAY!',
+                'ENJOY THE DISNEY DESTINY!'
+            ],
+            bubbleOffset: 28,
+            nextSpeechTime: 0
+        });
+
+        // Tourist Bob (Deck 11 - outside Eye Scream Treats)
+        let tour1 = this.add.sprite(1680, 1256, 'npc_tourist_idle').setDepth(9);
+        tour1.anims.play('npc_tourist_walk');
+        this.ambientNPCs.push({
+            name: 'Tourist Bob',
+            type: 'walker',
+            sprite: tour1,
+            minX: 1560,
+            maxX: 1960,
+            speed: 32,
+            dir: -1,
+            state: 'walk',
+            pauseTimer: 0,
+            walkAnim: 'npc_tourist_walk',
+            idleAnim: 'npc_tourist_idle',
+            quotes: [
+                'FREE SOFT SERVE ON DECK!',
+                'LOOK AT THAT OCEAN VIEW!',
+                'WHAT A WONDERFUL CRUISE!'
+            ],
+            bubbleOffset: 28,
+            nextSpeechTime: 0
+        });
+
+        // Active Guest Jordan (Deck 12 - promenade towards Hero Zone)
+        let tour2 = this.add.sprite(1100, 976, 'npc_tourist_idle').setDepth(9);
+        tour2.anims.play('npc_tourist_walk');
+        this.ambientNPCs.push({
+            name: 'Jordan',
+            type: 'walker',
+            sprite: tour2,
+            minX: 860,
+            maxX: 1460,
+            speed: 34,
+            dir: 1,
+            state: 'walk',
+            pauseTimer: 0,
+            walkAnim: 'npc_tourist_walk',
+            idleAnim: 'npc_tourist_idle',
+            quotes: [
+                'HEADED TO HERO ZONE!',
+                'WEATHER IS PERFECT!',
+                'QUIET COVE IS RELAXING.'
+            ],
+            bubbleOffset: 28,
+            nextSpeechTime: 0
+        });
+
+        // Officer Henderson (Deck 13 - AquaMouse Ride Operator)
+        let off2 = this.add.sprite(1060, 736, 'npc_officer_idle').setDepth(9);
+        off2.anims.play('npc_officer_walk');
+        this.ambientNPCs.push({
+            name: 'Officer Henderson',
+            type: 'walker',
+            sprite: off2,
+            minX: 960,
+            maxX: 1150,
+            speed: 28,
+            dir: 1,
+            state: 'walk',
+            pauseTimer: 0,
+            walkAnim: 'npc_officer_walk',
+            idleAnim: 'npc_officer_idle',
+            quotes: [
+                'READY FOR AQUAMOUSE?',
+                'HOLD ON TO YOUR HATS!',
+                'WILD WATER COASTER AT SEA!'
+            ],
+            bubbleOffset: 28,
+            nextSpeechTime: 0
+        });
+
+        // 3. Spawn Lounging Sunbathers on Deck Chairs
+        // Sunbather Chloe (Deck 11 poolside lounger)
+        this.add.image(1360, 1268, 'npc_lounge_chair').setDepth(8);
+        let lounger1 = this.add.sprite(1360, 1266, 'npc_lounger_0').setDepth(9);
+        lounger1.anims.play('npc_lounger_relax');
+        this.ambientNPCs.push({
+            name: 'Chloe',
+            type: 'lounger',
+            sprite: lounger1,
+            quotes: [
+                'AHHH, TOTAL PARADISE...',
+                'SUNNY SKIES ALL DAY!',
+                'PASS THE PINA COLADA!'
+            ],
+            bubbleOffset: 18,
+            nextSpeechTime: 0
+        });
+
+        // Guest Sarah (Deck 12 Quiet Cove lounger)
+        this.add.image(420, 988, 'npc_lounge_chair').setDepth(8);
+        let lounger2 = this.add.sprite(420, 986, 'npc_lounger_0').setDepth(9);
+        lounger2.anims.play('npc_lounger_relax');
+        this.ambientNPCs.push({
+            name: 'Sarah',
+            type: 'lounger',
+            sprite: lounger2,
+            quotes: [
+                'QUIET COVE IS SO PEACEFUL.',
+                'BEST SPOT FOR A SIESTA.',
+                'HEAR THE WAVES RUSH BY...'
+            ],
+            bubbleOffset: 18,
+            nextSpeechTime: 0
+        });
+
+        // 4. Spawn Swimming NPCs in Pools
+        // Swimmer Tommy (Deck 11 Main Pool in front of Funnel Vision)
+        let swim1 = this.add.sprite(1020, 1292, 'npc_swimmer_0').setDepth(2);
+        swim1.anims.play('npc_swimmer_bob');
+        this.ambientNPCs.push({
+            name: 'Tommy',
+            type: 'swimmer',
+            sprite: swim1,
+            minX: 940,
+            maxX: 1140,
+            baseY: 1292,
+            speed: 18,
+            dir: 1,
+            phase: 0,
+            quotes: [
+                'SPLISH SPLASH!',
+                'WATCHING CARTOONS IN WATER!',
+                'THE POOL IS SO WARM!'
+            ],
+            bubbleOffset: 20,
+            nextSpeechTime: 0
+        });
+
+        // Swimmer Alex (Deck 12 Quiet Cove Pool)
+        let swim2 = this.add.sprite(620, 1012, 'npc_swimmer_0').setDepth(2);
+        swim2.anims.play('npc_swimmer_bob');
+        this.ambientNPCs.push({
+            name: 'Alex',
+            type: 'swimmer',
+            sprite: swim2,
+            minX: 560,
+            maxX: 700,
+            baseY: 1012,
+            speed: 16,
+            dir: -1,
+            phase: 1.5,
+            quotes: [
+                'SO REFRESHING!',
+                'FLOATING IN PARADISE.',
+                'QUIET COVE IS THE BEST!'
+            ],
+            bubbleOffset: 20,
+            nextSpeechTime: 0
+        });
+
+        // Swimmer Lily (Deck 13 Splashdown Pool)
+        let swim3 = this.add.sprite(340, 772, 'npc_swimmer_0').setDepth(2);
+        swim3.anims.play('npc_swimmer_bob');
+        this.ambientNPCs.push({
+            name: 'Lily',
+            type: 'swimmer',
+            sprite: swim3,
+            minX: 270,
+            maxX: 430,
+            baseY: 772,
+            speed: 16,
+            dir: 1,
+            phase: 3.0,
+            quotes: [
+                'THAT SLIDE WAS EPIC!',
+                'LOOK AT THE BIG SPLASH!',
+                'I WANNA GO AGAIN!'
+            ],
+            bubbleOffset: 20,
+            nextSpeechTime: 0
+        });
+    }
+
+    showNPCSpeech(npc, text, time) {
+        if (!this.npcSpeechBox || !this.npcSpeechText) return;
+        this.npcCurrentSpeaker = npc;
+        this.npcSpeechText.setText(text);
+
+        let padX = 8;
+        let padY = 5;
+        let w = this.npcSpeechText.width + padX * 2;
+        let h = this.npcSpeechText.height + padY * 2;
+
+        let bx = npc.sprite.x - w / 2;
+        let by = npc.sprite.y - (npc.bubbleOffset || 28) - h;
+
+        // Keep inside camera / world bounds
+        bx = Phaser.Math.Clamp(bx, 20, 2380 - w);
+
+        this.npcSpeechBox.clear();
+        // Outer black border
+        this.npcSpeechBox.fillStyle(0x000000, 1);
+        this.npcSpeechBox.fillRect(bx - 2, by - 2, w + 4, h + 4);
+        // Navy Capcom dialogue background
+        this.npcSpeechBox.fillStyle(0x001024, 0.95);
+        this.npcSpeechBox.fillRect(bx, by, w, h);
+        // Gold 1px border
+        this.npcSpeechBox.lineStyle(1, 0xF8B800, 1);
+        this.npcSpeechBox.strokeRect(bx, by, w, h);
+
+        // Downward pointer arrow
+        let arrowX = Phaser.Math.Clamp(npc.sprite.x, bx + 8, bx + w - 8);
+        let arrowY = by + h;
+        this.npcSpeechBox.fillStyle(0x001024, 0.95);
+        this.npcSpeechBox.fillTriangle(arrowX - 4, arrowY, arrowX + 4, arrowY, arrowX, arrowY + 6);
+        this.npcSpeechBox.lineStyle(1, 0xF8B800, 1);
+        this.npcSpeechBox.lineBetween(arrowX - 4, arrowY, arrowX, arrowY + 6);
+        this.npcSpeechBox.lineBetween(arrowX, arrowY + 6, arrowX + 4, arrowY);
+
+        this.npcSpeechText.setPosition(bx + padX, by + padY);
+        this.npcSpeechBox.setVisible(true);
+        this.npcSpeechText.setVisible(true);
+        this.npcSpeechEndTime = time + 2500;
+    }
+
+    updateAmbientNPCs(time, delta) {
+        if (!this.ambientNPCs) return;
+        let dt = delta / 1000;
+
+        // 1. Update NPC Movement & States
+        for (let npc of this.ambientNPCs) {
+            if (npc.type === 'walker') {
+                if (npc.state === 'walk') {
+                    npc.sprite.x += npc.dir * npc.speed * dt;
+                    if (npc.dir > 0 && npc.sprite.x >= npc.maxX) {
+                        npc.sprite.x = npc.maxX;
+                        npc.state = 'pause';
+                        npc.pauseTimer = 1.5 + Math.random() * 1.5;
+                        npc.sprite.anims.play(npc.idleAnim, true);
+                    } else if (npc.dir < 0 && npc.sprite.x <= npc.minX) {
+                        npc.sprite.x = npc.minX;
+                        npc.state = 'pause';
+                        npc.pauseTimer = 1.5 + Math.random() * 1.5;
+                        npc.sprite.anims.play(npc.idleAnim, true);
+                    }
+                } else if (npc.state === 'pause') {
+                    npc.pauseTimer -= dt;
+                    if (npc.pauseTimer <= 0) {
+                        npc.dir *= -1;
+                        npc.sprite.setFlipX(npc.dir < 0);
+                        npc.state = 'walk';
+                        npc.sprite.anims.play(npc.walkAnim, true);
+                    }
+                }
+            } else if (npc.type === 'swimmer') {
+                npc.sprite.x += npc.dir * npc.speed * dt;
+                if (npc.dir > 0 && npc.sprite.x >= npc.maxX) {
+                    npc.sprite.x = npc.maxX;
+                    npc.dir = -1;
+                    npc.sprite.setFlipX(true);
+                } else if (npc.dir < 0 && npc.sprite.x <= npc.minX) {
+                    npc.sprite.x = npc.minX;
+                    npc.dir = 1;
+                    npc.sprite.setFlipX(false);
+                }
+                npc.sprite.y = npc.baseY + Math.sin(time * 0.0035 + npc.phase) * 2.5;
+            }
+        }
+
+        // 2. Proximity Speech Bubble Detection
+        if (this.player) {
+            // If bubble currently showing, check if expired or player moved away
+            if (this.npcSpeechBox && this.npcSpeechBox.visible) {
+                if (time > this.npcSpeechEndTime) {
+                    this.npcSpeechBox.setVisible(false);
+                    this.npcSpeechText.setVisible(false);
+                    this.npcCurrentSpeaker = null;
+                } else if (this.npcCurrentSpeaker) {
+                    let d = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.npcCurrentSpeaker.sprite.x, this.npcCurrentSpeaker.sprite.y);
+                    if (d > 120) {
+                        this.npcSpeechBox.setVisible(false);
+                        this.npcSpeechText.setVisible(false);
+                        this.npcCurrentSpeaker = null;
+                    }
+                }
+            }
+
+            // Check if player is near any NPC to trigger greeting
+            if (!this.npcSpeechBox || !this.npcSpeechBox.visible) {
+                for (let npc of this.ambientNPCs) {
+                    if (time < npc.nextSpeechTime) continue;
+                    let dx = Math.abs(this.player.x - npc.sprite.x);
+                    let dy = Math.abs(this.player.y - npc.sprite.y);
+                    if (dx < 65 && dy < 45) {
+                        let quote = Phaser.Utils.Array.GetRandom(npc.quotes);
+                        this.showNPCSpeech(npc, quote, time);
+                        npc.nextSpeechTime = time + 7000;
+                        break;
+                    }
                 }
             }
         }
