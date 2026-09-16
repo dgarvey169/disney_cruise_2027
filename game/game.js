@@ -373,7 +373,364 @@ class BootScene extends Phaser.Scene {
             this.generatePixelTexture('amelia_swim_' + i, 32, 40, amelia_swim, aPal, 2);
         }
 
+        // --- 8-BIT FUNNEL VISION CARTOON PALETTE & TEXTURES ---
+        const FV_PALETTE = {
+            'B': 0x000000, 'W': 0xFFFFFF, 'S': 0xFCD8A8, 's': 0xD89060,
+            'R': 0xE82000, 'r': 0x981000, 'Y': 0xF8B800, 'G': 0x787878,
+            'g': 0xB0B0B0, 'D': 0x783C00, 'd': 0x482000, 'P': 0xF85898,
+            'p': 0xB81858, 'C': 0x58B8F8, 'U': 0x0040A0, 'u': 0x001850
+        };
+
+        const fv_mickey_0 = [
+            "..BBBB......BBBB....",
+            ".BBBBBB....BBBBBB...",
+            ".BBBBBB....BBBBBB...",
+            "..BBBB......BBBB....",
+            "....WWWWWWWWWW......",
+            "...WWWWWWWWWWWW.....",
+            "...GGGGGGGGGGGG.....",
+            "..BBBBBBBBBBBBBB....",
+            "..BSSSSSSSSSSSSB....",
+            "..BSWWBSSSSWWBSSB...",
+            "..BSWBSSSSSSWBSSB...",
+            "..BSSSSSSSSSSSSSB...",
+            "..BSSSWWSSSWBSSSB...",
+            "...BSSSSSSSSSSSB....",
+            "....BBBBBBBBBBB.....",
+            "..WW.BBBBBBBBB.WW...",
+            ".WWW.BBBBBBBBB.WWW..",
+            ".WWW.RRRRRRRRR.WWW..",
+            "..W..RYRRYYRRY..W...",
+            ".....RRRRRRRRR......",
+            ".....BB.....BB......",
+            "....YYYY...YYYY.....",
+            "...YYYYY...YYYYY...."
+        ];
+
+        const fv_mickey_1 = [
+            "..BBBB......BBBB....",
+            ".BBBBBB....BBBBBB...",
+            ".BBBBBB....BBBBBB...",
+            "..BBBB......BBBB....",
+            "....WWWWWWWWWW......",
+            "...WWWWWWWWWWWW.....",
+            "...GGGGGGGGGGGG.....",
+            "..BBBBBBBBBBBBBB....",
+            "..BSSSSSSSSSSSSB....",
+            "..BSWWBSSSSWWBSSB...",
+            "..BSWBSSSSSSWBSSB...",
+            "..BSSSSSSSSSSSSSB...",
+            "..BSSSWWSSSWBSSSB...",
+            "...BSSSSSSSSSSSB....",
+            "....BBBBBBBBBBB.....",
+            ".WW..BBBBBBBBB...WW.",
+            "WWWW.BBBBBBBBB..WWWW",
+            ".WW..RRRRRRRRR...WW.",
+            ".....RYRRYYRRY......",
+            ".....RRRRRRRRR......",
+            "....BB......BB......",
+            "...YYYY......YYYY...",
+            "..YYYYY.......YY...."
+        ];
+
+        const fv_mickey_2 = [
+            "..BBBB......BBBB....",
+            ".BBBBBB....BBBBBB...",
+            ".BBBBBB....BBBBBB...",
+            "..BBBB......BBBB....",
+            "....WWWWWWWWWW......",
+            "...WWWWWWWWWWWW.....",
+            "...GGGGGGGGGGGG.....",
+            "..BBBBBBBBBBBBBB....",
+            "..BSSSSSSSSSSSSB....",
+            "..BSWWBSSSSWWBSSB...",
+            "..BSWBSSSSSSWBSSB...",
+            "..BSSSSSSSSSSSSSB...",
+            "..BSSBBWWRRWWSSSB...",
+            "...BSSSSSSSSSSSB....",
+            "....BBBBBBBBBBB.....",
+            "..WW.BBBBBBBBB.WW...",
+            ".WWW.BBBBBBBBB.WWW..",
+            ".WWW.RRRRRRRRR.WWW..",
+            "..W..RYRRYYRRY..W...",
+            ".....RRRRRRRRR......",
+            ".....BB.....BB......",
+            "....YYYY...YYYY.....",
+            "...YYYYY...YYYYY...."
+        ];
+
+        const fv_mickey_3 = [
+            "..BBBB......BBBB....",
+            ".BBBBBB....BBBBBB...",
+            ".BBBBBB....BBBBBB...",
+            "..BBBB......BBBB....",
+            "....WWWWWWWWWW......",
+            "...WWWWWWWWWWWW.....",
+            "...GGGGGGGGGGGG.....",
+            "..BBBBBBBBBBBBBB....",
+            "..BSSSSSSSSSSSSB....",
+            "..BSWWBSSSSWWBSSB...",
+            "..BSWBSSSSSSWBSSB...",
+            "..BSSSSSSSSSSSSSB...",
+            "..BSSSWWSSSWBSSSB...",
+            "...BSSSSSSSSSSSB....",
+            "....BBBBBBBBBBB.....",
+            ".WW...BBBBBBBBB..WW.",
+            "WWWW..BBBBBBBBB.WWWW",
+            ".WW...RRRRRRRRR..WW.",
+            "......RYRRYYRRY.....",
+            "......RRRRRRRRR.....",
+            "......BB......BB....",
+            "...YYYY......YYYY...",
+            "....YY.......YYYYY.."
+        ];
+
+        const fv_minnie_0 = [
+            "..BBBB......BBBB....",
+            ".BBBBBB....BBBBBB...",
+            ".BBBBBB....BBBBBB...",
+            "..BBBB......BBBB....",
+            ".......WWWW.........",
+            "......WWYYWW........",
+            ".......WWWW.........",
+            "..BBBBBBBBBBBBBB....",
+            "..BSSSSSSSSSSSSB....",
+            "..BSWWBSSSSWWBSSB...",
+            "..BSWBSSSSSSWBSSB...",
+            "..BSSSSSSSSSSSSSB...",
+            "..BSSBBWWRRWWSSSB...",
+            "...BSSSSSSSSSSSB....",
+            "....BBBBBBBBBBB.....",
+            "...WW.BBBBBBB.WW....",
+            "..WW..PPPPPPP..WW...",
+            ".....PWPWPWPWP......",
+            "....PPPPPPPPPPP.....",
+            "...PWPWPWPWPWPWP....",
+            "......BB...BB.......",
+            ".....YYYY.YYYY......",
+            "....PPYY...YYPP....."
+        ];
+
+        const fv_minnie_1 = [
+            "..BBBB......BBBB....",
+            ".BBBBBB....BBBBBB...",
+            ".BBBBBB....BBBBBB...",
+            "..BBBB......BBBB....",
+            ".......WWWW.........",
+            "......WWYYWW........",
+            ".......WWWW.........",
+            "..BBBBBBBBBBBBBB....",
+            "..BSSSSSSSSSSSSB....",
+            "..BSWWBSSSSWWBSSB...",
+            "..BSWBSSSSSSWBSSB...",
+            "..BSSSSSSSSSSSSSB...",
+            "..BSSBBWWRRWWSSSB...",
+            "...BSSSSSSSSSSSB....",
+            "....BBBBBBBBBBB.....",
+            "..WW..BBBBBBB..WW...",
+            ".WWW..PPPPPPP..WWW..",
+            ".....PWPWPWPWP......",
+            "....PPPPPPPPPPP.....",
+            "...PWPWPWPWPWPWP....",
+            "......BB...BB.......",
+            ".....YYYY.YYYY......",
+            "....PPYY...YYPP....."
+        ];
+
+        const fv_wheel_0 = [
+            "...........dd...........",
+            "...........DD...........",
+            "....dd.....DD.....dd....",
+            ".....DD....DD....DD.....",
+            "......DD...DD...DD......",
+            ".......DD..DD..DD.......",
+            "........DD.DD.DD........",
+            ".........DDDDDD.........",
+            "..........DDDD..........",
+            "....DDDDDDDDDDDDDDDD....",
+            "ddDDDDDD..YYYY..DDDDDDdd",
+            "ddDDDDDD.YYYYYY.DDDDDDdd",
+            "ddDDDDDD.YYYYYY.DDDDDDdd",
+            "ddDDDDDD..YYYY..DDDDDDdd",
+            "....DDDDDDDDDDDDDDDD....",
+            "..........DDDD..........",
+            ".........DDDDDD.........",
+            "........DD.DD.DD........",
+            ".......DD..DD..DD.......",
+            "......DD...DD...DD......",
+            ".....DD....DD....DD.....",
+            "....dd.....DD.....dd....",
+            "...........DD...........",
+            "...........dd..........."
+        ];
+
+        const fv_smokestack = [
+            "....GGGGGG....",
+            "...GGGGGGGG...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...RRRRRRRR...",
+            "...RRRRRRRR...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "...BBBBBBBB...",
+            "..BBBBBBBBBB..",
+            ".BBBBBBBBBBBB."
+        ];
+
+        const fv_steam_0 = [
+            "...gg...",
+            "..gWWg..",
+            ".gWWWWg.",
+            ".gWWWWg.",
+            "..gWWg..",
+            "...gg..."
+        ];
+
+        const fv_steam_1 = [
+            "....gggg....",
+            "..ggWWWWgg..",
+            ".gWWWWWWWWg.",
+            "gWWWWWWWWWWg",
+            "gWWWWWWWWWWg",
+            ".gWWWWWWWWg.",
+            "..ggWWWWgg..",
+            "....gggg...."
+        ];
+
+        const fv_steam_2 = [
+            ".....gggggg.....",
+            "...ggWWWWWWgg...",
+            "..gWWWWWWWWWWg..",
+            ".gWWWWWWWWWWWWg.",
+            "gWWWWWWWWWWWWWWg",
+            "gWWWWWWWWWWWWWWg",
+            ".gWWWWWWWWWWWWg.",
+            "..gWWWWWWWWWWg..",
+            "...ggWWWWWWgg...",
+            ".....gggggg....."
+        ];
+
+        const fv_note_0 = [
+            "....YYYY",
+            "....YYYY",
+            "....YY..",
+            "....YY..",
+            "....YY..",
+            "..YYYY..",
+            ".YYYYYY.",
+            "..YYYY.."
+        ];
+
+        const fv_note_1 = [
+            "..YYYYYYYYY.",
+            "..YYYYYYYYY.",
+            "..YY.....YY.",
+            "..YY.....YY.",
+            "..YY.....YY.",
+            ".YYYY...YYYY",
+            "YYYYYY.YYYYY",
+            ".YYYY...YYYY"
+        ];
+
+        const fv_heart = [
+            ".RR..RR.",
+            "RRRRRRRR",
+            "RRRRRRRR",
+            ".RRRRRR.",
+            "..RRRR..",
+            "...RR..."
+        ];
+
+        const fv_star = [
+            "...YY...",
+            "...YY...",
+            ".YYYYYY.",
+            "YYYYYYYY",
+            ".YYYYYY.",
+            "...YY...",
+            "...YY..."
+        ];
+
+        const fv_mickey_logo = [
+            "......BBBB......BBBB......",
+            ".....BBBBBB....BBBBBB.....",
+            ".....BBBBBB....BBBBBB.....",
+            "......BBBB......BBBB......",
+            ".........BBBBBB...........",
+            ".......BBBBBBBBBB.........",
+            "......BBBBBBBBBBBB........",
+            ".....BBBBBBBBBBBBBB.......",
+            ".....BBBBBBBBBBBBBB.......",
+            "......BBBBBBBBBBBB........",
+            ".......BBBBBBBBBB.........",
+            ".........BBBBBB..........."
+        ];
+
+        const fv_wave_0 = [
+            "....CCCC............CCCC........",
+            "..CCWWWWCC........CCWWWWCC......",
+            ".CWWUUUUWWC......CWWUUUUWWC.....",
+            "CWUUUUUUUUWC....CWUUUUUUUUWC....",
+            "UUUUUUUUUUUUCCCCUUUUUUUUUUUUCCCC",
+            "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU",
+            "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+            "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+        ];
+
+        const fv_wave_1 = [
+            "............CCCC............CCCC",
+            "..........CCWWWWCC........CCWWWW",
+            ".........CWWUUUUWWC......CWWUUUU",
+            "........CWUUUUUUUUWC....CWUUUUUU",
+            "CCCC....UUUUUUUUUUUUCCCCUUUUUUUU",
+            "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU",
+            "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+            "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+        ];
+
+        this.generatePixelTexture('fv_mickey_0', 40, 46, fv_mickey_0, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_mickey_1', 40, 46, fv_mickey_1, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_mickey_2', 40, 46, fv_mickey_2, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_mickey_3', 40, 46, fv_mickey_3, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_minnie_0', 40, 46, fv_minnie_0, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_minnie_1', 40, 46, fv_minnie_1, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_wheel_0', 48, 48, fv_wheel_0, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_smokestack', 28, 34, fv_smokestack, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_steam_0', 16, 12, fv_steam_0, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_steam_1', 24, 16, fv_steam_1, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_steam_2', 32, 20, fv_steam_2, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_note_0', 16, 16, fv_note_0, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_note_1', 24, 16, fv_note_1, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_heart', 16, 12, fv_heart, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_star', 16, 14, fv_star, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_mickey_logo', 52, 24, fv_mickey_logo, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_wave_0', 64, 16, fv_wave_0, FV_PALETTE, 2);
+        this.generatePixelTexture('fv_wave_1', 64, 16, fv_wave_1, FV_PALETTE, 2);
+
         let g = this.add.graphics();
+
+        // 8-Bit Funnel Vision Jumbotron Scanlines & Glass Highlight (200x120)
+        g.clear();
+        g.fillStyle(0x000000, 0.18);
+        for (let y = 0; y < 120; y += 3) {
+            g.fillRect(0, y, 200, 1);
+        }
+        g.fillStyle(0xFFFFFF, 0.10);
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(80, 0);
+        g.lineTo(0, 80);
+        g.closePath();
+        g.fillPath();
+        g.generateTexture('fv_scanlines', 200, 120);
+        g.clear();
         
         // --- 8-BIT ENVIRONMENT TEXTURES ---
         // Deck (Cruise Ship 16x16 Teak Wood Tiles in 40x40 block)
@@ -1546,30 +1903,8 @@ class GameScene extends Phaser.Scene {
         
         doors.create(2100, 1250, 'door');
         this.add.text(2010, 1190, 'MARCELINE MARKET', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
-        this.add.text(930, 1050, 'FUNNEL VISION', { fontSize: '11px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 8, y: 6 }, fontFamily: '"Press Start 2P", monospace', stroke: '#0058F8', strokeThickness: 3 });
-        
-        // Movie Screen
-        let screenBg = this.add.graphics();
-        screenBg.fillStyle(0x222222, 1);
-        screenBg.fillRect(940, 1100, 200, 120);
-        screenBg.lineStyle(4, 0x000000, 1);
-        screenBg.strokeRect(940, 1100, 200, 120);
-        
-        // Movie Screen Mask
-        let screenMask = this.add.graphics();
-        screenMask.fillStyle(0xFFFFFF, 1);
-        screenMask.fillRect(940, 1100, 200, 120);
-        let mask = new Phaser.Display.Masks.GeometryMask(this, screenMask);
-        
-        // Movie Screen Cartoon Elements (Cat and Mouse)
-        this.mouse = this.add.circle(940, 1190, 6, 0x8B4513).setMask(mask);
-        
-        let catHead = this.add.circle(0, 0, 12, 0x808080);
-        let catLeftEar = this.add.triangle(-6, -8, 0, 0, 12, 0, 6, -12, 0x808080);
-        let catRightEar = this.add.triangle(6, -8, 0, 0, 12, 0, 6, -12, 0x808080);
-        this.cat = this.add.container(900, 1184, [catHead, catLeftEar, catRightEar]).setMask(mask);
-        
-        this.cartoonVx = 100;
+        // Dynamic 8-Bit Funnel Vision Screen
+        this.createFunnelVision();
 
         const iceCreamStands = this.physics.add.staticGroup();
         iceCreamStands.create(1500, 1250, 'icecream_stand');
@@ -2420,22 +2755,8 @@ class GameScene extends Phaser.Scene {
             this.iceCreamSprite.y = this.player.y - 10;
         }
 
-        // Movie Screen Animation: Cat and Mouse
-        let dt = this.game.loop.delta / 1000;
-        this.mouse.x += this.cartoonVx * dt;
-        this.cat.x += this.cartoonVx * dt;
-
-        if (this.cartoonVx > 0 && this.cat.x > 1150) {
-            this.cartoonVx = -100;
-            this.cat.setScale(-1, 1);
-            this.mouse.x = 1150;
-            this.cat.x = 1180;
-        } else if (this.cartoonVx < 0 && this.cat.x < 930) {
-            this.cartoonVx = 100;
-            this.cat.setScale(1, 1);
-            this.mouse.x = 930;
-            this.cat.x = 900; 
-        }
+        // Dynamic Funnel Vision Screen Animation
+        this.updateFunnelVision(this.time.now, this.game.loop.delta);
 
         // Update Capcom Retro Location Banner
         let loc = 'DECK 11: MAIN POOL';
@@ -2469,6 +2790,370 @@ class GameScene extends Phaser.Scene {
         this.wasInWater = inWater;
         this.inWater = false;
         this.nearRaft = false;
+    }
+
+    createFunnelVision() {
+        const screenX = 940;
+        const screenY = 1100;
+        const screenW = 200;
+        const screenH = 120;
+        const centerX = screenX + screenW / 2; // 1040
+        const centerY = screenY + screenH / 2; // 1160
+
+        // 1. Red Disney Funnel Hull (behind screen, depth: 1)
+        let funnelHull = this.add.graphics().setDepth(1);
+        funnelHull.fillStyle(0x000000, 1);
+        funnelHull.beginPath();
+        funnelHull.moveTo(screenX - 16, screenY + screenH);
+        funnelHull.lineTo(screenX - 6, screenY - 50);
+        funnelHull.lineTo(screenX + screenW + 6, screenY - 50);
+        funnelHull.lineTo(screenX + screenW + 16, screenY + screenH);
+        funnelHull.closePath();
+        funnelHull.fillPath();
+
+        funnelHull.fillStyle(0xD82000, 1);
+        funnelHull.beginPath();
+        funnelHull.moveTo(screenX - 14, screenY + screenH);
+        funnelHull.lineTo(screenX - 4, screenY - 48);
+        funnelHull.lineTo(screenX + screenW + 4, screenY - 48);
+        funnelHull.lineTo(screenX + screenW + 14, screenY + screenH);
+        funnelHull.closePath();
+        funnelHull.fillPath();
+
+        // Funnel top cowl & yellow accent stripe
+        funnelHull.fillStyle(0x000000, 1);
+        funnelHull.fillRect(screenX - 8, screenY - 56, screenW + 16, 8);
+        funnelHull.fillStyle(0xF8B800, 1);
+        funnelHull.fillRect(screenX - 6, screenY - 48, screenW + 12, 3);
+
+        // Mickey Silhouette on red funnel above screen
+        this.add.image(centerX, screenY - 28, 'fv_mickey_logo').setScale(0.7).setDepth(2);
+
+        // 2. Capcom Marquee Header Box (depth: 4)
+        let marqueeG = this.add.graphics().setDepth(4);
+        marqueeG.fillStyle(0x000000, 1);
+        marqueeG.fillRect(centerX - 82, screenY - 22, 164, 20);
+        marqueeG.fillStyle(0xF8B800, 1);
+        marqueeG.fillRect(centerX - 80, screenY - 20, 160, 16);
+        marqueeG.fillStyle(0x001030, 1);
+        marqueeG.fillRect(centerX - 78, screenY - 18, 156, 12);
+
+        this.fvMarqueeText = this.add.text(centerX, screenY - 12, '★ FUNNEL VISION ★', {
+            fontSize: '9px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(5);
+
+        // Marquee light bulbs (row above and below)
+        this.fvBulbs = [];
+        for (let i = 0; i < 8; i++) {
+            let bx = centerX - 70 + i * 20;
+            let bTop = this.add.circle(bx, screenY - 21, 2, 0xF8B800).setDepth(5);
+            let bBot = this.add.circle(bx, screenY - 3, 2, 0xFFFFFF).setDepth(5);
+            this.fvBulbs.push({ top: bTop, bot: bBot });
+        }
+
+        // 3. Screen Bezel Frame & Speaker Columns (depth: 4)
+        let bezel = this.add.graphics().setDepth(4);
+        // Outer black bezel
+        bezel.fillStyle(0x000000, 1);
+        bezel.fillRect(screenX - 16, screenY - 4, screenW + 32, screenH + 8);
+        // Dark steel grey frame
+        bezel.fillStyle(0x182430, 1);
+        bezel.fillRect(screenX - 14, screenY - 2, screenW + 28, screenH + 4);
+        // Screen inner rim
+        bezel.fillStyle(0x081018, 1);
+        bezel.fillRect(screenX - 2, screenY - 2, screenW + 4, screenH + 4);
+
+        // Speaker columns (perforated dots)
+        for (let side of [-1, 1]) {
+            let sx = (side === -1) ? (screenX - 11) : (screenX + screenW + 3);
+            bezel.fillStyle(0x000810, 1);
+            bezel.fillRect(sx, screenY + 4, 8, screenH - 8);
+            bezel.fillStyle(0x587890, 1);
+            for (let sy = screenY + 10; sy < screenY + screenH - 10; sy += 8) {
+                bezel.fillRect(sx + 2, sy, 4, 2);
+            }
+        }
+        // Gold corner rivets
+        bezel.fillStyle(0xF8B800, 1);
+        bezel.fillRect(screenX - 12, screenY, 3, 3);
+        bezel.fillRect(screenX + screenW + 9, screenY, 3, 3);
+        bezel.fillRect(screenX - 12, screenY + screenH - 3, 3, 3);
+        bezel.fillRect(screenX + screenW + 9, screenY + screenH - 3, 3, 3);
+
+        // 4. Geometry Mask for Screen Viewport (depth: 2)
+        let screenMaskG = this.add.graphics().setDepth(0);
+        screenMaskG.fillStyle(0xFFFFFF, 1);
+        screenMaskG.fillRect(screenX, screenY, screenW, screenH);
+        let fvMask = new Phaser.Display.Masks.GeometryMask(this, screenMaskG);
+
+        // Screen Background Sky & Deck (depth: 2)
+        this.fvSky = this.add.graphics().setDepth(2).setMask(fvMask);
+        this.fvSky.fillStyle(0x58B8F8, 1);
+        this.fvSky.fillRect(screenX, screenY, screenW, 75);
+        this.fvSky.fillStyle(0x80D0F8, 1);
+        this.fvSky.fillRect(screenX, screenY + 50, screenW, 25);
+        // Steamboat wooden deck
+        this.fvSky.fillStyle(0x783C00, 1);
+        this.fvSky.fillRect(screenX, screenY + 75, screenW, 45);
+        this.fvSky.fillStyle(0x482000, 1);
+        for (let dx = screenX; dx < screenX + screenW; dx += 20) {
+            this.fvSky.fillRect(dx, screenY + 75, 1, 45);
+        }
+        // Brass deck rail
+        this.fvSky.fillStyle(0xF8B800, 1);
+        this.fvSky.fillRect(screenX, screenY + 74, screenW, 2);
+
+        // River Waves at bottom
+        this.fvWaves = [];
+        for (let i = 0; i < 4; i++) {
+            let w = this.add.image(screenX + i * 64, screenY + 110, 'fv_wave_0').setOrigin(0, 0.5).setDepth(2).setMask(fvMask);
+            this.fvWaves.push(w);
+        }
+
+        // Steamboat Smokestacks in background
+        this.fvStackLeft = this.add.image(screenX + 35, screenY + 62, 'fv_smokestack').setDepth(2).setMask(fvMask);
+        this.fvStackRight = this.add.image(screenX + screenW - 35, screenY + 62, 'fv_smokestack').setDepth(2).setMask(fvMask);
+
+        // Steam Puffs Pool
+        this.fvSteamPuffs = [];
+        for (let i = 0; i < 4; i++) {
+            let p = this.add.image(0, 0, 'fv_steam_0').setDepth(2).setMask(fvMask).setVisible(false);
+            this.fvSteamPuffs.push(p);
+        }
+
+        // Steamboat Willie Mickey Sprite
+        this.fvMickey = this.add.image(centerX, screenY + 68, 'fv_mickey_0').setDepth(2).setMask(fvMask);
+
+        // Steamboat Wheel
+        this.fvWheel = this.add.image(centerX, screenY + 78, 'fv_wheel_0').setDepth(2).setMask(fvMask);
+
+        // Minnie Mouse Sprite (for celebration scene)
+        this.fvMinnie = this.add.image(centerX + 35, screenY + 68, 'fv_minnie_0').setDepth(2).setMask(fvMask).setVisible(false);
+
+        // Floating Musical Notes & Sparkles Pool
+        this.fvFloatingItems = [];
+        for (let i = 0; i < 6; i++) {
+            let item = this.add.image(0, 0, 'fv_note_0').setDepth(2).setMask(fvMask).setVisible(false);
+            item.baseX = 0;
+            item.floatSpeed = 0;
+            item.wobblePhase = 0;
+            this.fvFloatingItems.push(item);
+        }
+
+        // Intermission Presentation Title Banner (Scene 3)
+        this.fvIntermissionContainer = this.add.container(centerX, centerY).setDepth(2).setMask(fvMask).setVisible(false);
+        let bannerBg = this.add.graphics();
+        bannerBg.fillStyle(0x001024, 0.94);
+        bannerBg.fillRect(-90, -48, 180, 96);
+        bannerBg.lineStyle(2, 0xF8B800, 1);
+        bannerBg.strokeRect(-88, -46, 176, 92);
+        let bannerLogo = this.add.image(0, -20, 'fv_mickey_logo').setScale(0.85);
+        let bannerTitle1 = this.add.text(0, 4, '★ DISNEY DESTINY ★', {
+            fontSize: '8px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace', align: 'center'
+        }).setOrigin(0.5);
+        let bannerTitle2 = this.add.text(0, 18, 'CARTOON CLASSIC', {
+            fontSize: '7px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace', align: 'center'
+        }).setOrigin(0.5);
+        let bannerTitle3 = this.add.text(0, 32, 'NOW PLAYING', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace', align: 'center'
+        }).setOrigin(0.5);
+        this.fvIntermissionContainer.add([bannerBg, bannerLogo, bannerTitle1, bannerTitle2, bannerTitle3]);
+
+        // Caption Bar for Scene 2
+        this.fvCaption = this.add.text(centerX, screenY + 12, '', {
+            fontSize: '6px', fill: '#FFD700', backgroundColor: '#001024',
+            padding: { x: 4, y: 2 }, fontFamily: '"Press Start 2P", monospace', align: 'center'
+        }).setOrigin(0.5).setDepth(2).setMask(fvMask).setVisible(false);
+
+        // 5. Jumbotron CRT Scanlines & Screen Glass (depth: 3)
+        this.add.image(centerX, centerY, 'fv_scanlines').setDepth(3).setMask(fvMask);
+
+        // Internal timing and state
+        this.fvTime = 0;
+        this.fvLastBulbToggle = 0;
+        this.fvBulbState = false;
+        this.fvNextSteamTime = 0;
+        this.fvNextNoteTime = 0;
+        this.fvScreenBounds = { x: screenX, y: screenY, w: screenW, h: screenH, cx: centerX, cy: centerY };
+    }
+
+    updateFunnelVision(time, delta) {
+        if (!this.fvScreenBounds) return;
+        let dt = delta / 1000;
+        this.fvTime += dt;
+
+        let b = this.fvScreenBounds;
+        let cycle = this.fvTime % 22; // 22-second loop
+
+        // 1. Toggle Marquee Light Bulbs
+        if (time - this.fvLastBulbToggle > 350) {
+            this.fvLastBulbToggle = time;
+            this.fvBulbState = !this.fvBulbState;
+            if (this.fvBulbs) {
+                this.fvBulbs.forEach((pair, idx) => {
+                    let cTop = ((idx % 2 === 0) ^ this.fvBulbState) ? 0xF8B800 : 0xFFFFFF;
+                    let cBot = ((idx % 2 !== 0) ^ this.fvBulbState) ? 0xF8B800 : 0xFFFFFF;
+                    pair.top.setFillStyle(cTop);
+                    pair.bot.setFillStyle(cBot);
+                });
+            }
+        }
+
+        // 2. Scroll River Waves
+        if (this.fvWaves) {
+            this.fvWaves.forEach(w => {
+                w.x -= 30 * dt;
+                if (w.x <= b.x - 64) {
+                    w.x += 64 * this.fvWaves.length;
+                }
+            });
+        }
+
+        // 3. Update Steam Puffs
+        if (this.fvSteamPuffs) {
+            this.fvSteamPuffs.forEach(p => {
+                if (p.visible) {
+                    p.y -= 20 * dt;
+                    p.x += Math.sin(p.y * 0.08) * 6 * dt;
+                    p.alpha -= 0.6 * dt;
+                    if (p.alpha <= 0.1 || p.y < b.y + 10) {
+                        p.setVisible(false);
+                    }
+                }
+            });
+
+            // Spawn Steam Puffs periodically (every 1.1s)
+            if (this.fvTime > this.fvNextSteamTime) {
+                this.fvNextSteamTime = this.fvTime + 1.1;
+                let spawnStack = (Math.random() < 0.5) ? this.fvStackLeft : this.fvStackRight;
+                let idlePuff = this.fvSteamPuffs.find(p => !p.visible);
+                if (idlePuff && spawnStack) {
+                    idlePuff.setPosition(spawnStack.x, spawnStack.y - 18);
+                    let puffKey = (Math.random() < 0.4) ? 'fv_steam_0' : 'fv_steam_1';
+                    idlePuff.setTexture(puffKey);
+                    idlePuff.setAlpha(1.0);
+                    idlePuff.setVisible(true);
+                }
+            }
+        }
+
+        // 4. Update Floating Notes / Hearts
+        if (this.fvFloatingItems) {
+            this.fvFloatingItems.forEach(item => {
+                if (item.visible) {
+                    item.y -= item.floatSpeed * dt;
+                    item.x = item.baseX + Math.sin((item.y + item.wobblePhase) * 0.1) * 10;
+                    item.alpha -= 0.45 * dt;
+                    if (item.alpha <= 0.1 || item.y < b.y + 15) {
+                        item.setVisible(false);
+                    }
+                }
+            });
+        }
+
+        // 5. Scene Management
+        if (cycle < 9.5) {
+            // === SCENE 1: STEAMBOAT WILLIE (Mickey at the Helm) ===
+            this.fvMickey.setVisible(true);
+            this.fvWheel.setVisible(true);
+            this.fvMinnie.setVisible(false);
+            this.fvIntermissionContainer.setVisible(false);
+            this.fvCaption.setVisible(false);
+
+            this.fvMickey.setPosition(b.cx, b.y + 68);
+            this.fvWheel.setPosition(b.cx, b.y + 78);
+
+            // Steering & whistling animation states
+            let subT = cycle % 4.0;
+            if (subT < 1.0) {
+                this.fvMickey.setTexture('fv_mickey_0');
+                this.fvWheel.setAngle(Math.sin(time * 0.004) * 6);
+            } else if (subT < 2.0) {
+                this.fvMickey.setTexture('fv_mickey_1');
+                this.fvWheel.setAngle(-22);
+            } else if (subT < 3.0) {
+                this.fvMickey.setTexture('fv_mickey_2');
+                this.fvWheel.setAngle(0);
+            } else {
+                this.fvMickey.setTexture('fv_mickey_3');
+                this.fvWheel.setAngle(22);
+            }
+
+            // Spawn whistling musical notes from Mickey's mouth
+            if (this.fvTime > this.fvNextNoteTime) {
+                this.fvNextNoteTime = this.fvTime + 0.9;
+                let idleNote = this.fvFloatingItems.find(n => !n.visible);
+                if (idleNote) {
+                    idleNote.setTexture((Math.random() < 0.5) ? 'fv_note_0' : 'fv_note_1');
+                    idleNote.baseX = b.cx + 8;
+                    idleNote.setPosition(idleNote.baseX, b.y + 56);
+                    idleNote.floatSpeed = 28 + Math.random() * 8;
+                    idleNote.wobblePhase = Math.random() * 10;
+                    idleNote.setAlpha(1.0);
+                    idleNote.setVisible(true);
+                }
+            }
+        } else if (cycle < 16.0) {
+            // === SCENE 2: HIGH SEAS DANCE & CELEBRATION ===
+            this.fvMickey.setVisible(true);
+            this.fvMinnie.setVisible(true);
+            this.fvWheel.setVisible(true);
+            this.fvIntermissionContainer.setVisible(false);
+            this.fvCaption.setVisible(true);
+            this.fvCaption.setText('★ HIGH SEAS CELEBRATION ★');
+
+            this.fvMickey.setPosition(b.cx - 24, b.y + 68);
+            this.fvWheel.setPosition(b.cx, b.y + 80);
+            this.fvWheel.setAngle(0);
+            this.fvMinnie.setPosition(b.cx + 26, b.y + 68);
+
+            // Mickey happy wave
+            this.fvMickey.setTexture((Math.sin(time * 0.008) > 0) ? 'fv_mickey_2' : 'fv_mickey_0');
+            // Minnie clapping animation
+            this.fvMinnie.setTexture((Math.sin(time * 0.008) > 0) ? 'fv_minnie_0' : 'fv_minnie_1');
+
+            // Spawn floating hearts & stars
+            if (this.fvTime > this.fvNextNoteTime) {
+                this.fvNextNoteTime = this.fvTime + 0.8;
+                let idleItem = this.fvFloatingItems.find(n => !n.visible);
+                if (idleItem) {
+                    idleItem.setTexture((Math.random() < 0.5) ? 'fv_heart' : 'fv_star');
+                    idleItem.baseX = b.cx + (Math.random() * 30 - 15);
+                    idleItem.setPosition(idleItem.baseX, b.y + 60);
+                    idleItem.floatSpeed = 24 + Math.random() * 6;
+                    idleItem.wobblePhase = Math.random() * 10;
+                    idleItem.setAlpha(1.0);
+                    idleItem.setVisible(true);
+                }
+            }
+        } else {
+            // === SCENE 3: FEATURE PRESENTATION MARQUEE ===
+            this.fvMickey.setVisible(false);
+            this.fvMinnie.setVisible(false);
+            this.fvWheel.setVisible(false);
+            this.fvCaption.setVisible(false);
+            this.fvIntermissionContainer.setVisible(true);
+
+            // Pulse logo gently
+            let scale = 0.85 + Math.sin(time * 0.005) * 0.05;
+            this.fvIntermissionContainer.setScale(scale);
+
+            // Spawn twinkling stars around the screen
+            if (this.fvTime > this.fvNextNoteTime) {
+                this.fvNextNoteTime = this.fvTime + 0.6;
+                let idleStar = this.fvFloatingItems.find(n => !n.visible);
+                if (idleStar) {
+                    idleStar.setTexture('fv_star');
+                    idleStar.baseX = b.x + 20 + Math.random() * (b.w - 40);
+                    idleStar.setPosition(idleStar.baseX, b.y + 20 + Math.random() * (b.h - 40));
+                    idleStar.floatSpeed = 10;
+                    idleStar.wobblePhase = Math.random() * 10;
+                    idleStar.setAlpha(1.0);
+                    idleStar.setVisible(true);
+                }
+            }
+        }
     }
 
     createInGameMenu() {
