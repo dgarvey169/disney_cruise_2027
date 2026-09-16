@@ -2104,14 +2104,6 @@ class GameScene extends Phaser.Scene {
                 this.executeMenuAction(this.menuSelectedIndex);
             } else if (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
                 this.executeMenuAction(this.menuSelectedIndex);
-            } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-                this.navigateMenu(-1);
-            } else if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-                this.navigateMenu(1);
-            } else if (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.up)) {
-                this.navigateMenu(-1);
-            } else if (this.wasd && Phaser.Input.Keyboard.JustDown(this.wasd.down)) {
-                this.navigateMenu(1);
             }
             return;
         }
@@ -2483,6 +2475,7 @@ class GameScene extends Phaser.Scene {
         this.isMenuOpen = false;
         this.menuSelectedIndex = 0;
         this.lastMenuActionTime = 0;
+        this.lastMenuNavTime = 0;
         this.menuItems = [
             { text: 'CONTINUE', action: () => this.closeInGameMenu() },
             { text: 'RESTART LEVEL', action: () => this.restartLevel() },
@@ -2589,25 +2582,6 @@ class GameScene extends Phaser.Scene {
             this.input.keyboard.on('keydown-ESC', () => this.toggleInGameMenu());
             this.input.keyboard.on('keydown-P', () => this.toggleInGameMenu());
             this.input.keyboard.on('keydown-M', () => this.toggleInGameMenu());
-
-            this.input.keyboard.on('keydown-UP', () => {
-                if (this.isMenuOpen) this.navigateMenu(-1);
-            });
-            this.input.keyboard.on('keydown-W', () => {
-                if (this.isMenuOpen) this.navigateMenu(-1);
-            });
-            this.input.keyboard.on('keydown-DOWN', () => {
-                if (this.isMenuOpen) this.navigateMenu(1);
-            });
-            this.input.keyboard.on('keydown-S', () => {
-                if (this.isMenuOpen) this.navigateMenu(1);
-            });
-            this.input.keyboard.on('keydown-ENTER', () => {
-                if (this.isMenuOpen) this.executeMenuAction(this.menuSelectedIndex);
-            });
-            this.input.keyboard.on('keydown-SPACE', () => {
-                if (this.isMenuOpen) this.executeMenuAction(this.menuSelectedIndex);
-            });
         }
     }
 
@@ -2684,6 +2658,9 @@ class GameScene extends Phaser.Scene {
     }
 
     navigateMenu(dir) {
+        let now = Date.now();
+        if (this.lastMenuNavTime && (now - this.lastMenuNavTime < 180)) return;
+        this.lastMenuNavTime = now;
         let count = this.menuItems.length;
         this.setMenuIndex((this.menuSelectedIndex + dir + count) % count);
     }
