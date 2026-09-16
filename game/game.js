@@ -2069,6 +2069,7 @@ class GameScene extends Phaser.Scene {
         this.player = this.physics.add.sprite(700, 1200, this.selectedCharacter);
         this.player.setBounce(0.0);
         this.player.setCollideWorldBounds(true);
+        this.player.setDepth(15);
         if (this.selectedCharacter === 'riley') {
             this.player.body.setSize(22, 44);
             this.player.body.setOffset(5, 4);
@@ -2221,6 +2222,7 @@ class GameScene extends Phaser.Scene {
         this.iceCreamFlavors = ['strawberry', 'chocolate', 'vanilla', 'mint'];
         this.currentFlavorIndex = 0;
         this.iceCreamSprite = this.add.sprite(0, 0, 'icecream_strawberry');
+        this.iceCreamSprite.setDepth(16);
         this.iceCreamSprite.setVisible(false);
 
         this.physics.add.overlap(this.player, iceCreamStands, () => {
@@ -2829,8 +2831,8 @@ class GameScene extends Phaser.Scene {
         // Mickey Silhouette on red funnel above screen
         this.add.image(centerX, screenY - 28, 'fv_mickey_logo').setScale(0.7).setDepth(2);
 
-        // 2. Capcom Marquee Header Box (depth: 4)
-        let marqueeG = this.add.graphics().setDepth(4);
+        // 2. Capcom Marquee Header Box (depth: 5)
+        let marqueeG = this.add.graphics().setDepth(5);
         marqueeG.fillStyle(0x000000, 1);
         marqueeG.fillRect(centerX - 82, screenY - 22, 164, 20);
         marqueeG.fillStyle(0xF8B800, 1);
@@ -2841,54 +2843,80 @@ class GameScene extends Phaser.Scene {
         this.fvMarqueeText = this.add.text(centerX, screenY - 12, '★ FUNNEL VISION ★', {
             fontSize: '9px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
-        }).setOrigin(0.5).setDepth(5);
+        }).setOrigin(0.5).setDepth(6);
 
         // Marquee light bulbs (row above and below)
         this.fvBulbs = [];
         for (let i = 0; i < 8; i++) {
             let bx = centerX - 70 + i * 20;
-            let bTop = this.add.circle(bx, screenY - 21, 2, 0xF8B800).setDepth(5);
-            let bBot = this.add.circle(bx, screenY - 3, 2, 0xFFFFFF).setDepth(5);
+            let bTop = this.add.circle(bx, screenY - 21, 2, 0xF8B800).setDepth(6);
+            let bBot = this.add.circle(bx, screenY - 3, 2, 0xFFFFFF).setDepth(6);
             this.fvBulbs.push({ top: bTop, bot: bBot });
         }
 
-        // 3. Screen Bezel Frame & Speaker Columns (depth: 4)
-        let bezel = this.add.graphics().setDepth(4);
-        // Outer black bezel
+        // 3. Screen Bezel Frame & Speaker Columns (depth: 5)
+        // IMPORTANT: Bezel is a HOLLOW frame surrounding the screen area (screenX, screenY, screenW, screenH).
+        // It NEVER fills the screen interior so cartoon animations remain 100% visible.
+        let bezel = this.add.graphics().setDepth(5);
+
+        // Left Speaker Tower (x: screenX - 16 to screenX, y: screenY - 4 to screenY + screenH + 6)
         bezel.fillStyle(0x000000, 1);
-        bezel.fillRect(screenX - 16, screenY - 4, screenW + 32, screenH + 8);
-        // Dark steel grey frame
+        bezel.fillRect(screenX - 16, screenY - 4, 16, screenH + 10);
         bezel.fillStyle(0x182430, 1);
-        bezel.fillRect(screenX - 14, screenY - 2, screenW + 28, screenH + 4);
-        // Screen inner rim
-        bezel.fillStyle(0x081018, 1);
-        bezel.fillRect(screenX - 2, screenY - 2, screenW + 4, screenH + 4);
-
-        // Speaker columns (perforated dots)
-        for (let side of [-1, 1]) {
-            let sx = (side === -1) ? (screenX - 11) : (screenX + screenW + 3);
-            bezel.fillStyle(0x000810, 1);
-            bezel.fillRect(sx, screenY + 4, 8, screenH - 8);
-            bezel.fillStyle(0x587890, 1);
-            for (let sy = screenY + 10; sy < screenY + screenH - 10; sy += 8) {
-                bezel.fillRect(sx + 2, sy, 4, 2);
-            }
+        bezel.fillRect(screenX - 15, screenY - 3, 14, screenH + 8);
+        // Left Speaker Grill
+        bezel.fillStyle(0x000810, 1);
+        bezel.fillRect(screenX - 12, screenY + 6, 8, screenH - 12);
+        bezel.fillStyle(0x587890, 1);
+        for (let sy = screenY + 12; sy < screenY + screenH - 12; sy += 8) {
+            bezel.fillRect(screenX - 10, sy, 4, 2);
         }
-        // Gold corner rivets
+        // Left Corner Rivets
         bezel.fillStyle(0xF8B800, 1);
-        bezel.fillRect(screenX - 12, screenY, 3, 3);
-        bezel.fillRect(screenX + screenW + 9, screenY, 3, 3);
-        bezel.fillRect(screenX - 12, screenY + screenH - 3, 3, 3);
-        bezel.fillRect(screenX + screenW + 9, screenY + screenH - 3, 3, 3);
+        bezel.fillRect(screenX - 13, screenY, 3, 3);
+        bezel.fillRect(screenX - 13, screenY + screenH - 3, 3, 3);
 
-        // 4. Geometry Mask for Screen Viewport (depth: 2)
-        let screenMaskG = this.add.graphics().setDepth(0);
-        screenMaskG.fillStyle(0xFFFFFF, 1);
-        screenMaskG.fillRect(screenX, screenY, screenW, screenH);
-        let fvMask = new Phaser.Display.Masks.GeometryMask(this, screenMaskG);
+        // Right Speaker Tower (x: screenX + screenW to screenX + screenW + 16, y: screenY - 4 to screenY + screenH + 6)
+        bezel.fillStyle(0x000000, 1);
+        bezel.fillRect(screenX + screenW, screenY - 4, 16, screenH + 10);
+        bezel.fillStyle(0x182430, 1);
+        bezel.fillRect(screenX + screenW + 1, screenY - 3, 14, screenH + 8);
+        // Right Speaker Grill
+        bezel.fillStyle(0x000810, 1);
+        bezel.fillRect(screenX + screenW + 4, screenY + 6, 8, screenH - 12);
+        bezel.fillStyle(0x587890, 1);
+        for (let sy = screenY + 12; sy < screenY + screenH - 12; sy += 8) {
+            bezel.fillRect(screenX + screenW + 6, sy, 4, 2);
+        }
+        // Right Corner Rivets
+        bezel.fillStyle(0xF8B800, 1);
+        bezel.fillRect(screenX + screenW + 10, screenY, 3, 3);
+        bezel.fillRect(screenX + screenW + 10, screenY + screenH - 3, 3, 3);
 
-        // Screen Background Sky & Deck (depth: 2)
-        this.fvSky = this.add.graphics().setDepth(2).setMask(fvMask);
+        // Top Frame Bar (between speaker columns)
+        bezel.fillStyle(0x000000, 1);
+        bezel.fillRect(screenX, screenY - 4, screenW, 4);
+        bezel.fillStyle(0x182430, 1);
+        bezel.fillRect(screenX, screenY - 3, screenW, 3);
+
+        // Bottom Frame Bar (between speaker columns)
+        bezel.fillStyle(0x000000, 1);
+        bezel.fillRect(screenX, screenY + screenH, screenW, 6);
+        bezel.fillStyle(0x182430, 1);
+        bezel.fillRect(screenX, screenY + screenH, screenW, 5);
+        bezel.fillStyle(0xF8B800, 1);
+        bezel.fillRect(screenX, screenY + screenH + 4, screenW, 1);
+
+        // Inner screen borders and outer frame strokes
+        bezel.lineStyle(2, 0x081018, 1);
+        bezel.strokeRect(screenX - 1, screenY - 1, screenW + 2, screenH + 2);
+        bezel.lineStyle(1, 0xF8B800, 0.7);
+        bezel.strokeRect(screenX - 2, screenY - 2, screenW + 4, screenH + 4);
+        bezel.lineStyle(1, 0x000000, 1);
+        bezel.strokeRect(screenX - 16, screenY - 4, screenW + 32, screenH + 10);
+
+        // 4. Screen Background Sky & Deck (depth: 2)
+        this.fvSky = this.add.graphics().setDepth(2);
         this.fvSky.fillStyle(0x58B8F8, 1);
         this.fvSky.fillRect(screenX, screenY, screenW, 75);
         this.fvSky.fillStyle(0x80D0F8, 1);
@@ -2904,45 +2932,41 @@ class GameScene extends Phaser.Scene {
         this.fvSky.fillStyle(0xF8B800, 1);
         this.fvSky.fillRect(screenX, screenY + 74, screenW, 2);
 
-        // River Waves at bottom
-        this.fvWaves = [];
-        for (let i = 0; i < 4; i++) {
-            let w = this.add.image(screenX + i * 64, screenY + 110, 'fv_wave_0').setOrigin(0, 0.5).setDepth(2).setMask(fvMask);
-            this.fvWaves.push(w);
-        }
+        // Animated River Waves at bottom of screen (depth: 2)
+        this.fvWaves = this.add.tileSprite(screenX, screenY + 104, screenW, 16, 'fv_wave_0').setOrigin(0, 0).setDepth(2);
 
-        // Steamboat Smokestacks in background
-        this.fvStackLeft = this.add.image(screenX + 35, screenY + 62, 'fv_smokestack').setDepth(2).setMask(fvMask);
-        this.fvStackRight = this.add.image(screenX + screenW - 35, screenY + 62, 'fv_smokestack').setDepth(2).setMask(fvMask);
+        // Steamboat Smokestacks in background (depth: 2)
+        this.fvStackLeft = this.add.image(screenX + 35, screenY + 62, 'fv_smokestack').setDepth(2);
+        this.fvStackRight = this.add.image(screenX + screenW - 35, screenY + 62, 'fv_smokestack').setDepth(2);
 
-        // Steam Puffs Pool
+        // Steam Puffs Pool (depth: 3)
         this.fvSteamPuffs = [];
         for (let i = 0; i < 4; i++) {
-            let p = this.add.image(0, 0, 'fv_steam_0').setDepth(2).setMask(fvMask).setVisible(false);
+            let p = this.add.image(0, 0, 'fv_steam_0').setDepth(3).setVisible(false);
             this.fvSteamPuffs.push(p);
         }
 
-        // Steamboat Willie Mickey Sprite
-        this.fvMickey = this.add.image(centerX, screenY + 68, 'fv_mickey_0').setDepth(2).setMask(fvMask);
+        // Steamboat Willie Mickey Sprite (depth: 3)
+        this.fvMickey = this.add.image(centerX, screenY + 68, 'fv_mickey_0').setDepth(3);
 
-        // Steamboat Wheel
-        this.fvWheel = this.add.image(centerX, screenY + 78, 'fv_wheel_0').setDepth(2).setMask(fvMask);
+        // Steamboat Wheel (depth: 4)
+        this.fvWheel = this.add.image(centerX, screenY + 78, 'fv_wheel_0').setDepth(4);
 
-        // Minnie Mouse Sprite (for celebration scene)
-        this.fvMinnie = this.add.image(centerX + 35, screenY + 68, 'fv_minnie_0').setDepth(2).setMask(fvMask).setVisible(false);
+        // Minnie Mouse Sprite (for celebration scene) (depth: 3)
+        this.fvMinnie = this.add.image(centerX + 35, screenY + 68, 'fv_minnie_0').setDepth(3).setVisible(false);
 
-        // Floating Musical Notes & Sparkles Pool
+        // Floating Musical Notes & Sparkles Pool (depth: 4)
         this.fvFloatingItems = [];
         for (let i = 0; i < 6; i++) {
-            let item = this.add.image(0, 0, 'fv_note_0').setDepth(2).setMask(fvMask).setVisible(false);
+            let item = this.add.image(0, 0, 'fv_note_0').setDepth(4).setVisible(false);
             item.baseX = 0;
             item.floatSpeed = 0;
             item.wobblePhase = 0;
             this.fvFloatingItems.push(item);
         }
 
-        // Intermission Presentation Title Banner (Scene 3)
-        this.fvIntermissionContainer = this.add.container(centerX, centerY).setDepth(2).setMask(fvMask).setVisible(false);
+        // Intermission Presentation Title Banner (Scene 3) (depth: 4)
+        this.fvIntermissionContainer = this.add.container(centerX, centerY).setDepth(4).setVisible(false);
         let bannerBg = this.add.graphics();
         bannerBg.fillStyle(0x001024, 0.94);
         bannerBg.fillRect(-90, -48, 180, 96);
@@ -2960,14 +2984,14 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
         this.fvIntermissionContainer.add([bannerBg, bannerLogo, bannerTitle1, bannerTitle2, bannerTitle3]);
 
-        // Caption Bar for Scene 2
+        // Caption Bar for Scene 2 (depth: 4)
         this.fvCaption = this.add.text(centerX, screenY + 12, '', {
             fontSize: '6px', fill: '#FFD700', backgroundColor: '#001024',
             padding: { x: 4, y: 2 }, fontFamily: '"Press Start 2P", monospace', align: 'center'
-        }).setOrigin(0.5).setDepth(2).setMask(fvMask).setVisible(false);
+        }).setOrigin(0.5).setDepth(4).setVisible(false);
 
-        // 5. Jumbotron CRT Scanlines & Screen Glass (depth: 3)
-        this.add.image(centerX, centerY, 'fv_scanlines').setDepth(3).setMask(fvMask);
+        // 5. Jumbotron CRT Scanlines & Screen Glass (depth: 4)
+        this.add.image(centerX, centerY, 'fv_scanlines').setDepth(4);
 
         // Internal timing and state
         this.fvTime = 0;
@@ -3002,12 +3026,11 @@ class GameScene extends Phaser.Scene {
 
         // 2. Scroll River Waves
         if (this.fvWaves) {
-            this.fvWaves.forEach(w => {
-                w.x -= 30 * dt;
-                if (w.x <= b.x - 64) {
-                    w.x += 64 * this.fvWaves.length;
-                }
-            });
+            this.fvWaves.tilePositionX += 28 * dt;
+            let waveFrame = (Math.floor(this.fvTime * 3) % 2 === 0) ? 'fv_wave_0' : 'fv_wave_1';
+            if (this.fvWaves.texture.key !== waveFrame) {
+                this.fvWaves.setTexture(waveFrame);
+            }
         }
 
         // 3. Update Steam Puffs
@@ -3017,7 +3040,7 @@ class GameScene extends Phaser.Scene {
                     p.y -= 20 * dt;
                     p.x += Math.sin(p.y * 0.08) * 6 * dt;
                     p.alpha -= 0.6 * dt;
-                    if (p.alpha <= 0.1 || p.y < b.y + 10) {
+                    if (p.alpha <= 0.1 || p.y < b.y + 6) {
                         p.setVisible(false);
                     }
                 }
