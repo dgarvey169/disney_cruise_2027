@@ -1017,8 +1017,14 @@ class TitleScene extends Phaser.Scene {
 
         this.renderScene(this.scale.width, this.scale.height);
 
-        this.scale.on('resize', (gameSize) => {
-            this.renderScene(gameSize.width, gameSize.height);
+        const resizeHandler = (gameSize) => {
+            if (this.sys && this.sys.isActive()) {
+                this.renderScene(gameSize.width, gameSize.height);
+            }
+        };
+        this.scale.on('resize', resizeHandler);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', resizeHandler);
         });
 
         const startSelection = () => {
@@ -1249,8 +1255,14 @@ class CharacterSelectScene extends Phaser.Scene {
 
         this.layout(this.scale.width, this.scale.height);
 
-        this.scale.on('resize', (gameSize) => {
-            this.layout(gameSize.width, gameSize.height);
+        const resizeHandler = (gameSize) => {
+            if (this.sys && this.sys.isActive()) {
+                this.layout(gameSize.width, gameSize.height);
+            }
+        };
+        this.scale.on('resize', resizeHandler);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', resizeHandler);
         });
 
         this.selectHero('riley');
@@ -1477,10 +1489,20 @@ class GameScene extends Phaser.Scene {
             .setOrigin(0, 0)
             .setScrollFactor(0, 0.1);
 
-        this.scale.on('resize', (gameSize) => {
-            if (this.oceanBg) this.oceanBg.setSize(gameSize.width, 1400);
-            this.layoutHUD(gameSize.width, gameSize.height);
-        }); 
+        const resizeHandler = (gameSize) => {
+            if (this.sys && this.sys.isActive()) {
+                if (this.oceanBg) this.oceanBg.setSize(gameSize.width, 1400);
+                this.layoutHUD(gameSize.width, gameSize.height);
+            }
+        };
+        this.scale.on('resize', resizeHandler);
+        this.events.once('shutdown', () => {
+            this.scale.off('resize', resizeHandler);
+            if (this.cursorTween) {
+                this.cursorTween.stop();
+                this.cursorTween = null;
+            }
+        });
 
         // --- SHIP WALLS ---
         // Deck 11 wall (beneath y=1300 down to y=1420)
@@ -1695,6 +1717,17 @@ class GameScene extends Phaser.Scene {
         // Ice Cream Status Indicator Icon
         this.hudIceCreamIcon = this.add.image(890, 20, 'icecream_strawberry').setScale(0.8).setScrollFactor(0).setDepth(100).setVisible(false);
 
+        // Retro Capcom [MENU] Button
+        this.hudMenuBtn = this.add.text(0, 0, '[MENU]', {
+            fontSize: '10px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(1, 0.5).setPadding(8, 8, 8, 8).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudMenuBtn.on('pointerover', () => this.hudMenuBtn.setFill('#FFFFFF'));
+        this.hudMenuBtn.on('pointerout', () => this.hudMenuBtn.setFill('#FFD700'));
+        this.hudMenuBtn.on('pointerdown', () => this.toggleInGameMenu());
+
+        this.createInGameMenu();
+
         this.layoutHUD(this.scale.width, this.scale.height);
 
         // Player (Spawn in the middle of Deck 11)
@@ -1710,6 +1743,7 @@ class GameScene extends Phaser.Scene {
         }
         this.player.setInteractive({ useHandCursor: true });
         this.player.on('pointerdown', () => {
+            if (this.isMenuOpen) return;
             if (this.canBoardRaft()) {
                 this.boardRaft();
             }
@@ -2015,6 +2049,7 @@ class GameScene extends Phaser.Scene {
         let joyOrigin = { x: 0, y: 0 };
 
         this.input.on('pointerdown', (ptr) => {
+            if (this.isMenuOpen) return;
             const halfW = this.scale.width / 2;
             if (ptr.x < halfW) {
                 // Left side: spawn joystick at touch point
@@ -2063,6 +2098,16 @@ class GameScene extends Phaser.Scene {
     }
 
     update() {
+        if (this.isMenuOpen) {
+            this.player.setVelocity(0, 0);
+            if (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+                this.executeMenuAction(this.menuSelectedIndex);
+            } else if (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+                this.executeMenuAction(this.menuSelectedIndex);
+            }
+            return;
+        }
+
         let inWater = this.inWater || (this.water && this.physics.overlap(this.player, this.water));
         let speed = inWater ? 130 : 250;
         let jumpPower = inWater ? -420 : -550;
@@ -2426,6 +2471,309 @@ class GameScene extends Phaser.Scene {
         this.nearRaft = false;
     }
 
+    createInGameMenu() {
+        this.isMenuOpen = false;
+        this.menuSelectedIndex = 0;
+        this.lastMenuActionTime = 0;
+        this.lastMenuNavTime = 0;
+        this.lastMenuToggleTime = 0;
+        this.menuItems = [
+            { text: 'CONTINUE', action: () => this.closeInGameMenu() },
+            { text: 'RESTART LEVEL', action: () => this.restartLevel() },
+            { text: 'CHANGE CHARACTER', action: () => this.scene.start('CharacterSelectScene') },
+            { text: 'TITLE SCREEN', action: () => this.scene.start('TitleScene') }
+        ];
+
+        if (this.input.keyboard && !this.enterKey) {
+            this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        }
+
+        // Direct scene GameObjects (no Container) for reliable touch & input handling
+        this.menuOverlay = this.add.graphics().setScrollFactor(0).setDepth(498).setVisible(false);
+        this.menuBox = this.add.graphics().setScrollFactor(0).setDepth(499).setVisible(false);
+
+        // Header Title
+        this.menuTitle = this.add.text(0, 0, 'PAUSE MENU', {
+            fontSize: '14px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 4, align: 'center'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
+
+        this.menuSub = this.add.text(0, 0, '★ DISNEY DESTINY ★', {
+            fontSize: '8px', fill: '#58B8F8', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2, align: 'center'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
+
+        // Cursor arrow
+        this.menuCursor = this.add.text(0, 0, '►', {
+            fontSize: '12px', fill: '#F8B800', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
+
+        // Item text objects
+        this.menuTextObjects = [];
+        this.menuItems.forEach((item, index) => {
+            let txt = this.add.text(0, 0, item.text, {
+                fontSize: '11px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace',
+                stroke: '#000000', strokeThickness: 3
+            }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(500).setVisible(false).setInteractive({ useHandCursor: true });
+
+            const triggerItem = () => {
+                this.executeMenuAction(index);
+            };
+
+            txt.on('pointerdown', triggerItem);
+            txt.on('pointerup', triggerItem);
+            txt.on('pointerover', () => this.setMenuIndex(index));
+
+            this.menuTextObjects.push(txt);
+        });
+
+        // Prompt helper at bottom of box
+        this.menuHelper = this.add.text(0, 0, '[ ARROWS / ENTER OR TAP ]', {
+            fontSize: '8px', fill: '#B0C0D0', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2, align: 'center'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(500).setVisible(false);
+
+        // Global pointer listener on scene input for 100% reliable mobile touch hit detection
+        this.input.on('pointerdown', (ptr) => {
+            if (this.isMenuOpen) {
+                let idx = this.getMenuItemAt(ptr.x, ptr.y);
+                if (idx !== -1) {
+                    this.executeMenuAction(idx);
+                }
+            }
+        });
+        this.input.on('pointerup', (ptr) => {
+            if (this.isMenuOpen) {
+                let idx = this.getMenuItemAt(ptr.x, ptr.y);
+                if (idx !== -1) {
+                    this.executeMenuAction(idx);
+                }
+            }
+        });
+
+        // Native DOM keyboard listener (guarantees Enter, Space, Arrows, P, M, ESC work regardless of canvas focus state)
+        const onNativeKeyDown = (e) => {
+            if (!this.sys || !this.sys.isActive()) return;
+            if (e.key === 'Escape' || e.code === 'Escape' ||
+                e.key === 'p' || e.key === 'P' || e.code === 'KeyP' ||
+                e.key === 'm' || e.key === 'M' || e.code === 'KeyM') {
+                e.preventDefault();
+                this.toggleInGameMenu();
+                return;
+            }
+            if (this.isMenuOpen) {
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'KeyW' || e.code === 'ArrowUp') {
+                    e.preventDefault();
+                    this.navigateMenu(-1);
+                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.code === 'KeyS' || e.code === 'ArrowDown') {
+                    e.preventDefault();
+                    this.navigateMenu(1);
+                } else if (e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13 || e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    this.executeMenuAction(this.menuSelectedIndex);
+                }
+            }
+        };
+        window.addEventListener('keydown', onNativeKeyDown);
+        this.events.once('shutdown', () => {
+            window.removeEventListener('keydown', onNativeKeyDown);
+        });
+    }
+
+    getMenuItemAt(x, y) {
+        if (!this.isMenuOpen || !this.menuBoxCoords) return -1;
+        let b = this.menuBoxCoords;
+        if (x < b.x + 8 || x > b.x + b.w - 8) return -1;
+        let startY = b.y + 68;
+        let itemSpacing = 30;
+        for (let i = 0; i < this.menuItems.length; i++) {
+            let cy = startY + i * itemSpacing;
+            if (y >= cy - 15 && y <= cy + 15) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    executeMenuAction(index) {
+        let now = Date.now();
+        if (this.lastMenuActionTime && (now - this.lastMenuActionTime < 350)) return;
+        this.lastMenuActionTime = now;
+        this.setMenuIndex(index);
+        this.executeMenuItem(index);
+    }
+
+    toggleInGameMenu() {
+        let now = Date.now();
+        if (this.lastMenuToggleTime && (now - this.lastMenuToggleTime < 250)) return;
+        this.lastMenuToggleTime = now;
+        if (this.isMenuOpen) {
+            this.closeInGameMenu();
+        } else {
+            this.openInGameMenu();
+        }
+    }
+
+    openInGameMenu() {
+        this.isMenuOpen = true;
+        this.menuSelectedIndex = 0;
+        if (this.player && this.player.body) {
+            this.player.setVelocity(0, 0);
+        }
+        if (this.mobileInput) {
+            this.mobileInput.left = false;
+            this.mobileInput.right = false;
+            this.mobileInput.up = false;
+            this.mobileInput.down = false;
+        }
+        this.layoutInGameMenu(this.scale.width, this.scale.height);
+        this.setMenuVisible(true);
+        this.setMenuIndex(0);
+    }
+
+    closeInGameMenu() {
+        this.isMenuOpen = false;
+        if (this.cursorTween) {
+            this.cursorTween.stop();
+            this.cursorTween = null;
+        }
+        this.setMenuVisible(false);
+    }
+
+    setMenuVisible(visible) {
+        if (this.menuOverlay) this.menuOverlay.setVisible(visible);
+        if (this.menuBox) this.menuBox.setVisible(visible);
+        if (this.menuTitle) this.menuTitle.setVisible(visible);
+        if (this.menuSub) this.menuSub.setVisible(visible);
+        if (this.menuCursor) this.menuCursor.setVisible(visible);
+        if (this.menuHelper) this.menuHelper.setVisible(visible);
+        if (this.menuTextObjects) {
+            this.menuTextObjects.forEach(t => {
+                t.setVisible(visible);
+                if (t.input) t.input.enabled = visible;
+            });
+        }
+    }
+
+    navigateMenu(dir) {
+        let now = Date.now();
+        if (this.lastMenuNavTime && (now - this.lastMenuNavTime < 180)) return;
+        this.lastMenuNavTime = now;
+        let count = this.menuItems.length;
+        this.setMenuIndex((this.menuSelectedIndex + dir + count) % count);
+    }
+
+    setMenuIndex(index) {
+        this.menuSelectedIndex = index;
+        if (!this.menuTextObjects || !this.menuBoxCoords) return;
+        this.menuTextObjects.forEach((txt, i) => {
+            if (i === index) {
+                txt.setFill('#F8B800');
+                let cursorBaseX = this.menuBoxCoords.x + 36;
+                if (this.cursorTween) this.cursorTween.stop();
+                this.menuCursor.setPosition(cursorBaseX, txt.y);
+                this.cursorTween = this.tweens.add({
+                    targets: this.menuCursor,
+                    x: cursorBaseX + 4,
+                    duration: 350,
+                    yoyo: true,
+                    repeat: -1
+                });
+            } else {
+                txt.setFill('#FFFFFF');
+            }
+        });
+    }
+
+    executeMenuItem(index) {
+        if (this.menuItems && this.menuItems[index] && this.menuItems[index].action) {
+            this.menuItems[index].action();
+        }
+    }
+
+    layoutInGameMenu(W, H) {
+        if (!this.menuOverlay) return;
+
+        // Overlay fill
+        this.menuOverlay.clear();
+        this.menuOverlay.fillStyle(0x000000, 0.70);
+        this.menuOverlay.fillRect(0, 0, W, H);
+
+        let boxW = Math.min(360, W - 32);
+        let boxH = 220;
+        let boxX = Math.round(W / 2 - boxW / 2);
+        let boxY = Math.round(H / 2 - boxH / 2);
+        this.menuBoxCoords = { x: boxX, y: boxY, w: boxW, h: boxH };
+
+        // Capcom vintage double-border box
+        let mb = this.menuBox;
+        mb.clear();
+        mb.fillStyle(0x000000, 1);
+        mb.fillRect(boxX - 3, boxY - 3, boxW + 6, boxH + 6);
+        mb.fillStyle(0xFFFFFF, 1);
+        mb.fillRect(boxX - 1, boxY - 1, boxW + 2, boxH + 2);
+        mb.fillStyle(0x001030, 0.96);
+        mb.fillRect(boxX + 1, boxY + 1, boxW - 2, boxH - 2);
+
+        // Gold corner rivets
+        mb.fillStyle(0xF8B800, 1);
+        mb.fillRect(boxX + 2, boxY + 2, 4, 4);
+        mb.fillRect(boxX + boxW - 6, boxY + 2, 4, 4);
+        mb.fillRect(boxX + 2, boxY + boxH - 6, 4, 4);
+        mb.fillRect(boxX + boxW - 6, boxY + boxH - 6, 4, 4);
+
+        // Header separator line
+        mb.fillStyle(0x58B8F8, 1);
+        mb.fillRect(boxX + 16, boxY + 44, boxW - 32, 2);
+
+        this.menuTitle.setPosition(W / 2, boxY + 20);
+        this.menuSub.setPosition(W / 2, boxY + 34);
+
+        let startItemY = boxY + 68;
+        let itemSpacing = 30;
+        let itemTextX = boxX + 54;
+        let rowW = boxW - 64;
+
+        if (this.menuTextObjects) {
+            this.menuTextObjects.forEach((txt, i) => {
+                let itemY = startItemY + i * itemSpacing;
+                txt.setPosition(itemTextX, itemY);
+                txt.setFixedSize(rowW, 30);
+                txt.setPadding(0, 8, 0, 8);
+                if (i === this.menuSelectedIndex) {
+                    let cursorBaseX = boxX + 36;
+                    this.menuCursor.setPosition(cursorBaseX, itemY);
+                }
+            });
+        }
+
+        this.menuHelper.setPosition(W / 2, boxY + boxH - 18);
+    }
+
+    restartLevel() {
+        this.closeInGameMenu();
+        // Clean physics reset at Deck 11 spawn (x: 700, y: 1200)
+        this.player.body.reset(700, 1200);
+        this.player.setVelocity(0, 0);
+        this.player.angle = 0;
+        this.ridingRaft = false;
+        this.onSlide = false;
+        this.inWater = false;
+        this.wasInWater = false;
+        this.currentStair = null;
+        this.player.body.allowGravity = true;
+
+        // Restore health nodes
+        if (this.hpNodes) {
+            this.hpNodes.forEach(node => node.setTexture('hp_node_full'));
+        }
+
+        // Camera flash & reposition
+        this.cameras.main.flash(300, 255, 255, 255);
+        this.cameras.main.centerOn(700, 1200);
+    }
+
     layoutHUD(W, H) {
         const insets = getSafeAreaInsets();
         const topOffset = insets.top;
@@ -2442,35 +2790,89 @@ class GameScene extends Phaser.Scene {
             this.hudBg.lineBetween(0, hudHeight + 2, W, hudHeight + 2);
         }
 
-        const leftPadding = Math.max(16, insets.left + 12);
-        const rightPadding = Math.max(16, insets.right + 12);
+        const leftPadding = Math.max(12, insets.left + 8);
+        const rightPadding = Math.max(12, insets.right + 8);
+        const isNarrow = W < 520;
+        const isVeryNarrow = W < 420;
 
-        if (this.hudPlayerIcon) this.hudPlayerIcon.setPosition(leftPadding, contentY);
-        if (this.hudPlayerName) this.hudPlayerName.setPosition(leftPadding + 18, contentY - 7);
+        // --- LEFT SIDE: Player Avatar & HP ---
+        if (this.hudPlayerIcon) {
+            this.hudPlayerIcon.setPosition(leftPadding + 8, contentY);
+        }
+        let curX = leftPadding + 22;
 
-        let nameRight = leftPadding + 18 + (this.hudPlayerName ? this.hudPlayerName.width : 45) + 12;
-        if (this.hudHpText) this.hudHpText.setPosition(nameRight, contentY - 7);
-        let hpRight = nameRight + (this.hudHpText ? this.hudHpText.width : 20) + 8;
+        if (this.hudPlayerName) {
+            if (isVeryNarrow) {
+                this.hudPlayerName.setVisible(false);
+            } else {
+                this.hudPlayerName.setVisible(true);
+                this.hudPlayerName.setFontSize(isNarrow ? '8px' : '10px');
+                this.hudPlayerName.setOrigin(0, 0.5);
+                this.hudPlayerName.setPosition(curX, contentY);
+                curX += this.hudPlayerName.width + (isNarrow ? 6 : 10);
+            }
+        }
+
+        if (this.hudHpText) {
+            this.hudHpText.setFontSize(isNarrow ? '8px' : '10px');
+            this.hudHpText.setOrigin(0, 0.5);
+            this.hudHpText.setPosition(curX, contentY);
+            curX += this.hudHpText.width + 6;
+        }
 
         if (this.hpNodes) {
+            const nodeSpacing = isNarrow ? 13 : 16;
             this.hpNodes.forEach((node, i) => {
-                node.setPosition(hpRight + (i * 16), contentY);
+                node.setScale(isNarrow ? 0.8 : 1.0);
+                node.setPosition(curX + (i * nodeSpacing) + 6, contentY);
             });
         }
 
-        if (this.hudIceCreamIcon) this.hudIceCreamIcon.setPosition(W - rightPadding - 10, contentY);
-        if (this.hudScoreText) this.hudScoreText.setPosition(W - rightPadding - 120, contentY - 7);
-        if (this.hudCoinIcon) this.hudCoinIcon.setPosition(W - rightPadding - 135, contentY);
+        // --- RIGHT SIDE: [MENU]  [ICECREAM]  $0002500 [COIN] ---
+        let rightX = W - rightPadding;
 
+        // [MENU] button anchored at top-right
+        if (this.hudMenuBtn) {
+            this.hudMenuBtn.setFontSize(isNarrow ? '9px' : '10px');
+            this.hudMenuBtn.setOrigin(1, 0.5);
+            this.hudMenuBtn.setPosition(rightX, contentY);
+            rightX -= (this.hudMenuBtn.width + (isNarrow ? 8 : 14));
+        }
+
+        // Ice cream indicator
+        if (this.hudIceCreamIcon) {
+            this.hudIceCreamIcon.setPosition(rightX - 8, contentY);
+            if (this.hudIceCreamIcon.visible) {
+                rightX -= (20 + (isNarrow ? 6 : 10));
+            }
+        }
+
+        // Currency score & coin icon
+        if (this.hudScoreText) {
+            this.hudScoreText.setFontSize(isNarrow ? '8px' : '10px');
+            this.hudScoreText.setOrigin(1, 0.5);
+            this.hudScoreText.setPosition(rightX, contentY);
+            rightX -= (this.hudScoreText.width + 6);
+        }
+
+        if (this.hudCoinIcon) {
+            this.hudCoinIcon.setScale(isNarrow ? 0.85 : 1.0);
+            this.hudCoinIcon.setPosition(rightX - 6, contentY);
+        }
+
+        // --- CENTER LOCATION BANNER ---
         if (this.hudLocation) {
             this.hudLocation.setPosition(W / 2, contentY);
-            if (W < 540) {
-                this.hudLocation.setFontSize('7px');
-                this.hudLocation.setVisible(W >= 360);
+            if (W < 640) {
+                this.hudLocation.setVisible(false);
             } else {
-                this.hudLocation.setFontSize('9px');
                 this.hudLocation.setVisible(true);
+                this.hudLocation.setFontSize('9px');
             }
+        }
+
+        if (this.isMenuOpen) {
+            this.layoutInGameMenu(W, H);
         }
     }
 }
