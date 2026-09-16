@@ -2476,6 +2476,7 @@ class GameScene extends Phaser.Scene {
         this.menuSelectedIndex = 0;
         this.lastMenuActionTime = 0;
         this.lastMenuNavTime = 0;
+        this.lastMenuToggleTime = 0;
         this.menuItems = [
             { text: 'CONTINUE', action: () => this.closeInGameMenu() },
             { text: 'RESTART LEVEL', action: () => this.restartLevel() },
@@ -2551,19 +2552,21 @@ class GameScene extends Phaser.Scene {
             }
         });
 
-        // Native DOM keyboard listener (guarantees Enter, Space, Arrows work regardless of canvas focus state)
+        // Native DOM keyboard listener (guarantees Enter, Space, Arrows, P, M, ESC work regardless of canvas focus state)
         const onNativeKeyDown = (e) => {
             if (!this.sys || !this.sys.isActive()) return;
-            if (e.key === 'Escape' || e.key === 'p' || e.key === 'P' || e.key === 'm' || e.key === 'M') {
+            if (e.key === 'Escape' || e.code === 'Escape' ||
+                e.key === 'p' || e.key === 'P' || e.code === 'KeyP' ||
+                e.key === 'm' || e.key === 'M' || e.code === 'KeyM') {
                 e.preventDefault();
                 this.toggleInGameMenu();
                 return;
             }
             if (this.isMenuOpen) {
-                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.code === 'KeyW' || e.code === 'ArrowUp') {
                     e.preventDefault();
                     this.navigateMenu(-1);
-                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.code === 'KeyS' || e.code === 'ArrowDown') {
                     e.preventDefault();
                     this.navigateMenu(1);
                 } else if (e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13 || e.key === ' ' || e.code === 'Space') {
@@ -2576,13 +2579,6 @@ class GameScene extends Phaser.Scene {
         this.events.once('shutdown', () => {
             window.removeEventListener('keydown', onNativeKeyDown);
         });
-
-        // Phaser keyboard hotkeys
-        if (this.input.keyboard) {
-            this.input.keyboard.on('keydown-ESC', () => this.toggleInGameMenu());
-            this.input.keyboard.on('keydown-P', () => this.toggleInGameMenu());
-            this.input.keyboard.on('keydown-M', () => this.toggleInGameMenu());
-        }
     }
 
     getMenuItemAt(x, y) {
@@ -2609,6 +2605,9 @@ class GameScene extends Phaser.Scene {
     }
 
     toggleInGameMenu() {
+        let now = Date.now();
+        if (this.lastMenuToggleTime && (now - this.lastMenuToggleTime < 250)) return;
+        this.lastMenuToggleTime = now;
         if (this.isMenuOpen) {
             this.closeInGameMenu();
         } else {
