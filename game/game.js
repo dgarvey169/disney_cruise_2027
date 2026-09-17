@@ -1383,6 +1383,18 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('door', 40, 60);
         g.clear();
 
+        // Midship Elevator Door (60x60)
+        g.fillStyle(0x777777);
+        g.fillRect(0, 0, 60, 60);
+        g.fillStyle(0xaaaaaa);
+        g.fillRect(28, 0, 4, 60); // door split
+        // Up/Down arrows
+        g.fillStyle(0xffff00);
+        g.fillTriangle(20, 15, 30, 5, 40, 15);
+        g.fillTriangle(20, 45, 30, 55, 40, 45);
+        g.generateTexture('elevator_door', 60, 60);
+        g.clear();
+
         // Tube Platform
         g.fillStyle(0x000000, 1);
         g.fillRect(0, 0, 80, 20);
@@ -2509,6 +2521,21 @@ class GameScene extends Phaser.Scene {
         this.add.tileSprite(700, 320, 100, 20, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.text(670, 275, 'AQUAMOUSE LAUNCH', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
+        // Midship Elevators & Interaction Zones
+        this.elevators = this.physics.add.staticGroup();
+        // Deck 11, 12, 13 Visuals
+        this.elevators.create(1250, 1190, 'elevator_door').setDepth(1190);
+        this.elevators.create(1250, 910, 'elevator_door').setDepth(910);
+        this.elevators.create(1250, 670, 'elevator_door').setDepth(670);
+        
+        // Interaction Zones
+        this.elevatorZones = this.physics.add.staticGroup();
+        this.elevatorZones.add(this.add.zone(1250, 1255, 60, 60)); // Deck 11
+        this.elevatorZones.add(this.add.zone(1250, 975, 60, 60));  // Deck 12
+        this.elevatorZones.add(this.add.zone(1250, 735, 60, 60));  // Deck 13
+        // Enable physics on zones
+        this.elevatorZones.getChildren().forEach(z => this.physics.add.existing(z, true));
+
         // --- 3D POOL WATER SUBMERSION COPING & CORRIDORS ---
         // Marble front coping and translucent water surface overlay for 3D pool submersion
         this.add.tileSprite(890, 1268, 300, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1282);
@@ -2795,6 +2822,19 @@ class GameScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.player, this.liftZone, () => {
             this.nearRaft = true;
+        });
+
+        // Midship Elevator interaction prompt & overlap
+        this.nearElevator = false;
+        const elevatorPromptLabel = isTouch ? '[ TAP TO USE ELEVATOR ]' : '[ ENTER: USE ELEVATOR ]';
+        this.elevatorPromptText = this.add.text(1250, 700, elevatorPromptLabel, {
+            fontSize: '10px', fill: '#FFFFFF', backgroundColor: '#0000AA', padding: { x: 10, y: 8 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(2000).setVisible(false).setInteractive({ useHandCursor: true });
+        this.elevatorPromptText.on('pointerdown', () => this.openElevatorMenu());
+
+        this.physics.add.overlap(this.player, this.elevatorZones, () => {
+            this.nearElevator = true;
         });
 
         // Board the raft
@@ -3431,15 +3471,28 @@ class GameScene extends Phaser.Scene {
 
         // AquaMouse boarding handling & UI visibility
         let canBoard = this.canBoardRaft();
-        if (canBoard && !this.ridingRaft) {
+        if (canBoard && !this.ridingRaft && !this.nearElevator) {
             this.boardPromptText.setVisible(true);
         } else {
             this.boardPromptText.setVisible(false);
         }
 
         // Enter key boards the AquaMouse
-        if (canBoard && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+        if (canBoard && !this.nearElevator && this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
             this.boardRaft();
+        }
+
+        // Midship Elevator handling & UI visibility
+        if (this.nearElevator && !this.ridingRaft) {
+            this.elevatorPromptText.setVisible(true);
+            this.elevatorPromptText.x = this.player.x;
+            this.elevatorPromptText.y = this.player.y - 60;
+            
+            if (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+                this.openElevatorMenu();
+            }
+        } else {
+            this.elevatorPromptText.setVisible(false);
         }
 
         // Dynamic Funnel Vision Screen Animation
@@ -3494,6 +3547,7 @@ class GameScene extends Phaser.Scene {
         this.wasInWater = inWater;
         this.inWater = false;
         this.nearRaft = false;
+        this.nearElevator = false;
     }
 
     createFunnelVision() {
@@ -4683,8 +4737,98 @@ class GameScene extends Phaser.Scene {
             this.layoutInGameMenu(W, H);
         }
     }
+
+    openElevatorMenu() {
+        if (this.ridingRaft) return;
+        // Stop player movement
+        if (this.cursors) {
+            if (this.cursors.left) this.cursors.left.isDown = false;
+            if (this.cursors.right) this.cursors.right.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+        }
+        if (this.wasd) {
+            if (this.wasd.left) this.wasd.left.isDown = false;
+            if (this.wasd.right) this.wasd.right.isDown = false;
+            if (this.wasd.up) this.wasd.up.isDown = false;
+            if (this.wasd.down) this.wasd.down.isDown = false;
+        }
+        if (this.elevatorPromptText) {
+            this.elevatorPromptText.setVisible(false);
+        }
+        this.nearElevator = false;
+        this.scene.pause('GameScene');
+        this.scene.launch('ElevatorMenuScene', { gameScene: this });
+    }
 }
 
-config.scene = [BootScene, TitleScene, CharacterSelectScene, GameScene];
+class ElevatorMenuScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'ElevatorMenuScene' });
+    }
+    init(data) {
+        this.gameScene = data.gameScene;
+    }
+    create() {
+        const cx = this.scale.width / 2;
+        const cy = this.scale.height / 2;
+
+        this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x000000, 0.7);
+        this.add.rectangle(cx, cy, 340, 300, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
+        
+        this.add.text(cx, cy - 110, 'MIDSHIP ELEVATOR', {
+            fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5);
+
+        const floors = [
+            { label: 'Deck 13 (AquaMouse)', y: 735 },
+            { label: 'Deck 12 (Hero Zone)', y: 975 },
+            { label: 'Deck 11 (Pools)', y: 1255 }
+        ];
+
+        let startY = cy - 40;
+        floors.forEach((floor, index) => {
+            let btn = this.add.text(cx, startY + (index * 40), floor.label, {
+                fontSize: '10px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 10, y: 10 },
+                fontFamily: '"Press Start 2P", monospace'
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+            btn.on('pointerover', () => btn.setStyle({ fill: '#000000', backgroundColor: '#FFD700' }));
+            btn.on('pointerout', () => btn.setStyle({ fill: '#FFFFFF', backgroundColor: '#000000' }));
+            btn.on('pointerdown', () => this.travelToFloor(floor.y));
+        });
+
+        let closeBtn = this.add.text(cx, cy + 110, '[ CANCEL ]', {
+            fontSize: '10px', fill: '#FF5555', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        closeBtn.on('pointerdown', () => {
+            this.scene.stop();
+            this.scene.resume('GameScene');
+        });
+
+        if (this.input.keyboard) {
+            this.input.keyboard.on('keydown-ESC', () => {
+                this.scene.stop();
+                this.scene.resume('GameScene');
+            });
+        }
+    }
+    travelToFloor(targetGroundY) {
+        this.gameScene.jumpZ = 0;
+        this.gameScene.jumpV = 0;
+        this.gameScene.isJumping = false;
+        this.gameScene.currentStair = null;
+        
+        this.gameScene.player.x = 1250;
+        this.gameScene.groundY = targetGroundY;
+        this.gameScene.player.y = targetGroundY;
+        this.gameScene.player.body.reset(1250, targetGroundY);
+
+        this.scene.stop();
+        this.scene.resume('GameScene');
+    }
+}
+
+config.scene = [BootScene, TitleScene, CharacterSelectScene, GameScene, ElevatorMenuScene];
 window.game = new Phaser.Game(config);
 const game = window.game;
