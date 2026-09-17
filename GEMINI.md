@@ -31,10 +31,10 @@
   - **Decoupled 2.5D Coordinate System**: Character position is tracked using `groundY` (foot-plane position within the 60px deck corridor) and `jumpZ` (height off the ground during jumps). Visual render position is computed as `player.y = groundY - jumpZ`.
   - **Arcade Body Reset on Every Frame**: `player.body.reset(player.x, player.y)` keeps the Phaser Arcade Physics body synchronized with visual coordinates without conflicting deltas (`body.prev` / `body.prevFrame`), eliminating 60Hz flutter and collision jitter.
   - **Deck Corridor Coordinates (60px Depth)**:
-    - Deck 11: `minY = 1220`, `maxY = 1280` (midway `groundY = 1255`)
-    - Deck 12: `minY = 940`, `maxY = 1000` (midway `groundY = 975`)
-    - Deck 13: `minY = 700`, `maxY = 760` (midway `groundY = 735`)
-    - Top Deck: `minY = 325`, `maxY = 345` (midway `groundY = 335`)
+    - Deck 11: `minY = 1220`, `maxY = 1280` (midway `groundY = 1255`), `x = 20..2380`
+    - Deck 12: `minY = 940`, `maxY = 1000` (midway `groundY = 975`), `x = 20..2380`
+    - Deck 13: `minY = 700`, `maxY = 760` (midway `groundY = 735`), `x = 20..2380`
+    - Top Deck: `minY = 325`, `maxY = 345` (midway `groundY = 335`), `x = 700..800`
   - **Dynamic Y-Sorting Hierarchy**:
     - Floor tiles & bulkheads: `depth = 1` to `3`
     - Bulkhead doors / stands: `depth = 1190` (Deck 11), `910` (Deck 12)
@@ -52,8 +52,8 @@
     - `pool_front_coping_3d`: 40x14, marble coping slab and translucent water surface overlay.
     - `stair_step_3d`: 40x22, authentic horizontal tread with yellow non-slip safety nose and vertical steel riser.
   - **Stair Mounting & Traversal Coordinates**:
-    - Stair 1: `x: 60..340`, `groundY = 1340 - x`. Mounting from Deck 11 base (`x: 40..100, groundY: 1210..1285` with `isUp`). Top exit: `x = 340, groundY = 975`. Bottom exit: `x = 60, groundY = 1255`.
-    - Stair 2: `x: 2060..2300`, `groundY = 760 + (x - 2060)`. Mounting from Deck 12 base (`x: 2240..2320, groundY: 930..1010` with `isUp`). Top exit: `x = 2060, groundY = 735`. Bottom exit: `x = 2300, groundY = 975`.
+    - Stair 1: `x: 60..340`, `groundY = 1340 - x`. Mounting from Deck 11 base (`x: 40..100, groundY: 1210..1285` with `isUp`). Mounting from Deck 12 top (`x: 300..360, groundY: 930..1010` with `isDown`). Top exit: `x = 340, groundY = 975`. Bottom exit: `x = 60, groundY = 1255`. Stairwell opening in Deck 12 railing and fascia at `x: 300..345` with safety newel posts. Horizontal walking (`Left`/`Right`) passes freely along Deck 12 across the stairwell.
+    - Stair 2: `x: 2060..2300`, `groundY = 760 + (x - 2060)`. Mounting from Deck 12 base (`x: 2240..2320, groundY: 930..1010` with `isUp`). Mounting from Deck 13 top (`x: 2040..2100, groundY: 690..770` with `isDown`). Top exit: `x = 2060, groundY = 735`. Bottom exit: `x = 2300, groundY = 975`. Stairwell opening in Deck 13 railing and fascia at `x: 2055..2100` with safety newel posts. Horizontal walking (`Left`/`Right`) passes freely along Deck 13 across the stairwell.
 
 # Feature Roadmap & Design Memory
 
@@ -70,8 +70,12 @@
 - **AquaMouse Redesign & Overhaul (Issue #39)**:
   - Overhaul of the AquaMouse water coaster aesthetics and ride mechanics. Address raft/tube depth ordering relative to Deck 13 floor planes and slide curves.
 
-- **Extend Decks 12 & 13 to Full Width (Issue #40)**:
-  - Eliminate staggered deck overhangs and open-water gaps behind stairwells by extending Deck 12 left to `x = 0` and Deck 13 across the full width (`x = 0..2400`), integrating stairs into dedicated stairwell openings.
+- **Full-Width Decks 12 & 13 and Superstructure Continuity (Issue #40 - Completed)**:
+  - Eliminated staggered deck overhangs and open-water gaps behind stairwells by extending Deck 12 left to `x = 0` and Deck 13 across the full width (`x = 0..2400`).
+  - Background hull wall panels (`ship_wall`), baseboard trim lines, and ambient occlusion overhang shadows cover `x = 0..2400` across all decks.
+  - Dedicated stairwell openings with architectural 8-bit safety newel posts on Deck 12 (`x: 300..345`) and Deck 13 (`x: 2055..2100`).
+  - New venues added: Cove Cafe (`x = 140`) on Deck 12 forward, and Currents Bar (`x = 2240`) on Deck 13 aft (Note: Follow-up bug #42 created to remove Currents Bar doorway).
+  - Added ambient NPCs Marcus (Cove Cafe lounger) and Elena (Deck 13 aft promenade walker).
 
 
 
