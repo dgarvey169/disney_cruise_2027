@@ -2389,24 +2389,24 @@ class GameScene extends Phaser.Scene {
         // Deck 11 lower hull (beneath y=1280 down to y=1420)
         this.add.tileSprite(0, 1280, 2400, 140, 'ship_wall').setOrigin(0, 0);
 
-        // Deck 12 wall (behind Deck 11, from Deck 12 floor y=1000 down to Deck 11 back wall y=1220)
-        this.add.tileSprite(340, 1000, 2060, 220, 'ship_wall').setOrigin(0, 0);
+        // Deck 12 wall (behind Deck 11, from Deck 12 floor y=1000 down to Deck 11 back wall y=1220) - Full width
+        this.add.tileSprite(0, 1000, 2400, 220, 'ship_wall').setOrigin(0, 0);
 
-        // Deck 13 wall (behind Deck 12, from Deck 13 floor y=760 down to Deck 12 back wall y=940)
-        this.add.tileSprite(20, 760, 2040, 180, 'ship_wall').setOrigin(0, 0);
+        // Deck 13 wall (behind Deck 12, from Deck 13 floor y=760 down to Deck 12 back wall y=940) - Full width
+        this.add.tileSprite(0, 760, 2400, 180, 'ship_wall').setOrigin(0, 0);
 
         // Top of AquaMouse structure (from launch deck y=340 down to Deck 13 back wall y=700)
         this.add.tileSprite(700, 340, 100, 360, 'ship_wall').setOrigin(0, 0);
 
         // 8-bit Architectural Baseboard Trim Lines between vertical walls and horizontal deck corridors
-        this.add.rectangle(340, 1220, 2060, 2, 0x182030).setOrigin(0, 1).setDepth(2);
-        this.add.rectangle(20, 940, 2040, 2, 0x182030).setOrigin(0, 1).setDepth(2);
-        this.add.rectangle(20, 700, 2040, 2, 0x182030).setOrigin(0, 1).setDepth(2);
+        this.add.rectangle(0, 1220, 2400, 2, 0x182030).setOrigin(0, 1).setDepth(2);
+        this.add.rectangle(0, 940, 2400, 2, 0x182030).setOrigin(0, 1).setDepth(2);
+        this.add.rectangle(0, 700, 2400, 2, 0x182030).setOrigin(0, 1).setDepth(2);
 
         // Upper Deck Overhang Ambient Occlusion Shadows
-        this.add.tileSprite(340, 1220, 2060, 10, 'deck_overhang_shadow').setOrigin(0, 0).setDepth(3);
-        this.add.tileSprite(20, 940, 2040, 10, 'deck_overhang_shadow').setOrigin(0, 0).setDepth(3);
-        this.add.tileSprite(20, 700, 2040, 10, 'deck_overhang_shadow').setOrigin(0, 0).setDepth(3);
+        this.add.tileSprite(0, 1220, 2400, 10, 'deck_overhang_shadow').setOrigin(0, 0).setDepth(3);
+        this.add.tileSprite(0, 940, 2400, 10, 'deck_overhang_shadow').setOrigin(0, 0).setDepth(3);
+        this.add.tileSprite(0, 700, 2400, 10, 'deck_overhang_shadow').setOrigin(0, 0).setDepth(3);
 
         const platforms = this.physics.add.staticGroup();
         const water = this.physics.add.staticGroup();
@@ -2462,11 +2462,14 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y: 940 to 1000 (Depth: 60px)
         // ----------------------------------------------------
-        this.add.tileSprite(340, 940, 190, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(0, 940, 530, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(530, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(730, 940, 970, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(1700, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(1900, 940, 480, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(1900, 940, 500, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+
+        doors.create(140, 910, 'door');
+        this.add.text(80, 865, 'COVE CAFE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         this.add.text(590, 915, 'QUIET COVE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(1680, 915, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
@@ -2478,17 +2481,20 @@ class GameScene extends Phaser.Scene {
         createStaircase(2300, 1000, 6, -1, -1);
 
         // ----------------------------------------------------
-        // DECK 13 (AquaMouse) - y: 700 to 760 (Depth: 60px)
+        // DECK 13 (AquaMouse Deck) - y: 700 to 760 (Depth: 60px)
         // ----------------------------------------------------
-        this.add.tileSprite(20, 700, 210, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(0, 700, 230, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(230, 700, 240, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(470, 700, 1590, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(470, 700, 1930, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
 
         // AquaMouse Splashdown Pool
         this.add.text(340, 675, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         this.add.text(1170, 675, 'AQUAMOUSE ENTRANCE', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         
+        doors.create(2240, 670, 'door');
+        this.add.text(2170, 625, 'CURRENTS BAR', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+
         // AquaMouse Raft Lift
         this.raft = this.physics.add.sprite(1200, 730, 'raft');
         this.raft.body.allowGravity = false;
@@ -2521,14 +2527,31 @@ class GameScene extends Phaser.Scene {
 
         // --- 3D DECK SLAB FASCIA (STRUCTURAL DECK THICKNESS) ---
         this.add.tileSprite(0, 1280, 2400, 12, 'deck_fascia').setOrigin(0, 0).setDepth(1340);
-        this.add.tileSprite(340, 1000, 2060, 12, 'deck_fascia').setOrigin(0, 0).setDepth(1040);
-        this.add.tileSprite(20, 760, 2040, 12, 'deck_fascia').setOrigin(0, 0).setDepth(800);
+        this.add.tileSprite(0, 1000, 300, 12, 'deck_fascia').setOrigin(0, 0).setDepth(1040);
+        this.add.tileSprite(345, 1000, 2055, 12, 'deck_fascia').setOrigin(0, 0).setDepth(1040);
+        this.add.tileSprite(0, 760, 2055, 12, 'deck_fascia').setOrigin(0, 0).setDepth(800);
+        this.add.tileSprite(2100, 760, 300, 12, 'deck_fascia').setOrigin(0, 0).setDepth(800);
         this.add.tileSprite(700, 340, 100, 12, 'deck_fascia').setOrigin(0, 0).setDepth(340); // Top deck
 
-        // --- FOREGROUND RAILINGS ---
+        // --- FOREGROUND RAILINGS WITH INTEGRATED STAIRWELL OPENINGS ---
         this.add.tileSprite(0, 1280, 2400, 40, 'railing').setOrigin(0, 0).setDepth(1350);
-        this.add.tileSprite(340, 1000, 2060, 40, 'railing').setOrigin(0, 0).setDepth(1050);
-        this.add.tileSprite(20, 760, 2040, 40, 'railing').setOrigin(0, 0).setDepth(810);
+
+        // Deck 12 railing with Stair 1 stairwell opening (x: 300..345)
+        this.add.tileSprite(0, 1000, 300, 40, 'railing').setOrigin(0, 0).setDepth(1050);
+        this.add.tileSprite(345, 1000, 2055, 40, 'railing').setOrigin(0, 0).setDepth(1050);
+        this.add.rectangle(300, 1000, 4, 38, 0x182030).setOrigin(0.5, 0).setDepth(1051);
+        this.add.rectangle(345, 1000, 4, 38, 0x182030).setOrigin(0.5, 0).setDepth(1051);
+        this.add.rectangle(300, 998, 6, 4, 0xF8B800).setOrigin(0.5, 0).setDepth(1052);
+        this.add.rectangle(345, 998, 6, 4, 0xF8B800).setOrigin(0.5, 0).setDepth(1052);
+
+        // Deck 13 railing with Stair 2 stairwell opening (x: 2055..2100)
+        this.add.tileSprite(0, 760, 2055, 40, 'railing').setOrigin(0, 0).setDepth(810);
+        this.add.tileSprite(2100, 760, 300, 40, 'railing').setOrigin(0, 0).setDepth(810);
+        this.add.rectangle(2055, 760, 4, 38, 0x182030).setOrigin(0.5, 0).setDepth(811);
+        this.add.rectangle(2100, 760, 4, 38, 0x182030).setOrigin(0.5, 0).setDepth(811);
+        this.add.rectangle(2055, 758, 6, 4, 0xF8B800).setOrigin(0.5, 0).setDepth(812);
+        this.add.rectangle(2100, 758, 6, 4, 0xF8B800).setOrigin(0.5, 0).setDepth(812);
+
         this.add.tileSprite(700, 340, 100, 40, 'railing').setOrigin(0, 0).setDepth(350); // Top deck
 
         // The AquaMouse Slide (circular loop around the deck!)
@@ -3088,17 +3111,17 @@ class GameScene extends Phaser.Scene {
             this.groundY = Phaser.Math.Clamp(this.groundY, 325, 345);
             this.player.x = Phaser.Math.Clamp(this.player.x, 700, 800);
         } else if (this.groundY < 850) {
-            // Deck 13 (AquaMouse Deck) - depth 60px: y 700..760
+            // Deck 13 (AquaMouse Deck) - depth 60px: y 700..760, full width x: 20..2380
             this.currentDeck = 'deck13';
             this.groundY = Phaser.Math.Clamp(this.groundY, 700, 760);
-            this.player.x = Phaser.Math.Clamp(this.player.x, 20, 2060);
+            this.player.x = Phaser.Math.Clamp(this.player.x, 20, 2380);
         } else if (this.groundY < 1120) {
-            // Deck 12 (Quiet Cove & Hero Zone) - depth 60px: y 940..1000
+            // Deck 12 (Quiet Cove & Hero Zone) - depth 60px: y 940..1000, full width x: 20..2380
             this.currentDeck = 'deck12';
             this.groundY = Phaser.Math.Clamp(this.groundY, 940, 1000);
-            this.player.x = Phaser.Math.Clamp(this.player.x, 340, 2380);
+            this.player.x = Phaser.Math.Clamp(this.player.x, 20, 2380);
         } else {
-            // Deck 11 (Main Pool Deck) - depth 60px: y 1220..1280
+            // Deck 11 (Main Pool Deck) - depth 60px: y 1220..1280, full width x: 20..2380
             this.currentDeck = 'deck11';
             this.groundY = Phaser.Math.Clamp(this.groundY, 1220, 1280);
             this.player.x = Phaser.Math.Clamp(this.player.x, 20, 2380);
@@ -3211,9 +3234,9 @@ class GameScene extends Phaser.Scene {
                         this.currentStair = 'deck11_to_12';
                         this.groundY = 1340 - this.player.x;
                     }
-                    // From Deck 12 top (x: 320..370, Deck 12 corridor y: 930..1010)
-                    // Moving left or down descends Stair 1
-                    else if (this.player.x >= 320 && this.player.x <= 370 && this.groundY >= 930 && this.groundY <= 1010 && (isLeft || isDown)) {
+                    // From Deck 12 top stair opening (x: 300..360, Deck 12 corridor y: 930..1010)
+                    // Moving down (or down+left) enters stairwell to descend Stair 1; walking left/right alone passes along Deck 12
+                    else if (this.player.x >= 300 && this.player.x <= 360 && this.groundY >= 930 && this.groundY <= 1010 && isDown) {
                         this.currentStair = 'deck11_to_12';
                         this.groundY = 1340 - this.player.x;
                     }
@@ -3224,9 +3247,9 @@ class GameScene extends Phaser.Scene {
                         this.currentStair = 'deck12_to_13';
                         this.groundY = 760 + (this.player.x - 2060);
                     }
-                    // From Deck 13 top (x: 2040..2090, Deck 13 corridor y: 690..770)
-                    // Moving right or down descends Stair 2
-                    else if (this.player.x >= 2040 && this.player.x <= 2090 && this.groundY >= 690 && this.groundY <= 770 && (isRight || isDown)) {
+                    // From Deck 13 top stair opening (x: 2040..2100, Deck 13 corridor y: 690..770)
+                    // Moving down (or down+right) enters stairwell to descend Stair 2; walking left/right alone passes along Deck 13
+                    else if (this.player.x >= 2040 && this.player.x <= 2100 && this.groundY >= 690 && this.groundY <= 770 && isDown) {
                         this.currentStair = 'deck12_to_13';
                         this.groundY = 760 + (this.player.x - 2060);
                     }
@@ -3440,9 +3463,21 @@ class GameScene extends Phaser.Scene {
         } else if (this.groundY < 500) {
             loc = 'DECK 13: AQUAMOUSE LAUNCH';
         } else if (this.groundY < 850) {
-            loc = 'DECK 13: AQUAMOUSE';
+            if (this.player.x > 2060) {
+                loc = 'DECK 13: CURRENTS BAR';
+            } else if (this.player.x < 500) {
+                loc = 'DECK 13: SPLASHDOWN POOL';
+            } else {
+                loc = 'DECK 13: AQUAMOUSE';
+            }
         } else if (this.groundY < 1120) {
-            loc = (this.player.x > 1850) ? 'DECK 12: HERO ZONE' : 'DECK 12: QUIET COVE';
+            if (this.player.x > 1850) {
+                loc = 'DECK 12: HERO ZONE';
+            } else if (this.player.x < 340) {
+                loc = 'DECK 12: COVE CAFE';
+            } else {
+                loc = 'DECK 12: QUIET COVE';
+            }
         } else {
             loc = (this.player.x > 1950) ? 'DECK 11: MARCELINE MARKET' : ((this.player.x < 500) ? 'DECK 11: SENSES SPA' : 'DECK 11: MAIN POOL');
         }
@@ -3962,6 +3997,30 @@ class GameScene extends Phaser.Scene {
             nextSpeechTime: 0
         });
 
+        // Guest Elena (Deck 13 - aft promenade towards Currents Bar)
+        let tour3 = this.add.sprite(2250, 730, 'npc_tourist_idle').setDepth(730);
+        tour3.anims.play('npc_tourist_walk');
+        this.ambientNPCs.push({
+            name: 'Elena',
+            type: 'walker',
+            sprite: tour3,
+            minX: 2160,
+            maxX: 2360,
+            speed: 30,
+            dir: -1,
+            state: 'walk',
+            pauseTimer: 0,
+            walkAnim: 'npc_tourist_walk',
+            idleAnim: 'npc_tourist_idle',
+            quotes: [
+                'WHAT A VIEW FROM DECK 13!',
+                'HEADING TO CURRENTS BAR!',
+                'THE WHOLE SHIP LOOKS AMAZING!'
+            ],
+            bubbleOffset: 28,
+            nextSpeechTime: 0
+        });
+
         // 3. Spawn Lounging Sunbathers on Deck Chairs
         // Sunbather Chloe (Deck 11 poolside lounger)
         this.add.image(1360, 1255, 'npc_lounge_chair').setDepth(1254);
@@ -3992,6 +4051,23 @@ class GameScene extends Phaser.Scene {
                 'QUIET COVE IS SO PEACEFUL.',
                 'BEST SPOT FOR A SIESTA.',
                 'HEAR THE WAVES RUSH BY...'
+            ],
+            bubbleOffset: 18,
+            nextSpeechTime: 0
+        });
+
+        // Guest Marcus (Deck 12 Cove Cafe lounger)
+        this.add.image(240, 975, 'npc_lounge_chair').setDepth(974);
+        let lounger3 = this.add.sprite(240, 973, 'npc_lounger_0').setDepth(975);
+        lounger3.anims.play('npc_lounger_relax');
+        this.ambientNPCs.push({
+            name: 'Marcus',
+            type: 'lounger',
+            sprite: lounger3,
+            quotes: [
+                'COVE CAFE ESPRESSO IS PERFECTION!',
+                'SO PEACEFUL HERE ON DECK 12.',
+                'LOVING THE OCEAN BREEZE!'
             ],
             bubbleOffset: 18,
             nextSpeechTime: 0
