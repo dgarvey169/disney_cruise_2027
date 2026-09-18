@@ -2475,11 +2475,9 @@ class GameScene extends Phaser.Scene {
         createStaircase(60, 1280, 7, 1, -1);
 
         // ----------------------------------------------------
-        // DECK 12 (Quiet Cove & Hero Zone) - y: 940 to 1000 (Depth: 60px)
+        // DECK 12 (Splashdown & Hero Zone) - y: 940 to 1000 (Depth: 60px)
         // ----------------------------------------------------
-        this.add.tileSprite(0, 940, 230, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(230, 940, 240, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(470, 940, 60, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(0, 940, 530, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(530, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(730, 940, 970, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(1700, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
@@ -2487,8 +2485,7 @@ class GameScene extends Phaser.Scene {
 
         doors.create(140, 910, 'door');
         this.add.text(80, 865, 'COVE CAFE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
-        this.add.text(340, 915, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
-        this.add.text(590, 915, 'QUIET COVE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        this.add.text(590, 915, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(1680, 915, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         doors.create(2000, 910, 'door');
@@ -2538,13 +2535,11 @@ class GameScene extends Phaser.Scene {
         this.add.tileSprite(890, 1268, 300, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1282);
         this.add.tileSprite(530, 988, 200, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
         this.add.tileSprite(1700, 988, 200, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
-        this.add.tileSprite(230, 988, 240, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
 
         this.pools = [
             { name: 'deck11_main', xMin: 890, xMax: 1190, yMin: 1220, yMax: 1280 },
-            { name: 'deck12_quiet', xMin: 530, xMax: 730, yMin: 940, yMax: 1000 },
-            { name: 'deck12_toystory', xMin: 1700, xMax: 1900, yMin: 940, yMax: 1000 },
-            { name: 'deck12_splashdown', xMin: 230, xMax: 470, yMin: 940, yMax: 1000 }
+            { name: 'deck12_splashdown', xMin: 530, xMax: 730, yMin: 940, yMax: 1000 },
+            { name: 'deck12_toystory', xMin: 1700, xMax: 1900, yMin: 940, yMax: 1000 }
         ];
 
         // --- 3D DECK SLAB FASCIA (STRUCTURAL DECK THICKNESS) ---
@@ -2584,7 +2579,7 @@ class GameScene extends Phaser.Scene {
             200, 450,
             400, 600,
             500, 800,
-            350, 1000
+            630, 1000
         ]);
 
         this.slideCurve = slideCurve;
@@ -2595,8 +2590,8 @@ class GameScene extends Phaser.Scene {
             let p1 = liftPoints[i];
             let p2 = liftPoints[i+1];
             let g = this.add.graphics();
-            g.lineStyle(40, 0xFFFFFF, 0.5);
-            g.fillStyle(0xFFFFFF, 0.5);
+            g.lineStyle(40, 0x58D8F8, 0.85);
+            g.fillStyle(0x58D8F8, 0.85);
             g.fillCircle(p1.x, p1.y, 20); // Round joint
             g.beginPath();
             g.moveTo(p1.x, p1.y);
@@ -2622,8 +2617,8 @@ class GameScene extends Phaser.Scene {
             let g = this.add.graphics();
             
             // Main transparent blue tube
-            g.lineStyle(40, 0x87CEFA, 0.6);
-            g.fillStyle(0x87CEFA, 0.6);
+            g.lineStyle(40, 0x1878F8, 0.85);
+            g.fillStyle(0x1878F8, 0.85);
             g.fillCircle(p1.x, p1.y, 20); // Round joint
             g.beginPath();
             g.moveTo(p1.x, p1.y);
@@ -2926,7 +2921,7 @@ class GameScene extends Phaser.Scene {
                                 this.player.body.enable = true;
                                 this.player.body.allowGravity = false;
                                 this.player.setVelocity(-120, 0);
-                                this.player.body.reset(350, 975 - (this.player.body.height / 2));
+                                this.player.body.reset(630, 975 - (this.player.body.height / 2));
                             }
                             this.raft.x = 1200;
                             this.raft.y = 730;
