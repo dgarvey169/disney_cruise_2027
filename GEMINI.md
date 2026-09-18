@@ -63,9 +63,29 @@
   - **Capcom Retro HUD & UI**: Top-mounted HUD featuring retro HP health spheres/nodes, zero-padded score/currency counters (`$0000000`), vintage 1px border dialogue boxes, and uppercase bitmap/pixel typography (e.g., `Press Start 2P`).
   - **Rendering & Viewport**: Canvas rendered with `image-rendering: pixelated; crisp-edges;`, dynamic 16:9 viewport with `object-fit: contain`, and touch/mobile layouts respecting `env(safe-area-inset-*)`.
 
-- **Bespoke Character Levels & Storylines (Issue #12)**:
-  - **Character Themes**: Custom levels aboard the Disney Destiny tailored to each playable character: Riley (age 11: Edge Tween Club, Hero Zone sports & interactive obstacle courses) and Amelia (age 8: Oceaneer Club, Bibbidi Bobbidi Boutique makeover mini-game).
-  - **Storyboarding First**: Storyboards, narrative arcs, and level progression flows must be collaboratively drafted and aligned before breaking out into implementation sub-tasks.
+- **Bespoke Character Levels & Storylines (Issue #12 - Triaged & Closed)**:
+  - **Sub-Tasks Generated & Tracked**: Broken down into discrete issues on the project board:
+    - #43: Midship Elevators and UI Floor Selection Menu (Completed)
+    - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI)
+    - #45: Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
+    - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
+    - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet)
+  - Storyboard documented in detail in `Issue_12_Storyboard.md`.
+
+- **Currents Bar Doorway & Signage Removal (Issue #42 - Completed)**:
+  - Removed unused doorway sprite and "CURRENTS BAR" banner on Deck 13 aft (`x = 2240`).
+
+- **Midship Elevators & Floor Navigation System (Issues #43 & #50 - Completed)**:
+  - **Locations**: Midship elevator doors and interaction zones placed on Deck 11 (`x = 1250, y = 1190`, ground `y = 1255`) and Deck 12 (`x = 1250, y = 910`, ground `y = 975`).
+  - **Deck 13 Traversal**: Elevators are intentionally omitted from Deck 13 per design preference; Deck 13 is reached exclusively via Stair 2 from Deck 12.
+  - **Interaction**: Retro prompt `[ ENTER: USE ELEVATOR ]` / `[ TAP TO USE ELEVATOR ]` appears above player.
+  - **ElevatorMenuScene**:
+    - Authentic 8-bit modal dialog box with animated cursor arrow (`►`), gold active highlights, and soft red cancel option.
+    - Full keyboard navigation: `Up` / `Down` and `W` / `S` cycle options with wrap-around.
+    - Confirmation via `Enter` / `Space` with debounce to prevent accidental double-activation on open.
+    - Cancellation via `ESC` or `[ CANCEL ]` button.
+    - Mouse/touch hover seamlessly synchronizes with the cursor position.
+  - **Physics Transition**: Teleportation cleanly resets `jumpZ = 0`, sets `groundY = targetGroundY`, and invokes `player.body.reset(1250, targetGroundY)` to guarantee zero physics vibration.
 
 - **AquaMouse Redesign & Overhaul (Issue #39)**:
   - Overhaul of the AquaMouse water coaster aesthetics and ride mechanics. Address raft/tube depth ordering relative to Deck 13 floor planes and slide curves.
@@ -74,7 +94,7 @@
   - Eliminated staggered deck overhangs and open-water gaps behind stairwells by extending Deck 12 left to `x = 0` and Deck 13 across the full width (`x = 0..2400`).
   - Background hull wall panels (`ship_wall`), baseboard trim lines, and ambient occlusion overhang shadows cover `x = 0..2400` across all decks.
   - Dedicated stairwell openings with architectural 8-bit safety newel posts on Deck 12 (`x: 300..345`) and Deck 13 (`x: 2055..2100`).
-  - New venues added: Cove Cafe (`x = 140`) on Deck 12 forward, and Currents Bar (`x = 2240`) on Deck 13 aft (Note: Follow-up bug #42 created to remove Currents Bar doorway).
+  - New venues added: Cove Cafe (`x = 140`) on Deck 12 forward.
   - Added ambient NPCs Marcus (Cove Cafe lounger) and Elena (Deck 13 aft promenade walker).
 
 

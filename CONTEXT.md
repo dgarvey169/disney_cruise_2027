@@ -73,9 +73,21 @@ The game is a Phaser 3 browser-based platformer. All changes are on the `main` b
   - Character sits **on top of the raft** throughout the lift (Deck 13 → Top Deck) and the slide.
   - Slide follows a spline curve from top deck → splashdown pool on Deck 13.
 - **Mobile Controls:** Floating joystick — touch left half of screen to spawn joystick at finger position, drag to move. Tap right half of screen with a second finger to jump. Replaces old fixed D-pad buttons.
+- **Midship Elevators & Floor Navigation System (#43, #50):**
+  - Midship elevators on Deck 11 (`x = 1250, groundY = 1255`) and Deck 12 (`x = 1250, groundY = 975`).
+  - Interactive prompt `[ ENTER: USE ELEVATOR ]` / `[ TAP TO USE ELEVATOR ]`.
+  - `ElevatorMenuScene`: 8-bit retro popup dialog with keyboard (arrow keys, WASD, Enter, Space, ESC) and mouse/touch selection, animated cursor arrow `►`, and gold selection highlighting.
+  - Deck 13 deliberately omitted from the elevator shaft; accessible exclusively via Stair 2 on Deck 12 aft.
+  - Clean physics teleportation using `player.body.reset(1250, targetGroundY)` with zero drift or flutter.
+- **Currents Bar Removal (#42):** Doorway and signage removed from Deck 13.
 
 ### Known Pending Items & Feature Roadmap
 - **DuckTales (NES) Graphics & UI Overhaul:** Tracked in Issue #11. Capcom 8-bit styling, black-bordered sprites, PPU palette limits, 16×16 tile grid, retro HP health spheres, padded zero score display, pixelated canvas rendering.
-- **Bespoke Character Levels & Storylines:** Tracked in Issue #12. Placeholder for dedicated character levels (Riley: Edge / Hero Zone; Amelia: Oceaneer Club / Bibbidi Bobbidi Boutique makeover mini-game). Storyboards and narrative flow to be drafted before scoping sub-tasks.
+- **Bespoke Character Levels & Storylines:** Issue #12 triaged, closed, and split into:
+  - **Issue #44:** Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI)
+  - **Issue #45:** Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
+  - **Issue #46:** Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
+  - **Issue #47:** Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet)
+- **AquaMouse Redesign & Overhaul:** Tracked in Issue #39.
 - **Theaters (Pending):** Movie theater and grand Walt Disney Theatre.
 
