@@ -5665,7 +5665,14 @@ class BoutiqueScene extends Phaser.Scene {
         const W = this.scale.width;
         const H = this.scale.height;
         const cx = W / 2;
+        const cy = H / 2;
         const isPortrait = H > W && W < 700;
+
+        // Scaling factor so everything scales up proportionally
+        const scaleFactor = isPortrait
+            ? Math.max(1.0, Math.min(1.4, W / 360))
+            : Math.max(1.0, Math.min(2.0, H / 450));
+        this.scaleFactor = scaleFactor;
 
         this.currentOutfit = Object.assign({}, window.ameliaOutfit || DEFAULT_AMELIA_OUTFIT);
 
@@ -5710,27 +5717,28 @@ class BoutiqueScene extends Phaser.Scene {
         ];
 
         // 1. Royal Salon Background & Framing
-        this.add.rectangle(cx, H / 2, W, H, 0x140620).setDepth(0);
+        this.add.rectangle(cx, cy, W, H, 0x140620).setDepth(0);
         let bgGraphics = this.add.graphics().setDepth(1);
         bgGraphics.fillStyle(0x200B32, 0.6);
         for (let x = 0; x < W; x += 32) {
             bgGraphics.fillRect(x, 0, 16, H);
         }
-        this.add.rectangle(cx, H / 2, W - 16, H - 16).setStrokeStyle(3, 0xFFD700).setDepth(2);
-        this.add.rectangle(cx, H / 2, W - 24, H - 24).setStrokeStyle(1, 0xFF88D8).setDepth(2);
+        this.add.rectangle(cx, cy, W - 16, H - 16).setStrokeStyle(3, 0xFFD700).setDepth(2);
+        this.add.rectangle(cx, cy, W - 24, H - 24).setStrokeStyle(1, 0xFF88D8).setDepth(2);
 
         // Corner decorative stars
-        const cornerPad = 20;
+        const cornerPad = Math.round(20 * scaleFactor);
         ['✦', '✦', '✦', '✦'].forEach((star, idx) => {
             let sx = (idx % 2 === 0) ? cornerPad : W - cornerPad;
             let sy = (idx < 2) ? cornerPad : H - cornerPad;
-            this.add.text(sx, sy, star, { fontSize: '12px', fill: '#FFD700' }).setOrigin(0.5).setDepth(3);
+            this.add.text(sx, sy, star, { fontSize: `${Math.round(14 * scaleFactor)}px`, fill: '#FFD700' }).setOrigin(0.5).setDepth(3);
         });
 
         // Top Header
-        const headerY = isPortrait ? 22 : 18;
+        const headerFontSize = Math.round((isPortrait ? 11 : 13) * scaleFactor);
+        const headerY = Math.max(14, Math.round((isPortrait ? 18 : 16) * scaleFactor));
         this.add.text(cx, headerY, '★ BIBBIDI BOBBIDI BOUTIQUE ★', {
-            fontSize: isPortrait ? '10px' : '12px',
+            fontSize: `${headerFontSize}px`,
             fill: '#FFD700',
             fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000',
@@ -5738,10 +5746,13 @@ class BoutiqueScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(4);
 
         // 2. Tiered Category Selection (Row of 4 visual icons above Amelia)
-        const tierY = headerY + (isPortrait ? 30 : 28);
-        const tabW = isPortrait ? 52 : 64;
-        const tabH = isPortrait ? 42 : 46;
-        const tabSpacing = isPortrait ? 10 : 16;
+        const tabW = Math.round((isPortrait ? 56 : 68) * scaleFactor);
+        const tabH = Math.round((isPortrait ? 38 : 40) * scaleFactor);
+        const tabSpacing = Math.round((isPortrait ? 10 : 16) * scaleFactor);
+        const iconSize = Math.round((isPortrait ? 20 : 24) * scaleFactor);
+        const tabFontSize = Math.round((isPortrait ? 7 : 8) * scaleFactor);
+        const tierY = headerY + Math.round((isPortrait ? 27 : 28) * scaleFactor);
+
         const totalTabsW = this.tiers.length * tabW + (this.tiers.length - 1) * tabSpacing;
         const startTabX = cx - (totalTabsW / 2) + (tabW / 2);
 
@@ -5753,18 +5764,18 @@ class BoutiqueScene extends Phaser.Scene {
                 .setDepth(5)
                 .setInteractive({ useHandCursor: true });
 
-            const iconSprite = this.add.image(tx, tierY - (isPortrait ? 6 : 7), tier.iconKey)
-                .setDisplaySize(isPortrait ? 22 : 26, isPortrait ? 22 : 26)
+            const iconSprite = this.add.image(tx, tierY - Math.round((isPortrait ? 5 : 5) * scaleFactor), tier.iconKey)
+                .setDisplaySize(iconSize, iconSize)
                 .setDepth(6);
 
-            const tabText = this.add.text(tx, tierY + (isPortrait ? 11 : 13), tier.name, {
-                fontSize: isPortrait ? '6px' : '7px',
+            const tabText = this.add.text(tx, tierY + Math.round((isPortrait ? 10 : 11) * scaleFactor), tier.name, {
+                fontSize: `${tabFontSize}px`,
                 fill: '#9080A8',
                 fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setDepth(6);
 
             const tabIndicator = this.add.text(tx, tierY + tabH / 2 + 2, '▼', {
-                fontSize: '8px',
+                fontSize: `${Math.round(8 * scaleFactor)}px`,
                 fill: '#FFD700'
             }).setOrigin(0.5, 0).setDepth(6);
 
@@ -5784,17 +5795,20 @@ class BoutiqueScene extends Phaser.Scene {
         });
 
         // 3. Carousel (Left arrow, Card with Item Title, Right arrow)
-        const carouselY = tierY + (isPortrait ? 38 : 38);
-        const cardW = isPortrait ? 220 : 300;
-        const cardH = isPortrait ? 28 : 30;
+        const carouselY = tierY + Math.round((isPortrait ? 33 : 34) * scaleFactor);
+        const cardW = Math.round((isPortrait ? 250 : 320) * scaleFactor);
+        const cardH = Math.round((isPortrait ? 26 : 28) * scaleFactor);
+        const arrowFontSize = Math.round((isPortrait ? 14 : 16) * scaleFactor);
+        const titleFontSize = Math.round((isPortrait ? 8 : 9) * scaleFactor);
+        const counterFontSize = Math.round((isPortrait ? 6 : 7) * scaleFactor);
 
         // Left Arrow Button
-        const arrowOffset = cardW / 2 + (isPortrait ? 24 : 32);
+        const arrowOffset = cardW / 2 + Math.round((isPortrait ? 22 : 30) * scaleFactor);
         this.leftArrowBtn = this.add.text(cx - arrowOffset, carouselY, '◀', {
-            fontSize: isPortrait ? '14px' : '16px',
+            fontSize: `${arrowFontSize}px`,
             fill: '#FFD700',
             backgroundColor: '#000000',
-            padding: { x: isPortrait ? 8 : 10, y: isPortrait ? 4 : 5 },
+            padding: { x: Math.round(12 * scaleFactor), y: Math.round(5 * scaleFactor) },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
         this.leftArrowBtn.setStroke('#FFD700', 2);
@@ -5805,13 +5819,13 @@ class BoutiqueScene extends Phaser.Scene {
 
         // Center Card
         this.carouselCard = this.add.rectangle(cx, carouselY, cardW, cardH, 0x16082A).setStrokeStyle(2, 0xFFD700).setDepth(5).setInteractive({ useHandCursor: true });
-        this.carouselTitleText = this.add.text(cx, carouselY - 4, '', {
-            fontSize: isPortrait ? '7px' : '8px',
+        this.carouselTitleText = this.add.text(cx, carouselY - Math.round(3 * scaleFactor), '', {
+            fontSize: `${titleFontSize}px`,
             fill: '#FFD700',
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(6);
-        this.carouselCounterText = this.add.text(cx, carouselY + 8, '', {
-            fontSize: '6px',
+        this.carouselCounterText = this.add.text(cx, carouselY + Math.round(8 * scaleFactor), '', {
+            fontSize: `${counterFontSize}px`,
             fill: '#A0D0FF',
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(6);
@@ -5820,10 +5834,10 @@ class BoutiqueScene extends Phaser.Scene {
 
         // Right Arrow Button
         this.rightArrowBtn = this.add.text(cx + arrowOffset, carouselY, '▶', {
-            fontSize: isPortrait ? '14px' : '16px',
+            fontSize: `${arrowFontSize}px`,
             fill: '#FFD700',
             backgroundColor: '#000000',
-            padding: { x: isPortrait ? 8 : 10, y: isPortrait ? 4 : 5 },
+            padding: { x: Math.round(12 * scaleFactor), y: Math.round(5 * scaleFactor) },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
         this.rightArrowBtn.setStroke('#FFD700', 2);
@@ -5833,20 +5847,52 @@ class BoutiqueScene extends Phaser.Scene {
         this.rightArrowBtn.on('pointerout', () => this.rightArrowBtn.setStyle({ fill: '#FFD700' }));
 
         // 4. Color Swatches Palette (Directly below Carousel)
-        this.colorRowY = carouselY + (isPortrait ? 24 : 26);
+        this.colorRowY = carouselY + Math.round((isPortrait ? 22 : 23) * scaleFactor);
+        const colorLabelFontSize = Math.round((isPortrait ? 7 : 8) * scaleFactor);
         this.colorLabel = this.add.text(cx, this.colorRowY, '', {
-            fontSize: isPortrait ? '6px' : '7px',
+            fontSize: `${colorLabelFontSize}px`,
             fill: '#F8A0C8',
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(6);
 
         this.colorSwatchesContainer = this.add.container(0, 0).setDepth(6);
 
-        // 5. Centered Magic Mirror & Amelia Preview
-        const mirrorW = isPortrait ? 130 : 155;
-        const mirrorH = isPortrait ? 130 : 140;
-        const mirrorY = this.colorRowY + (isPortrait ? 96 : 106);
+        // Bottom Controls Layout (Buttons & Dialogue)
+        const btnY = H - Math.max(22, Math.round(24 * scaleFactor));
+        const btnSpacing = Math.round((isPortrait ? 110 : 180) * scaleFactor);
+        const btnFontSize = Math.round((isPortrait ? 8 : 9) * scaleFactor);
+        const btnPaddingX = Math.round((isPortrait ? 12 : 16) * scaleFactor);
+        const btnPaddingY = Math.round((isPortrait ? 6 : 8) * scaleFactor);
+
+        const dialogW = Math.min(W - Math.round(36 * scaleFactor), Math.round(720 * scaleFactor));
+        const dialogH = Math.round((isPortrait ? 40 : 44) * scaleFactor);
+        const dialogY = btnY - Math.round((isPortrait ? 42 : 38) * scaleFactor);
+        const dialogFontSize = Math.round((isPortrait ? 7 : 8) * scaleFactor);
+
+        this.add.rectangle(cx, dialogY, dialogW, dialogH, 0x000010, 0.95).setStrokeStyle(2, 0xFFD700).setDepth(7);
+        this.add.text(cx - dialogW / 2 + Math.round(14 * scaleFactor), dialogY, '🪄', {
+            fontSize: `${Math.round((isPortrait ? 14 : 16) * scaleFactor)}px`
+        }).setOrigin(0, 0.5).setDepth(8);
+
+        this.dialogueText = this.add.text(cx - dialogW / 2 + Math.round((isPortrait ? 36 : 44) * scaleFactor), dialogY, '', {
+            fontSize: `${dialogFontSize}px`,
+            fill: '#58F8F8',
+            fontFamily: '"Press Start 2P", monospace',
+            lineSpacing: 4,
+            wordWrap: { width: dialogW - Math.round((isPortrait ? 50 : 60) * scaleFactor) }
+        }).setOrigin(0, 0.5).setDepth(8);
+
+        // 5. Centered Magic Mirror & Amelia Preview (Dynamically fitted in exact screen center)
+        const swatchBottom = this.colorRowY + Math.round((isPortrait ? 25 : 27) * scaleFactor);
+        const dialogTop = dialogY - dialogH / 2;
+        const availH = Math.max(120, dialogTop - swatchBottom);
+        const midY = (swatchBottom + dialogTop) / 2;
+
+        const maxMirrorH = Math.min(availH - 8, Math.round((isPortrait ? 150 : 165) * scaleFactor));
+        const mirrorH = Math.max(110, maxMirrorH);
+        const mirrorW = Math.round(mirrorH * 1.35);
         const mirrorX = cx;
+        const mirrorY = midY;
 
         // Mirror Backing & Glass
         this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH, 0x1E1238).setDepth(4);
@@ -5854,29 +5900,30 @@ class BoutiqueScene extends Phaser.Scene {
         mirrorGlass.fillStyle(0x281A48, 1);
         mirrorGlass.fillRect(mirrorX - mirrorW / 2 + 6, mirrorY - mirrorH / 2 + 6, mirrorW - 12, mirrorH - 12);
         mirrorGlass.lineStyle(2, 0x483870, 0.7);
-        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 14, mirrorY - mirrorH / 2 + 10, mirrorX + mirrorW / 2 - 14, mirrorY + mirrorH / 2 - 10);
-        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 28, mirrorY - mirrorH / 2 + 10, mirrorX + mirrorW / 2 - 10, mirrorY + mirrorH / 2 - 28);
+        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 18, mirrorY - mirrorH / 2 + 12, mirrorX + mirrorW / 2 - 18, mirrorY + mirrorH / 2 - 12);
+        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 36, mirrorY - mirrorH / 2 + 12, mirrorX + mirrorW / 2 - 12, mirrorY + mirrorH / 2 - 36);
 
         // Frame & Ruby Jewel
         this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH).setStrokeStyle(3, 0xFFD700).setDepth(6);
         this.add.rectangle(mirrorX, mirrorY, mirrorW - 6, mirrorH - 6).setStrokeStyle(1, 0xFF88D8).setDepth(6);
-        this.add.circle(mirrorX, mirrorY - mirrorH / 2, 6, 0xF83800).setStrokeStyle(2, 0xFFD700).setDepth(7);
+        this.add.circle(mirrorX, mirrorY - mirrorH / 2, Math.round(6 * scaleFactor), 0xF83800).setStrokeStyle(2, 0xFFD700).setDepth(7);
 
         // Velvet Royal Pedestal
-        const pedY = mirrorY + mirrorH / 2 - (isPortrait ? 10 : 12);
-        this.add.ellipse(mirrorX, pedY, mirrorW - 16, 20, 0xB81858).setStrokeStyle(2, 0xFFD700).setDepth(7);
+        const pedY = mirrorY + mirrorH / 2 - Math.round((isPortrait ? 10 : 12) * scaleFactor);
+        this.add.ellipse(mirrorX, pedY, mirrorW - 20, Math.round(20 * scaleFactor), 0xB81858).setStrokeStyle(2, 0xFFD700).setDepth(7);
 
         // Floating sparkles
         this.mirrorSparkles = [];
         const sparkleCoords = [
-            { x: mirrorX - mirrorW / 2 - 10, y: mirrorY - 30 },
-            { x: mirrorX + mirrorW / 2 + 10, y: mirrorY - 45 },
-            { x: mirrorX - mirrorW / 2 + 12, y: mirrorY - mirrorH / 2 - 8 },
-            { x: mirrorX + mirrorW / 2 - 12, y: mirrorY + mirrorH / 2 + 8 }
+            { x: mirrorX - mirrorW / 2 - 12, y: mirrorY - 25 },
+            { x: mirrorX + mirrorW / 2 + 12, y: mirrorY - 35 },
+            { x: mirrorX - mirrorW / 2 + 16, y: mirrorY - mirrorH / 2 - 8 },
+            { x: mirrorX + mirrorW / 2 - 16, y: mirrorY + mirrorH / 2 + 8 }
         ];
         sparkleCoords.forEach((pt, idx) => {
             let sp = this.add.text(pt.x, pt.y, (idx % 2 === 0 ? '✦' : '✧'), {
-                fontSize: '11px', fill: (idx % 2 === 0 ? '#FFD700' : '#58F8F8')
+                fontSize: `${Math.round(12 * scaleFactor)}px`,
+                fill: (idx % 2 === 0 ? '#FFD700' : '#58F8F8')
             }).setOrigin(0.5).setDepth(8);
             this.tweens.add({
                 targets: sp,
@@ -5890,38 +5937,24 @@ class BoutiqueScene extends Phaser.Scene {
             this.mirrorSparkles.push(sp);
         });
 
-        // Amelia Live Preview Sprite (centered right in the mirror on pedestal)
-        const previewScale = isPortrait ? 3.3 : 3.8;
-        this.previewY = pedY - (isPortrait ? 28 : 34);
+        // Amelia Live Preview Sprite (Feet anchored to velvet pedestal, scaled up inside mirror)
+        const ameliaH = mirrorH - Math.round((isPortrait ? 28 : 34) * scaleFactor);
+        const previewScale = Math.max(1.8, Math.min(5.5, ameliaH / 40));
+        this.currentPreviewScale = previewScale;
+        this.previewY = pedY;
         this.updatePreviewTexture();
-        this.previewSprite = this.add.image(mirrorX, this.previewY, 'amelia_boutique_preview').setScale(previewScale).setDepth(9);
-
-        // 6. Dialogue Box (Bottom)
-        const dialogY = H - (isPortrait ? 60 : 56);
-        const dialogW = Math.min(W - 36, 720);
-        const dialogH = isPortrait ? 38 : 42;
-
-        this.add.rectangle(cx, dialogY, dialogW, dialogH, 0x000010, 0.95).setStrokeStyle(2, 0xFFD700).setDepth(7);
-        this.add.text(cx - dialogW / 2 + 12, dialogY, '🪄', { fontSize: isPortrait ? '12px' : '15px' }).setOrigin(0, 0.5).setDepth(8);
-
-        this.dialogueText = this.add.text(cx - dialogW / 2 + (isPortrait ? 34 : 40), dialogY, '', {
-            fontSize: isPortrait ? '6px' : '7px',
-            fill: '#58F8F8',
-            fontFamily: '"Press Start 2P", monospace',
-            lineSpacing: 4,
-            wordWrap: { width: dialogW - (isPortrait ? 46 : 54) }
-        }).setOrigin(0, 0.5).setDepth(8);
+        this.previewSprite = this.add.image(mirrorX, this.previewY, 'amelia_boutique_preview')
+            .setOrigin(0.5, 1)
+            .setScale(previewScale)
+            .setDepth(9);
 
         // 7. Action Buttons (Bottom)
-        const btnY = H - (isPortrait ? 18 : 18);
-        const btnSpacing = isPortrait ? 100 : 160;
-
         // Return Button
         this.returnBtn = this.add.text(cx - btnSpacing, btnY, '❌ [ RETURN TO ELEVATOR ]', {
-            fontSize: isPortrait ? '7px' : '8px',
+            fontSize: `${btnFontSize}px`,
             fill: '#FF6666',
             backgroundColor: '#000000',
-            padding: { x: 10, y: isPortrait ? 4 : 5 },
+            padding: { x: btnPaddingX, y: btnPaddingY },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(8).setInteractive({ useHandCursor: true });
         this.returnBtn.setStroke('#FF6666', 1);
@@ -5931,17 +5964,16 @@ class BoutiqueScene extends Phaser.Scene {
 
         // Apply Makeover Button
         this.applyBtn = this.add.text(cx + btnSpacing, btnY, '✨ [ EMBARK WITH MAKEOVER ]', {
-            fontSize: isPortrait ? '7px' : '8px',
+            fontSize: `${btnFontSize}px`,
             fill: '#000000',
             backgroundColor: '#FFD700',
-            padding: { x: 12, y: isPortrait ? 5 : 6 },
+            padding: { x: btnPaddingX, y: btnPaddingY },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(8).setInteractive({ useHandCursor: true });
         this.applyBtn.setStroke('#000000', 1);
         this.applyBtn.on('pointerdown', () => this.applyMakeover());
         this.applyBtn.on('pointerover', () => this.applyBtn.setStyle({ backgroundColor: '#FFF080' }));
         this.applyBtn.on('pointerout', () => this.applyBtn.setStyle({ backgroundColor: '#FFD700' }));
-
         // 8. Swipe Gestures (Mobile & Touch)
         this.input.on('pointerdown', (pointer) => {
             this.swipeStartX = pointer.x;
@@ -6051,10 +6083,11 @@ class BoutiqueScene extends Phaser.Scene {
 
         // Animate preview sprite bounce
         if (this.previewSprite && this.previewSprite.scene) {
+            const baseScale = this.currentPreviewScale || this.previewSprite.scaleX;
             this.tweens.add({
                 targets: this.previewSprite,
-                scaleX: { from: this.previewSprite.scaleX * 1.05, to: this.previewSprite.scaleX },
-                scaleY: { from: this.previewSprite.scaleY * 1.05, to: this.previewSprite.scaleY },
+                scaleX: { from: baseScale * 1.05, to: baseScale },
+                scaleY: { from: baseScale * 1.05, to: baseScale },
                 duration: 160,
                 ease: 'Back.easeOut'
             });
@@ -6106,13 +6139,14 @@ class BoutiqueScene extends Phaser.Scene {
 
         const cx = this.scale.width / 2;
         const isPortrait = this.scale.height > this.scale.width && this.scale.width < 700;
+        const scaleFactor = this.scaleFactor || 1.0;
 
         if (tier.colors && tier.colorKey) {
             const currentColor = this.currentOutfit[tier.colorKey];
             const colors = tier.colors;
             const currentObj = colors.find(c => c.id === currentColor) || colors[0];
-            const swatchSize = isPortrait ? 20 : 22;
-            const spacing = isPortrait ? 26 : 28;
+            const swatchSize = Math.round((isPortrait ? 22 : 26) * scaleFactor);
+            const spacing = Math.round((isPortrait ? 28 : 34) * scaleFactor);
             const totalW = colors.length * spacing;
             const startX = cx - (totalW / 2) + (spacing / 2);
 
@@ -6122,7 +6156,7 @@ class BoutiqueScene extends Phaser.Scene {
 
             colors.forEach((col, idx) => {
                 const sx = startX + (idx * spacing);
-                const sy = this.colorRowY + (isPortrait ? 13 : 15);
+                const sy = this.colorRowY + Math.round((isPortrait ? 13 : 15) * scaleFactor);
                 const isSelected = (col.id === currentColor);
                 const hexColor = col.main !== undefined ? col.main : col.H;
 
@@ -6134,7 +6168,7 @@ class BoutiqueScene extends Phaser.Scene {
 
                 if (isSelected) {
                     const check = this.add.text(sx, sy, '✦', {
-                        fontSize: '10px',
+                        fontSize: `${Math.round(12 * scaleFactor)}px`,
                         fill: (hexColor === 0xF8E060 || hexColor === 0x78E0F8) ? '#000000' : '#FFFFFF'
                     }).setOrigin(0.5);
                     this.colorSwatchesContainer.add(check);
@@ -6168,7 +6202,7 @@ class BoutiqueScene extends Phaser.Scene {
     spawnMirrorSparkle() {
         if (!this.previewSprite) return;
         let sx = this.previewSprite.x + (Math.random() * 40 - 20);
-        let sy = this.previewSprite.y + (Math.random() * 50 - 25);
+        let sy = this.previewSprite.y - 60 + (Math.random() * 50 - 25);
         let star = this.add.text(sx, sy, '✦', { fontSize: '14px', fill: '#FFD700' }).setOrigin(0.5).setDepth(20);
         this.tweens.add({
             targets: star,
@@ -6206,7 +6240,7 @@ class BoutiqueScene extends Phaser.Scene {
         for (let i = 0; i < 16; i++) {
             let angle = (i / 16) * Math.PI * 2;
             let sx = this.previewSprite.x;
-            let sy = this.previewSprite.y;
+            let sy = this.previewSprite.y - 60;
             let star = this.add.text(sx, sy, (i % 2 === 0 ? '✦' : '★'), {
                 fontSize: '16px',
                 fill: (i % 2 === 0 ? '#FFD700' : '#FF88D8')
