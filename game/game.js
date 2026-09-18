@@ -2574,11 +2574,11 @@ class GameScene extends Phaser.Scene {
         // The AquaMouse Slide (circular loop around the deck!)
         let slideCurve = new Phaser.Curves.Spline([
             750, 360,
-            600, 200,
-            300, 250,
-            200, 450,
-            400, 600,
-            500, 800,
+            400, 150,
+            -50, 250,
+            -50, 500,
+            400, 700,
+            500, 900,
             630, 1000
         ]);
 
@@ -2609,35 +2609,57 @@ class GameScene extends Phaser.Scene {
             g.setDepth(p1.y + 1);
         }
 
+        // Villain Mountain Enclosure (Solid-colored structure around the forward funnel)
+        let mountainG = this.add.graphics().setDepth(365); // In front of Top Deck (340) and lift tube top (361)
+        mountainG.fillStyle(0x303040, 1);
+        mountainG.fillRoundedRect(680, 200, 140, 160, 20); // Dark grey mountain base
+        mountainG.fillStyle(0x404050, 1);
+        mountainG.fillRoundedRect(700, 150, 100, 100, 20); // Peak
+        this.add.text(750, 220, 'VILLAIN\nMOUNTAIN', { fontSize: '9px', fill: '#FF4444', fontFamily: '"Press Start 2P", monospace', align: 'center', stroke: '#000000', strokeThickness: 2 }).setOrigin(0.5).setDepth(366);
+
+        // Brightly colored exit flume at Deck 12 Splashdown
+        let flumeG = this.add.graphics().setDepth(1001);
+        flumeG.fillStyle(0xFF5500, 1); // Bright orange flume
+        flumeG.fillRoundedRect(600, 950, 60, 50, 10);
+        flumeG.fillStyle(0xFFFF00, 1); // Yellow stripes
+        flumeG.fillRect(610, 950, 5, 50);
+        flumeG.fillRect(645, 950, 5, 50);
+
         // Draw the looping slide visually with depth-sorted graphics segments
-        let slidePoints = slideCurve.getSpacedPoints(150);
+        let slidePoints = slideCurve.getSpacedPoints(180); // Increased points for smoother larger curve
         for (let i = 0; i < slidePoints.length - 1; i++) {
             let p1 = slidePoints[i];
             let p2 = slidePoints[i+1];
             let g = this.add.graphics();
             
-            // Main transparent blue tube
-            g.lineStyle(40, 0x1878F8, 0.85);
-            g.fillStyle(0x1878F8, 0.85);
+            // Clear acrylic tube
+            g.lineStyle(40, 0x88CCFF, 0.45);
+            g.fillStyle(0x88CCFF, 0.45);
             g.fillCircle(p1.x, p1.y, 20); // Round joint
             g.beginPath();
             g.moveTo(p1.x, p1.y);
             g.lineTo(p2.x, p2.y);
             g.strokePath();
             
-            // Orange stripe
-            g.lineStyle(4, 0xFF4500, 0.8);
+            // White shiny reflection on the top edge of the tube
+            g.lineStyle(4, 0xFFFFFF, 0.7);
             g.beginPath();
-            g.moveTo(p1.x, p1.y);
-            g.lineTo(p2.x, p2.y);
+            g.moveTo(p1.x - 10, p1.y - 10);
+            g.lineTo(p2.x - 10, p2.y - 10);
             g.strokePath();
             
-            // Yellow stripe
-            g.lineStyle(2, 0xFFD700, 1);
-            g.beginPath();
-            g.moveTo(p1.x, p1.y);
-            g.lineTo(p2.x, p2.y);
-            g.strokePath();
+            // Industrial metallic flanges every 10 segments
+            if (i % 10 === 0) {
+                g.lineStyle(6, 0xAAAAAA, 1); // Grey metal ring
+                g.beginPath();
+                g.moveTo(p1.x - 22, p1.y - 22);
+                g.lineTo(p1.x + 22, p1.y + 22);
+                g.strokePath();
+                // Add tiny bolts (dots)
+                g.fillStyle(0x444444, 1);
+                g.fillCircle(p1.x - 18, p1.y - 18, 2);
+                g.fillCircle(p1.x + 18, p1.y + 18, 2);
+            }
             
             g.setDepth(Math.max(p1.y + 1, 815));
         }
