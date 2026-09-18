@@ -2639,7 +2639,7 @@ class GameScene extends Phaser.Scene {
             g.lineTo(p2.x, p2.y);
             g.strokePath();
             
-            g.setDepth(p1.y + 1);
+            g.setDepth(Math.max(p1.y + 1, 815));
         }
 
         // --- TOP-MOUNTED CAPCOM RETRO HUD ---
@@ -2904,9 +2904,10 @@ class GameScene extends Phaser.Scene {
                             this.raft.y = p.y;
                             this.player.x = p.x;
                             this.player.y = p.y - 24; // Seated on raft
-                            // Dynamic depth ordering to sit inside the slide tube
-                            this.raft.setDepth(p.y);
-                            this.player.setDepth(p.y);
+                            // Dynamic depth ordering to sit inside the slide tube (elevated over Deck 13 railing)
+                            let d = Math.max(p.y, 814); 
+                            this.raft.setDepth(d);
+                            this.player.setDepth(d);
                         },
                         onComplete: () => {
                             // 3. Splashdown & Hop Out into Deck 12 Pool
