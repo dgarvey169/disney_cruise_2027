@@ -5517,121 +5517,236 @@ class BoutiqueScene extends Phaser.Scene {
         this.gameScene = data.gameScene;
         this.previewSprite = null;
         this.isClosing = false;
-        this.rowElements = [];
         this.mirrorSparkles = [];
-        this.categories = [];
-        this.selectedRow = 0;
+        this.tierTabElements = [];
+        this.colorSwatchElements = [];
+        this.activeTierIdx = 1; // Default to DRESS (0: WIG, 1: DRESS, 2: CROWN, 3: WAND)
         this.canSubmit = false;
+        this.swipeStartX = 0;
+        this.swipeStartY = 0;
+        this.swipeStartTime = 0;
     }
 
     create() {
         this.events.once('shutdown', () => {
             this.previewSprite = null;
-            this.rowElements = [];
             this.mirrorSparkles = [];
+            this.tierTabElements = [];
+            this.colorSwatchElements = [];
         });
 
         const W = this.scale.width;
         const H = this.scale.height;
         const cx = W / 2;
-        const cy = H / 2;
         const isPortrait = H > W && W < 700;
 
         this.currentOutfit = Object.assign({}, window.ameliaOutfit || DEFAULT_AMELIA_OUTFIT);
 
-        this.categories = [
-            { key: 'dressStyle', label: 'DRESS STYLE', options: BOUTIQUE_CONFIG.dressStyles },
-            { key: 'dressColor', label: 'DRESS COLOR', options: BOUTIQUE_CONFIG.dressColors },
-            { key: 'hairStyle', label: 'HAIRSTYLE', options: BOUTIQUE_CONFIG.hairStyles },
-            { key: 'hairColor', label: 'HAIR COLOR', options: BOUTIQUE_CONFIG.hairColors },
-            { key: 'crown', label: 'TIARA/CROWN', options: BOUTIQUE_CONFIG.crowns },
-            { key: 'scepter', label: 'SCEPTER/WAND', options: BOUTIQUE_CONFIG.scepters }
+        // 4 Category Tiers above character: WIG, DRESS, CROWN, WAND
+        this.tiers = [
+            {
+                id: 'wig',
+                name: 'WIG',
+                icon: '💇',
+                label: '💇 WIG',
+                key: 'hairStyle',
+                options: BOUTIQUE_CONFIG.hairStyles,
+                colorKey: 'hairColor',
+                colors: BOUTIQUE_CONFIG.hairColors
+            },
+            {
+                id: 'dress',
+                name: 'DRESS',
+                icon: '👗',
+                label: '👗 DRESS',
+                key: 'dressStyle',
+                options: BOUTIQUE_CONFIG.dressStyles,
+                colorKey: 'dressColor',
+                colors: BOUTIQUE_CONFIG.dressColors
+            },
+            {
+                id: 'crown',
+                name: 'CROWN',
+                icon: '👑',
+                label: '👑 CROWN',
+                key: 'crown',
+                options: BOUTIQUE_CONFIG.crowns,
+                colorKey: null,
+                colors: null
+            },
+            {
+                id: 'wand',
+                name: 'WAND',
+                icon: '🪄',
+                label: '🪄 WAND',
+                key: 'scepter',
+                options: BOUTIQUE_CONFIG.scepters,
+                colorKey: null,
+                colors: null
+            }
         ];
 
-        this.selectedRow = 0; // 0..5 = categories, 6 = Apply, 7 = Return
-
         // 1. Royal Salon Background & Framing
-        this.add.rectangle(cx, cy, W, H, 0x140620).setDepth(0);
-        
-        // Victorian wallpaper stripes
+        this.add.rectangle(cx, H / 2, W, H, 0x140620).setDepth(0);
         let bgGraphics = this.add.graphics().setDepth(1);
         bgGraphics.fillStyle(0x200B32, 0.6);
         for (let x = 0; x < W; x += 32) {
             bgGraphics.fillRect(x, 0, 16, H);
         }
-
-        // Gold framing borders
-        this.add.rectangle(cx, cy, W - 16, H - 16).setStrokeStyle(3, 0xFFD700).setDepth(2);
-        this.add.rectangle(cx, cy, W - 24, H - 24).setStrokeStyle(1, 0xFF88D8).setDepth(2);
+        this.add.rectangle(cx, H / 2, W - 16, H - 16).setStrokeStyle(3, 0xFFD700).setDepth(2);
+        this.add.rectangle(cx, H / 2, W - 24, H - 24).setStrokeStyle(1, 0xFF88D8).setDepth(2);
 
         // Corner decorative stars
-        const cornerPad = 22;
+        const cornerPad = 20;
         ['✦', '✦', '✦', '✦'].forEach((star, idx) => {
             let sx = (idx % 2 === 0) ? cornerPad : W - cornerPad;
             let sy = (idx < 2) ? cornerPad : H - cornerPad;
-            this.add.text(sx, sy, star, { fontSize: '14px', fill: '#FFD700' }).setOrigin(0.5).setDepth(3);
+            this.add.text(sx, sy, star, { fontSize: '12px', fill: '#FFD700' }).setOrigin(0.5).setDepth(3);
         });
 
-        // Top Banner
-        const bannerY = isPortrait ? 30 : 36;
-        this.add.rectangle(cx, bannerY, Math.min(W - 40, 680), 46, 0x2A0844).setStrokeStyle(2, 0xFFD700).setDepth(3);
-        this.add.text(cx, bannerY - 8, '★ BIBBIDI BOBBIDI BOUTIQUE ★', {
-            fontSize: isPortrait ? '10px' : '13px',
+        // Top Header
+        const headerY = isPortrait ? 22 : 18;
+        this.add.text(cx, headerY, '★ BIBBIDI BOBBIDI BOUTIQUE ★', {
+            fontSize: isPortrait ? '10px' : '12px',
             fill: '#FFD700',
             fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000',
             strokeThickness: 3
         }).setOrigin(0.5).setDepth(4);
 
-        this.add.text(cx, bannerY + 11, 'DECK 4: ROYAL MAKEOVER PARLOR', {
+        // 2. Tiered Category Tabs (Row of 4 icons above the character)
+        const tierY = headerY + (isPortrait ? 28 : 26);
+        const tabW = isPortrait ? 76 : 108;
+        const tabH = isPortrait ? 24 : 26;
+        const totalTabsW = this.tiers.length * (tabW + (isPortrait ? 6 : 10));
+        const startTabX = cx - (totalTabsW / 2) + (tabW / 2);
+
+        this.tierTabElements = [];
+        this.tiers.forEach((tier, idx) => {
+            const tx = startTabX + idx * (tabW + (isPortrait ? 6 : 10));
+            const bgRect = this.add.rectangle(tx, tierY, tabW, tabH, 0x1E0A30).setDepth(5).setInteractive({ useHandCursor: true });
+            const tabText = this.add.text(tx, tierY, tier.label, {
+                fontSize: isPortrait ? '7px' : '8px',
+                fill: '#FFFFFF',
+                fontFamily: '"Press Start 2P", monospace'
+            }).setOrigin(0.5).setDepth(6);
+            const tabIndicator = this.add.text(tx, tierY + tabH / 2 + 3, '▼', {
+                fontSize: '8px',
+                fill: '#FFD700'
+            }).setOrigin(0.5, 0).setDepth(6);
+
+            bgRect.on('pointerdown', () => this.selectTier(idx));
+            tabText.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.selectTier(idx));
+
+            this.tierTabElements.push({
+                bg: bgRect,
+                text: tabText,
+                indicator: tabIndicator,
+                tx: tx,
+                ty: tierY
+            });
+        });
+
+        // 3. Carousel (Left arrow, Card with Item Title, Right arrow)
+        const carouselY = tierY + (isPortrait ? 32 : 32);
+        const cardW = isPortrait ? 220 : 300;
+        const cardH = isPortrait ? 28 : 30;
+
+        // Left Arrow Button
+        const arrowOffset = cardW / 2 + (isPortrait ? 24 : 32);
+        this.leftArrowBtn = this.add.text(cx - arrowOffset, carouselY, '◀', {
+            fontSize: isPortrait ? '14px' : '16px',
+            fill: '#FFD700',
+            backgroundColor: '#000000',
+            padding: { x: isPortrait ? 8 : 10, y: isPortrait ? 4 : 5 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
+        this.leftArrowBtn.setStroke('#FFD700', 2);
+
+        this.leftArrowBtn.on('pointerdown', () => this.cycleCarousel(-1));
+        this.leftArrowBtn.on('pointerover', () => this.leftArrowBtn.setStyle({ fill: '#58F8F8' }));
+        this.leftArrowBtn.on('pointerout', () => this.leftArrowBtn.setStyle({ fill: '#FFD700' }));
+
+        // Center Card
+        this.carouselCard = this.add.rectangle(cx, carouselY, cardW, cardH, 0x16082A).setStrokeStyle(2, 0xFFD700).setDepth(5).setInteractive({ useHandCursor: true });
+        this.carouselTitleText = this.add.text(cx, carouselY - 4, '', {
             fontSize: isPortrait ? '7px' : '8px',
+            fill: '#FFD700',
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6);
+        this.carouselCounterText = this.add.text(cx, carouselY + 8, '', {
+            fontSize: '6px',
+            fill: '#A0D0FF',
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6);
+
+        this.carouselCard.on('pointerdown', () => this.cycleCarousel(1));
+
+        // Right Arrow Button
+        this.rightArrowBtn = this.add.text(cx + arrowOffset, carouselY, '▶', {
+            fontSize: isPortrait ? '14px' : '16px',
+            fill: '#FFD700',
+            backgroundColor: '#000000',
+            padding: { x: isPortrait ? 8 : 10, y: isPortrait ? 4 : 5 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
+        this.rightArrowBtn.setStroke('#FFD700', 2);
+
+        this.rightArrowBtn.on('pointerdown', () => this.cycleCarousel(1));
+        this.rightArrowBtn.on('pointerover', () => this.rightArrowBtn.setStyle({ fill: '#58F8F8' }));
+        this.rightArrowBtn.on('pointerout', () => this.rightArrowBtn.setStyle({ fill: '#FFD700' }));
+
+        // 4. Color Swatches Palette (Directly below Carousel)
+        this.colorRowY = carouselY + (isPortrait ? 24 : 24);
+        this.colorLabel = this.add.text(cx, this.colorRowY, '', {
+            fontSize: isPortrait ? '6px' : '7px',
             fill: '#F8A0C8',
             fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5).setDepth(4);
+        }).setOrigin(0.5).setDepth(6);
 
-        // 2. The Enchanted Magic Mirror (Left Column / Center on portrait)
-        const mirrorX = isPortrait ? cx : cx - 185;
-        const mirrorY = isPortrait ? 130 : cy - 20;
-        const mirrorW = isPortrait ? 140 : 160;
-        const mirrorH = isPortrait ? 150 : 230;
+        this.colorSwatchesContainer = this.add.container(0, 0).setDepth(6);
 
-        // Mirror backing and golden ornate frame
-        this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH, 0x1E1238).setDepth(5);
-        let mirrorGlass = this.add.graphics().setDepth(6);
+        // 5. Centered Magic Mirror & Amelia Preview
+        const mirrorW = isPortrait ? 130 : 155;
+        const mirrorH = isPortrait ? 130 : 140;
+        const mirrorY = this.colorRowY + (isPortrait ? 96 : 106);
+        const mirrorX = cx;
+
+        // Mirror Backing & Glass
+        this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH, 0x1E1238).setDepth(4);
+        let mirrorGlass = this.add.graphics().setDepth(5);
         mirrorGlass.fillStyle(0x281A48, 1);
         mirrorGlass.fillRect(mirrorX - mirrorW / 2 + 6, mirrorY - mirrorH / 2 + 6, mirrorW - 12, mirrorH - 12);
         mirrorGlass.lineStyle(2, 0x483870, 0.7);
-        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 16, mirrorY - mirrorH / 2 + 10, mirrorX + mirrorW / 2 - 16, mirrorY + mirrorH / 2 - 10);
-        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 30, mirrorY - mirrorH / 2 + 10, mirrorX + mirrorW / 2 - 10, mirrorY + mirrorH / 2 - 30);
+        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 14, mirrorY - mirrorH / 2 + 10, mirrorX + mirrorW / 2 - 14, mirrorY + mirrorH / 2 - 10);
+        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 28, mirrorY - mirrorH / 2 + 10, mirrorX + mirrorW / 2 - 10, mirrorY + mirrorH / 2 - 28);
 
-        // Frame
-        this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH).setStrokeStyle(4, 0xFFD700).setDepth(7);
-        this.add.rectangle(mirrorX, mirrorY, mirrorW - 8, mirrorH - 8).setStrokeStyle(1, 0xFF88D8).setDepth(7);
+        // Frame & Ruby Jewel
+        this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH).setStrokeStyle(3, 0xFFD700).setDepth(6);
+        this.add.rectangle(mirrorX, mirrorY, mirrorW - 6, mirrorH - 6).setStrokeStyle(1, 0xFF88D8).setDepth(6);
+        this.add.circle(mirrorX, mirrorY - mirrorH / 2, 6, 0xF83800).setStrokeStyle(2, 0xFFD700).setDepth(7);
 
-        // Ruby crown arch jewel
-        this.add.circle(mirrorX, mirrorY - mirrorH / 2, 7, 0xF83800).setStrokeStyle(2, 0xFFD700).setDepth(8);
+        // Velvet Royal Pedestal
+        const pedY = mirrorY + mirrorH / 2 - (isPortrait ? 10 : 12);
+        this.add.ellipse(mirrorX, pedY, mirrorW - 16, 20, 0xB81858).setStrokeStyle(2, 0xFFD700).setDepth(7);
 
-        // Royal velvet pedestal
-        const pedY = mirrorY + mirrorH / 2 - (isPortrait ? 12 : 18);
-        this.add.ellipse(mirrorX, pedY, mirrorW - 20, 24, 0xB81858).setStrokeStyle(2, 0xFFD700).setDepth(8);
-
-        // Twinkling floating sparkles around mirror
+        // Floating sparkles
         this.mirrorSparkles = [];
         const sparkleCoords = [
-            { x: mirrorX - mirrorW / 2 - 12, y: mirrorY - 40 },
-            { x: mirrorX + mirrorW / 2 + 12, y: mirrorY - 60 },
-            { x: mirrorX - mirrorW / 2 + 15, y: mirrorY - mirrorH / 2 - 10 },
-            { x: mirrorX + mirrorW / 2 - 15, y: mirrorY + mirrorH / 2 + 10 }
+            { x: mirrorX - mirrorW / 2 - 10, y: mirrorY - 30 },
+            { x: mirrorX + mirrorW / 2 + 10, y: mirrorY - 45 },
+            { x: mirrorX - mirrorW / 2 + 12, y: mirrorY - mirrorH / 2 - 8 },
+            { x: mirrorX + mirrorW / 2 - 12, y: mirrorY + mirrorH / 2 + 8 }
         ];
         sparkleCoords.forEach((pt, idx) => {
             let sp = this.add.text(pt.x, pt.y, (idx % 2 === 0 ? '✦' : '✧'), {
-                fontSize: '12px', fill: (idx % 2 === 0 ? '#FFD700' : '#58F8F8')
-            }).setOrigin(0.5).setDepth(9);
+                fontSize: '11px', fill: (idx % 2 === 0 ? '#FFD700' : '#58F8F8')
+            }).setOrigin(0.5).setDepth(8);
             this.tweens.add({
                 targets: sp,
                 alpha: { from: 0.3, to: 1 },
                 scale: { from: 0.8, to: 1.3 },
-                y: pt.y - 6,
+                y: pt.y - 5,
                 duration: 600 + (idx * 200),
                 yoyo: true,
                 repeat: -1
@@ -5639,226 +5754,268 @@ class BoutiqueScene extends Phaser.Scene {
             this.mirrorSparkles.push(sp);
         });
 
-        // Amelia Live Preview Sprite
-        const previewScale = isPortrait ? 3.4 : 4.5;
-        this.previewY = mirrorY + (isPortrait ? 8 : 10);
+        // Amelia Live Preview Sprite (centered right in the mirror on pedestal)
+        const previewScale = isPortrait ? 3.3 : 3.8;
+        this.previewY = pedY - (isPortrait ? 28 : 34);
         this.updatePreviewTexture();
-        this.previewSprite = this.add.image(mirrorX, this.previewY, 'amelia_boutique_preview').setScale(previewScale).setDepth(10);
+        this.previewSprite = this.add.image(mirrorX, this.previewY, 'amelia_boutique_preview').setScale(previewScale).setDepth(9);
 
-        // 3. The Wardrobe RPG Menu (Right side on landscape, bottom on portrait)
-        const menuX = isPortrait ? cx : cx + 155;
-        const menuY = isPortrait ? cy + 60 : cy - 20;
-        const menuW = isPortrait ? Math.min(W - 36, 400) : 380;
-        const menuH = isPortrait ? 230 : 255;
+        // 6. Dialogue Box (Bottom)
+        const dialogY = H - (isPortrait ? 60 : 56);
+        const dialogW = Math.min(W - 36, 720);
+        const dialogH = isPortrait ? 38 : 42;
 
-        // Menu Panel
-        this.add.rectangle(menuX, menuY, menuW, menuH, 0x0C0824, 0.95).setStrokeStyle(2, 0xFFD700).setDepth(5);
-        this.add.rectangle(menuX, menuY, menuW - 6, menuH - 6).setStrokeStyle(1, 0x582878).setDepth(5);
+        this.add.rectangle(cx, dialogY, dialogW, dialogH, 0x000010, 0.95).setStrokeStyle(2, 0xFFD700).setDepth(7);
+        this.add.text(cx - dialogW / 2 + 12, dialogY, '🪄', { fontSize: isPortrait ? '12px' : '15px' }).setOrigin(0, 0.5).setDepth(8);
 
-        // Menu Title
-        const menuTopY = menuY - menuH / 2 + 16;
-        this.add.text(menuX, menuTopY, '— FAIRY GODMOTHER\'S WARDROBE —', {
-            fontSize: isPortrait ? '8px' : '9px',
-            fill: '#A0D0FF',
-            fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5).setDepth(6);
+        this.dialogueText = this.add.text(cx - dialogW / 2 + (isPortrait ? 34 : 40), dialogY, '', {
+            fontSize: isPortrait ? '6px' : '7px',
+            fill: '#58F8F8',
+            fontFamily: '"Press Start 2P", monospace',
+            lineSpacing: 4,
+            wordWrap: { width: dialogW - (isPortrait ? 46 : 54) }
+        }).setOrigin(0, 0.5).setDepth(8);
 
-        // Render Category Rows
-        this.rowElements = [];
-        const startRowY = menuTopY + 28;
-        const rowSpacing = isPortrait ? 23 : 26;
+        // 7. Action Buttons (Bottom)
+        const btnY = H - (isPortrait ? 18 : 18);
+        const btnSpacing = isPortrait ? 100 : 160;
 
-        this.categories.forEach((cat, idx) => {
-            let ry = startRowY + (idx * rowSpacing);
-
-            // Label
-            let labelText = this.add.text(menuX - menuW / 2 + 14, ry, cat.label + ':', {
-                fontSize: isPortrait ? '7px' : '8px',
-                fill: '#FFFFFF',
-                fontFamily: '"Press Start 2P", monospace'
-            }).setOrigin(0, 0.5).setDepth(6);
-
-            // Arrow Left [◄]
-            let leftArrow = this.add.text(menuX + 35, ry, '◄', {
-                fontSize: isPortrait ? '9px' : '10px',
-                fill: '#FFD700',
-                padding: { x: 4, y: 2 },
-                fontFamily: '"Press Start 2P", monospace'
-            }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
-
-            // Value text
-            let valText = this.add.text(menuX + 105, ry, '', {
-                fontSize: isPortrait ? '7px' : '8px',
-                fill: '#FFD700',
-                fontFamily: '"Press Start 2P", monospace'
-            }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
-
-            // Arrow Right [►]
-            let rightArrow = this.add.text(menuX + 170, ry, '►', {
-                fontSize: isPortrait ? '9px' : '10px',
-                fill: '#FFD700',
-                padding: { x: 4, y: 2 },
-                fontFamily: '"Press Start 2P", monospace'
-            }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
-
-            leftArrow.on('pointerdown', () => {
-                this.selectedRow = idx;
-                this.cycleOption(idx, -1);
-            });
-            rightArrow.on('pointerdown', () => {
-                this.selectedRow = idx;
-                this.cycleOption(idx, 1);
-            });
-            valText.on('pointerdown', () => {
-                this.selectedRow = idx;
-                this.cycleOption(idx, 1);
-            });
-            labelText.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
-                this.selectedRow = idx;
-                this.updateRowHighlights();
-            });
-
-            this.rowElements.push({
-                idx: idx,
-                type: 'category',
-                labelText: labelText,
-                leftArrow: leftArrow,
-                valText: valText,
-                rightArrow: rightArrow,
-                ry: ry
-            });
-        });
-
-        // Action Buttons at bottom of menu
-        const btnRowY = startRowY + (6 * rowSpacing) + 6;
-
-        // Apply Makeover Button
-        let applyBtn = this.add.text(menuX, btnRowY, '💖 [ APPLY ROYAL MAKEOVER ]', {
-            fontSize: isPortrait ? '8px' : '9px',
-            fill: '#000000',
-            backgroundColor: '#FFD700',
-            padding: { x: 12, y: isPortrait ? 5 : 6 },
-            fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
-
-        applyBtn.on('pointerover', () => {
-            this.selectedRow = 6;
-            this.updateRowHighlights();
-        });
-        applyBtn.on('pointerdown', () => this.applyMakeover());
-
-        // Return to Elevator Button
-        let returnBtn = this.add.text(menuX, btnRowY + (isPortrait ? 23 : 26), '❌ [ RETURN TO ELEVATOR ]', {
+        // Return Button
+        this.returnBtn = this.add.text(cx - btnSpacing, btnY, '❌ [ RETURN TO ELEVATOR ]', {
             fontSize: isPortrait ? '7px' : '8px',
             fill: '#FF6666',
             backgroundColor: '#000000',
             padding: { x: 10, y: isPortrait ? 4 : 5 },
             fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setDepth(8).setInteractive({ useHandCursor: true });
+        this.returnBtn.setStroke('#FF6666', 1);
+        this.returnBtn.on('pointerdown', () => this.closeBoutique());
+        this.returnBtn.on('pointerover', () => this.returnBtn.setStyle({ fill: '#000000', backgroundColor: '#FF7777' }));
+        this.returnBtn.on('pointerout', () => this.returnBtn.setStyle({ fill: '#FF6666', backgroundColor: '#000000' }));
 
-        returnBtn.on('pointerover', () => {
-            this.selectedRow = 7;
-            this.updateRowHighlights();
-        });
-        returnBtn.on('pointerdown', () => this.closeBoutique());
-
-        this.applyBtn = applyBtn;
-        this.returnBtn = returnBtn;
-
-        // Cursor arrow indicator for keyboard navigation
-        this.cursorArrow = this.add.text(0, 0, '►', {
-            fontSize: '11px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
-            stroke: '#000000', strokeThickness: 2
-        }).setOrigin(1, 0.5).setDepth(8);
-
-        this.arrowTween = this.tweens.add({
-            targets: this.cursorArrow,
-            x: '-=3',
-            duration: 250,
-            yoyo: true,
-            repeat: -1
-        });
-
-        // 4. Bottom Dialogue Box
-        const dialogY = H - (isPortrait ? 42 : 48);
-        const dialogW = Math.min(W - 36, 740);
-        const dialogH = isPortrait ? 44 : 50;
-
-        this.add.rectangle(cx, dialogY, dialogW, dialogH, 0x000010, 0.95).setStrokeStyle(2, 0xFFD700).setDepth(7);
-        this.add.text(cx - dialogW / 2 + 14, dialogY, '🪄', { fontSize: isPortrait ? '14px' : '18px' }).setOrigin(0, 0.5).setDepth(8);
-
-        this.dialogueText = this.add.text(cx - dialogW / 2 + (isPortrait ? 38 : 46), dialogY, '', {
+        // Apply Makeover Button
+        this.applyBtn = this.add.text(cx + btnSpacing, btnY, '✨ [ EMBARK WITH MAKEOVER ]', {
             fontSize: isPortrait ? '7px' : '8px',
-            fill: '#58F8F8',
-            fontFamily: '"Press Start 2P", monospace',
-            lineSpacing: 5,
-            wordWrap: { width: dialogW - (isPortrait ? 52 : 60) }
-        }).setOrigin(0, 0.5).setDepth(8);
+            fill: '#000000',
+            backgroundColor: '#FFD700',
+            padding: { x: 12, y: isPortrait ? 5 : 6 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(8).setInteractive({ useHandCursor: true });
+        this.applyBtn.setStroke('#000000', 1);
+        this.applyBtn.on('pointerdown', () => this.applyMakeover());
+        this.applyBtn.on('pointerover', () => this.applyBtn.setStyle({ backgroundColor: '#FFF080' }));
+        this.applyBtn.on('pointerout', () => this.applyBtn.setStyle({ backgroundColor: '#FFD700' }));
 
-        // Initial UI values
-        this.updateAllRowTexts();
-        this.updateRowHighlights();
+        // 8. Swipe Gestures (Mobile & Touch)
+        this.input.on('pointerdown', (pointer) => {
+            this.swipeStartX = pointer.x;
+            this.swipeStartY = pointer.y;
+            this.swipeStartTime = this.time.now;
+        });
 
-        // Prevent accidental enter trigger on scene open
-        this.canSubmit = false;
-        this.time.delayedCall(150, () => { this.canSubmit = true; });
+        this.input.on('pointerup', (pointer) => {
+            const dx = pointer.x - this.swipeStartX;
+            const dy = pointer.y - this.swipeStartY;
+            const dt = this.time.now - this.swipeStartTime;
+            // Horizontal swipe of at least 32px
+            if (Math.abs(dx) > 32 && Math.abs(dx) > Math.abs(dy) * 1.3 && dt < 600) {
+                if (dx < 0) {
+                    this.cycleCarousel(1); // Swipe left -> next
+                } else {
+                    this.cycleCarousel(-1); // Swipe right -> prev
+                }
+            }
+        });
 
         // Keyboard Controls
         if (this.input.keyboard) {
-            this.input.keyboard.on('keydown-UP', () => this.changeRow(-1));
-            this.input.keyboard.on('keydown-W', () => this.changeRow(-1));
-            this.input.keyboard.on('keydown-DOWN', () => this.changeRow(1));
-            this.input.keyboard.on('keydown-S', () => this.changeRow(1));
+            this.input.keyboard.on('keydown-LEFT', () => this.cycleCarousel(-1));
+            this.input.keyboard.on('keydown-A', () => this.cycleCarousel(-1));
+            this.input.keyboard.on('keydown-RIGHT', () => this.cycleCarousel(1));
+            this.input.keyboard.on('keydown-D', () => this.cycleCarousel(1));
 
-            this.input.keyboard.on('keydown-LEFT', () => this.handleHorizontal(-1));
-            this.input.keyboard.on('keydown-A', () => this.handleHorizontal(-1));
-            this.input.keyboard.on('keydown-RIGHT', () => this.handleHorizontal(1));
-            this.input.keyboard.on('keydown-D', () => this.handleHorizontal(1));
+            this.input.keyboard.on('keydown-UP', () => this.cycleTier(-1));
+            this.input.keyboard.on('keydown-W', () => this.cycleTier(-1));
+            this.input.keyboard.on('keydown-DOWN', () => this.cycleTier(1));
+            this.input.keyboard.on('keydown-S', () => this.cycleTier(1));
 
-            this.input.keyboard.on('keydown-ENTER', () => this.handleEnter());
-            this.input.keyboard.on('keydown-SPACE', () => this.handleEnter());
+            this.input.keyboard.on('keydown-ONE', () => this.selectTier(0));
+            this.input.keyboard.on('keydown-TWO', () => this.selectTier(1));
+            this.input.keyboard.on('keydown-THREE', () => this.selectTier(2));
+            this.input.keyboard.on('keydown-FOUR', () => this.selectTier(3));
+
+            this.input.keyboard.on('keydown-C', () => this.cycleColor(1));
+
+            this.input.keyboard.on('keydown-ENTER', () => this.applyMakeover());
+            this.input.keyboard.on('keydown-SPACE', () => this.applyMakeover());
             this.input.keyboard.on('keydown-ESC', () => this.closeBoutique());
         }
+
+        // Render initial tier state
+        this.selectTier(this.activeTierIdx);
     }
 
-    changeRow(delta) {
-        this.selectedRow = (this.selectedRow + delta + 8) % 8;
-        this.updateRowHighlights();
+    selectTier(idx) {
+        if (idx < 0) idx = this.tiers.length - 1;
+        if (idx >= this.tiers.length) idx = 0;
+        this.activeTierIdx = idx;
+
+        // Update Tab visual highlights
+        this.tierTabElements.forEach((tab, i) => {
+            const isActive = (i === this.activeTierIdx);
+            if (isActive) {
+                tab.bg.setFillStyle(0x4A156B);
+                tab.bg.setStrokeStyle(2, 0xFFD700);
+                tab.text.setStyle({ fill: '#FFD700' });
+                tab.indicator.setVisible(true);
+            } else {
+                tab.bg.setFillStyle(0x1E0A30);
+                tab.bg.setStrokeStyle(1, 0x603080);
+                tab.text.setStyle({ fill: '#FFFFFF' });
+                tab.indicator.setVisible(false);
+            }
+        });
+
+        // Update carousel and colors for this tier
+        this.updateCarouselDisplay();
+        this.updateColorSwatches();
+        this.updateDialogue();
     }
 
-    handleHorizontal(delta) {
-        if (this.selectedRow < 6) {
-            this.cycleOption(this.selectedRow, delta);
-        }
+    cycleTier(delta) {
+        this.selectTier(this.activeTierIdx + delta);
     }
 
-    handleEnter() {
-        if (!this.canSubmit) return;
-        if (this.selectedRow === 6) {
-            this.applyMakeover();
-        } else if (this.selectedRow === 7) {
-            this.closeBoutique();
-        } else if (this.selectedRow < 6) {
-            this.cycleOption(this.selectedRow, 1);
-        }
-    }
-
-    cycleOption(catIdx, delta) {
-        const cat = this.categories[catIdx];
-        const currentVal = this.currentOutfit[cat.key];
-        const optList = cat.options;
+    cycleCarousel(delta) {
+        const tier = this.tiers[this.activeTierIdx];
+        const currentVal = this.currentOutfit[tier.key];
+        const optList = tier.options;
         let optIdx = optList.findIndex(o => o.id === currentVal);
         if (optIdx === -1) optIdx = 0;
         optIdx = (optIdx + delta + optList.length) % optList.length;
-        this.currentOutfit[cat.key] = optList[optIdx].id;
+        this.currentOutfit[tier.key] = optList[optIdx].id;
 
-        // Sparkle burst at mirror
+        // Animate carousel card bounce
+        this.tweens.add({
+            targets: [this.carouselTitleText, this.carouselCard],
+            scaleX: { from: 1.08, to: 1.0 },
+            scaleY: { from: 1.08, to: 1.0 },
+            duration: 160,
+            ease: 'Back.easeOut'
+        });
+
+        // Animate preview sprite bounce
+        if (this.previewSprite && this.previewSprite.scene) {
+            this.tweens.add({
+                targets: this.previewSprite,
+                scaleX: { from: this.previewSprite.scaleX * 1.05, to: this.previewSprite.scaleX },
+                scaleY: { from: this.previewSprite.scaleY * 1.05, to: this.previewSprite.scaleY },
+                duration: 160,
+                ease: 'Back.easeOut'
+            });
+        }
+
         this.spawnMirrorSparkle();
-
-        // Update preview & UI
         this.updatePreviewTexture();
-        this.updateAllRowTexts();
-        this.updateRowHighlights();
+        this.updateCarouselDisplay();
+        this.updateDialogue();
+    }
+
+    selectColor(colorId) {
+        const tier = this.tiers[this.activeTierIdx];
+        if (!tier.colorKey) return;
+        this.currentOutfit[tier.colorKey] = colorId;
+
+        this.spawnMirrorSparkle();
+        this.updatePreviewTexture();
+        this.updateColorSwatches();
+        this.updateDialogue();
+    }
+
+    cycleColor(delta) {
+        const tier = this.tiers[this.activeTierIdx];
+        if (!tier.colorKey || !tier.colors) return;
+        const currentVal = this.currentOutfit[tier.colorKey];
+        const colorList = tier.colors;
+        let colIdx = colorList.findIndex(c => c.id === currentVal);
+        if (colIdx === -1) colIdx = 0;
+        colIdx = (colIdx + delta + colorList.length) % colorList.length;
+        this.selectColor(colorList[colIdx].id);
+    }
+
+    updateCarouselDisplay() {
+        const tier = this.tiers[this.activeTierIdx];
+        const currentVal = this.currentOutfit[tier.key];
+        const optList = tier.options;
+        let optIdx = optList.findIndex(o => o.id === currentVal);
+        if (optIdx === -1) optIdx = 0;
+        const opt = optList[optIdx];
+
+        this.carouselTitleText.setText(opt.label);
+        this.carouselCounterText.setText(`( ${optIdx + 1} / ${optList.length} )`);
+    }
+
+    updateColorSwatches() {
+        const tier = this.tiers[this.activeTierIdx];
+        this.colorSwatchesContainer.removeAll(true);
+
+        const cx = this.scale.width / 2;
+        const isPortrait = this.scale.height > this.scale.width && this.scale.width < 700;
+
+        if (tier.colors && tier.colorKey) {
+            const currentColor = this.currentOutfit[tier.colorKey];
+            const colors = tier.colors;
+            const swatchSize = isPortrait ? 18 : 22;
+            const spacing = isPortrait ? 24 : 28;
+            const totalW = colors.length * spacing;
+            const startX = cx - (totalW / 2) + (spacing / 2);
+
+            this.colorLabel.setText(tier.id === 'hair' ? 'HAIR COLOR PALETTE:' : 'GOWN COLOR PALETTE:');
+            this.colorLabel.setVisible(true);
+
+            colors.forEach((col, idx) => {
+                const sx = startX + (idx * spacing);
+                const sy = this.colorRowY + (isPortrait ? 12 : 14);
+                const isSelected = (col.id === currentColor);
+                const hexColor = col.main !== undefined ? col.main : col.H;
+
+                const swatchBg = this.add.rectangle(sx, sy, swatchSize, swatchSize, hexColor)
+                    .setStrokeStyle(isSelected ? 3 : 1, isSelected ? 0xFFD700 : 0x000000)
+                    .setInteractive({ useHandCursor: true });
+
+                this.colorSwatchesContainer.add(swatchBg);
+
+                if (isSelected) {
+                    const check = this.add.text(sx, sy, '✦', {
+                        fontSize: '9px',
+                        fill: (hexColor === 0xF8E060 || hexColor === 0x78E0F8) ? '#000000' : '#FFFFFF'
+                    }).setOrigin(0.5);
+                    this.colorSwatchesContainer.add(check);
+                }
+
+                swatchBg.on('pointerdown', () => this.selectColor(col.id));
+                swatchBg.on('pointerover', () => {
+                    this.dialogueText.setText(`"FAIRY GODMOTHER: ${col.desc.toUpperCase()}"`);
+                });
+            });
+        } else {
+            // Category has no color choices (Crown or Wand)
+            this.colorLabel.setText(tier.id === 'crown' ? '✦ ROYAL TIARAS & HEADWEAR ✦' : '✦ ROYAL SCEPTERS & MAGIC WANDS ✦');
+            this.colorLabel.setVisible(true);
+        }
+    }
+
+    updateDialogue() {
+        const tier = this.tiers[this.activeTierIdx];
+        const opt = tier.options.find(o => o.id === this.currentOutfit[tier.key]) || tier.options[0];
+        let desc = opt.desc;
+        if (tier.colorKey && tier.colors) {
+            const col = tier.colors.find(c => c.id === this.currentOutfit[tier.colorKey]);
+            if (col && col.desc) {
+                desc = `${opt.desc} ${col.desc}`;
+            }
+        }
+        this.dialogueText.setText(`"FAIRY GODMOTHER: ${desc.toUpperCase()}"`);
     }
 
     spawnMirrorSparkle() {
@@ -5888,66 +6045,6 @@ class BoutiqueScene extends Phaser.Scene {
         );
         if (this.previewSprite && this.previewSprite.scene) {
             this.previewSprite.setTexture('amelia_boutique_preview');
-        }
-    }
-
-    updateAllRowTexts() {
-        this.categories.forEach((cat, idx) => {
-            const currentVal = this.currentOutfit[cat.key];
-            const opt = cat.options.find(o => o.id === currentVal) || cat.options[0];
-            if (this.rowElements[idx]) {
-                this.rowElements[idx].valText.setText(opt.label);
-            }
-        });
-    }
-
-    updateRowHighlights() {
-        // Highlight active category row or button
-        this.rowElements.forEach((el, idx) => {
-            const isSelected = (idx === this.selectedRow);
-            el.labelText.setStyle({ fill: isSelected ? '#FFD700' : '#FFFFFF' });
-            el.valText.setStyle({ fill: isSelected ? '#58F8F8' : '#FFD700' });
-            el.leftArrow.setStyle({ fill: isSelected ? '#FFFFFF' : '#888888' });
-            el.rightArrow.setStyle({ fill: isSelected ? '#FFFFFF' : '#888888' });
-        });
-
-        const isApply = (this.selectedRow === 6);
-        const isReturn = (this.selectedRow === 7);
-
-        this.applyBtn.setStyle({
-            fill: isApply ? '#000000' : '#FFFFFF',
-            backgroundColor: isApply ? '#FFF080' : '#B8860B'
-        });
-        this.returnBtn.setStyle({
-            fill: isReturn ? '#000000' : '#FF6666',
-            backgroundColor: isReturn ? '#FF7777' : '#000000'
-        });
-
-        // Position cursor arrow
-        let targetX = 0;
-        let targetY = 0;
-        if (this.selectedRow < 6) {
-            const el = this.rowElements[this.selectedRow];
-            targetX = el.labelText.x - 8;
-            targetY = el.ry;
-        } else if (this.selectedRow === 6) {
-            targetX = this.applyBtn.x - (this.applyBtn.width / 2) - 8;
-            targetY = this.applyBtn.y;
-        } else if (this.selectedRow === 7) {
-            targetX = this.returnBtn.x - (this.returnBtn.width / 2) - 8;
-            targetY = this.returnBtn.y;
-        }
-        this.cursorArrow.setPosition(targetX, targetY);
-
-        // Update dialogue text
-        if (this.selectedRow < 6) {
-            const cat = this.categories[this.selectedRow];
-            const opt = cat.options.find(o => o.id === this.currentOutfit[cat.key]) || cat.options[0];
-            this.dialogueText.setText(`"FAIRY GODMOTHER: ${opt.desc.toUpperCase()}"`);
-        } else if (this.selectedRow === 6) {
-            this.dialogueText.setText('"FAIRY GODMOTHER: READY TO EMBARK ON THY ROYAL CRUISE VOYAGE?"');
-        } else if (this.selectedRow === 7) {
-            this.dialogueText.setText('"FAIRY GODMOTHER: RETURN TO THE SHIP ELEVATOR WITHOUT SAVING?"');
         }
     }
 
