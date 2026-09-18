@@ -4774,10 +4774,15 @@ class ElevatorMenuScene extends Phaser.Scene {
         const cy = this.scale.height / 2;
 
         this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x000000, 0.7);
-        this.add.rectangle(cx, cy, 340, 300, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
+        this.add.rectangle(cx, cy, 360, 320, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
         
-        this.add.text(cx, cy - 110, 'MIDSHIP ELEVATOR', {
-            fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
+        this.add.text(cx, cy - 120, 'MIDSHIP ELEVATOR', {
+            fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+
+        this.add.text(cx, cy - 95, 'SELECT DESTINATION', {
+            fontSize: '9px', fill: '#A0D0FF', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
         const floors = [
@@ -4786,33 +4791,134 @@ class ElevatorMenuScene extends Phaser.Scene {
             { label: 'Deck 11 (Pools)', y: 1255 }
         ];
 
-        let startY = cy - 40;
+        this.menuItems = [];
+        let startY = cy - 50;
+
         floors.forEach((floor, index) => {
-            let btn = this.add.text(cx, startY + (index * 40), floor.label, {
-                fontSize: '10px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 10, y: 10 },
+            let btn = this.add.text(cx, startY + (index * 42), floor.label, {
+                fontSize: '10px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 14, y: 10 },
                 fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-            btn.on('pointerover', () => btn.setStyle({ fill: '#000000', backgroundColor: '#FFD700' }));
-            btn.on('pointerout', () => btn.setStyle({ fill: '#FFFFFF', backgroundColor: '#000000' }));
-            btn.on('pointerdown', () => this.travelToFloor(floor.y));
+            const item = {
+                btn: btn,
+                isCancel: false,
+                action: () => this.travelToFloor(floor.y)
+            };
+            this.menuItems.push(item);
+
+            btn.on('pointerover', () => this.setSelectedIndex(index));
+            btn.on('pointerdown', () => item.action());
         });
 
-        let closeBtn = this.add.text(cx, cy + 110, '[ CANCEL ]', {
-            fontSize: '10px', fill: '#FF5555', fontFamily: '"Press Start 2P", monospace'
+        // Cancel option
+        let cancelBtn = this.add.text(cx, startY + (floors.length * 42) + 6, '[ CANCEL ]', {
+            fontSize: '10px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 14, y: 8 },
+            fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        closeBtn.on('pointerdown', () => {
-            this.scene.stop();
-            this.scene.resume('GameScene');
+
+        const cancelItem = {
+            btn: cancelBtn,
+            isCancel: true,
+            action: () => this.closeMenu()
+        };
+        this.menuItems.push(cancelItem);
+
+        cancelBtn.on('pointerover', () => this.setSelectedIndex(this.menuItems.length - 1));
+        cancelBtn.on('pointerdown', () => cancelItem.action());
+
+        // Navigation hint
+        this.add.text(cx, cy + 130, '▲/▼: SELECT   ENTER: TRAVEL', {
+            fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5);
+
+        // Animated cursor arrow
+        this.cursorArrow = this.add.text(0, 0, '►', {
+            fontSize: '12px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(1, 0.5);
+
+        this.arrowTween = null;
+
+        // Determine default selected floor (select current floor or Deck 13)
+        let defaultIdx = 0;
+        if (this.gameScene && this.gameScene.groundY) {
+            let gy = this.gameScene.groundY;
+            if (gy > 1120) defaultIdx = 2;      // Deck 11
+            else if (gy > 850) defaultIdx = 1;  // Deck 12
+            else defaultIdx = 0;               // Deck 13
+        }
+
+        this.setSelectedIndex(defaultIdx);
+
+        // Prevent accidental immediate activation from the enter key used to open elevator
+        this.canSubmit = false;
+        this.time.delayedCall(120, () => {
+            this.canSubmit = true;
         });
 
         if (this.input.keyboard) {
-            this.input.keyboard.on('keydown-ESC', () => {
-                this.scene.stop();
-                this.scene.resume('GameScene');
+            this.input.keyboard.on('keydown-UP', () => this.setSelectedIndex(this.selectedIndex - 1));
+            this.input.keyboard.on('keydown-W', () => this.setSelectedIndex(this.selectedIndex - 1));
+            this.input.keyboard.on('keydown-DOWN', () => this.setSelectedIndex(this.selectedIndex + 1));
+            this.input.keyboard.on('keydown-S', () => this.setSelectedIndex(this.selectedIndex + 1));
+
+            this.input.keyboard.on('keydown-ENTER', () => {
+                if (!this.canSubmit) return;
+                const active = this.menuItems[this.selectedIndex];
+                if (active) active.action();
             });
+            this.input.keyboard.on('keydown-SPACE', () => {
+                if (!this.canSubmit) return;
+                const active = this.menuItems[this.selectedIndex];
+                if (active) active.action();
+            });
+            this.input.keyboard.on('keydown-ESC', () => this.closeMenu());
         }
     }
+
+    setSelectedIndex(index) {
+        if (!this.menuItems || this.menuItems.length === 0) return;
+        if (index < 0) index = this.menuItems.length - 1;
+        if (index >= this.menuItems.length) index = 0;
+        this.selectedIndex = index;
+
+        this.menuItems.forEach((item, idx) => {
+            const isSelected = (idx === this.selectedIndex);
+            if (isSelected) {
+                if (item.isCancel) {
+                    item.btn.setStyle({ fill: '#000000', backgroundColor: '#FF7777' });
+                } else {
+                    item.btn.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+                }
+                const targetX = item.btn.x - (item.btn.width / 2) - 8;
+                this.cursorArrow.setPosition(targetX, item.btn.y);
+                this.cursorArrow.setVisible(true);
+                if (this.arrowTween) {
+                    this.arrowTween.remove();
+                }
+                this.arrowTween = this.tweens.add({
+                    targets: this.cursorArrow,
+                    x: targetX - 4,
+                    duration: 250,
+                    yoyo: true,
+                    repeat: -1
+                });
+            } else {
+                if (item.isCancel) {
+                    item.btn.setStyle({ fill: '#FF5555', backgroundColor: '#000000' });
+                } else {
+                    item.btn.setStyle({ fill: '#FFFFFF', backgroundColor: '#000000' });
+                }
+            }
+        });
+    }
+
+    closeMenu() {
+        this.scene.stop();
+        this.scene.resume('GameScene');
+    }
+
     travelToFloor(targetGroundY) {
         this.gameScene.jumpZ = 0;
         this.gameScene.jumpV = 0;
