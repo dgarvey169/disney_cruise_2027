@@ -44,6 +44,458 @@ const config = {
     scene: []
 };
 
+// --- AMELIA ROYAL MAKEOVER SYSTEM (BIBBIDI BOBBIDI BOUTIQUE) ---
+
+const DEFAULT_AMELIA_OUTFIT = {
+    dressStyle: 'play',
+    dressColor: 'rose',
+    hairStyle: 'curls',
+    hairColor: 'brown',
+    crown: 'none',
+    scepter: 'none'
+};
+
+if (!window.ameliaOutfit) {
+    window.ameliaOutfit = Object.assign({}, DEFAULT_AMELIA_OUTFIT);
+}
+
+const BOUTIQUE_CONFIG = {
+    dressStyles: [
+        { id: 'ballgown', label: 'ROYAL BALLGOWN', desc: 'A majestic sweeping gown fit for the Grand Hall!' },
+        { id: 'peplum', label: 'PRINCESS PEPLUM', desc: 'Puffed sleeves and delicate royal sash ruffles!' },
+        { id: 'mermaid', label: 'MERMAID GOWN', desc: 'An iridescent seafoam gown styled after Ariel!' },
+        { id: 'play', label: 'CLASSIC PLAY', desc: 'Amelia\'s comfortable everyday cruise clothes!' }
+    ],
+    dressColors: [
+        { id: 'sapphire', label: 'CINDERELLA BLUE', main: 0x58B8F8, shade: 0x0058F8, desc: 'Sparkling sapphire blue blessed by a fairy godmother!' },
+        { id: 'rose', label: 'ROYAL ROSE PINK', main: 0xF85898, shade: 0xB81858, desc: 'A glowing rose pink reminiscent of Aurora\'s coronation!' },
+        { id: 'gold', label: 'BELLE RADIANT GOLD', main: 0xF8C800, shade: 0xA88000, desc: 'Gleaming ballroom gold from a tale as old as time!' },
+        { id: 'emerald', label: 'TIANA EMERALD', main: 0x48C848, shade: 0x007820, desc: 'Enchanted bayou emerald green with royal water lily trim!' },
+        { id: 'crystal', label: 'ELSA ICE CRYSTAL', main: 0x78E0F8, shade: 0x2888B8, desc: 'Glittering icy cyan that sparkles like fresh snow!' },
+        { id: 'violet', label: 'RAPUNZEL VIOLET', main: 0xB858D8, shade: 0x681888, desc: 'Radiant corona violet woven with floating lanterns magic!' }
+    ],
+    hairStyles: [
+        { id: 'updo', label: 'ROYAL BUN UPDO', desc: 'An elegant high bun with soft cascading curls!' },
+        { id: 'braid', label: 'PRINCESS BRAID', desc: 'A long braided garland trailing gracefully over shoulder!' },
+        { id: 'curls', label: 'FLOWING CURLS', desc: 'Amelia\'s signature shoulder-length bouncy curls!' }
+    ],
+    hairColors: [
+        { id: 'brown', label: 'CHESTNUT BROWN', H: 0x783C00, h: 0x482000, L: 0xB87828, desc: 'Amelia\'s natural warm chestnut brown curls!' },
+        { id: 'blonde', label: 'GOLDEN SUN BLONDE', H: 0xF8E060, h: 0xC09010, L: 0xFFF8A0, desc: 'Shimmering sunlight golden blonde locks!' },
+        { id: 'black', label: 'RAVEN SILK BLACK', H: 0x383838, h: 0x181818, L: 0x686868, desc: 'Lustrous, sleek raven black hair with moonlight shine!' },
+        { id: 'auburn', label: 'ROYAL AUBURN', H: 0xC84010, h: 0x801800, L: 0xF87040, desc: 'Vibrant fiery auburn with copper highlights!' },
+        { id: 'pink', label: 'FAIRY PASTEL PINK', H: 0xF8A0C8, h: 0xC05080, L: 0xFFD8E8, desc: 'Enchanted pastel pink dusted with pixie glow!' }
+    ],
+    crowns: [
+        { id: 'none', label: 'NONE', desc: 'No crown, keeping hair in its natural royal splendor!' },
+        { id: 'tiara', label: 'SPARKLING TIARA', desc: 'A gleaming diamond crystal tiara that catches the light!' },
+        { id: 'royal_crown', label: 'ROYAL GOLD CROWN', desc: 'A majestic 24K gold crown set with precious rubies!' },
+        { id: 'wreath', label: 'BLOSSOM WREATH', desc: 'A garland of enchanted pink roses and evergreen leaves!' }
+    ],
+    scepters: [
+        { id: 'none', label: 'NONE', desc: 'Hands free for swimming and cruise adventures!' },
+        { id: 'star', label: 'GOLD STAR SCEPTER', desc: 'A shining golden star wand with magical trailing stardust!' },
+        { id: 'heart', label: 'CRYSTAL HEART WAND', desc: 'A glowing rose crystal heart that pulses with kindness!' },
+        { id: 'rose', label: 'ENCHANTED ROSE', desc: 'A royal red rose scepter plucked from an enchanted garden!' }
+    ]
+};
+
+const BASE_AMELIA_PALETTE = {
+    'B': 0x000000,
+    'S': 0xFCD8A8,
+    's': 0xD89060,
+    'H': 0x783C00,
+    'h': 0x482000,
+    'L': 0xB87828,
+    'P': 0xF85898,
+    'p': 0xB81858,
+    'W': 0xFFFFFF,
+    'T': 0xFFD700,
+    't': 0xB8860B,
+    'C': 0x58F8F8,
+    'c': 0x00A8A8,
+    'R': 0xE82020,
+    'r': 0x900000,
+    'G': 0x20C040,
+    'g': 0x007820,
+    'M': 0xE0B840,
+    'Y': 0xFFE800
+};
+
+function getAmeliaPalette(outfit) {
+    let pal = Object.assign({}, BASE_AMELIA_PALETTE);
+    const hairOpt = BOUTIQUE_CONFIG.hairColors.find(h => h.id === outfit.hairColor) || BOUTIQUE_CONFIG.hairColors[0];
+    pal['H'] = hairOpt.H;
+    pal['h'] = hairOpt.h;
+    pal['L'] = hairOpt.L;
+
+    const dressOpt = BOUTIQUE_CONFIG.dressColors.find(d => d.id === outfit.dressColor) || BOUTIQUE_CONFIG.dressColors[0];
+    pal['P'] = dressOpt.main;
+    pal['p'] = dressOpt.shade;
+    pal['W'] = 0xFFFFFF;
+    return pal;
+}
+
+function buildAmeliaMatrix(outfit, frameType = 'idle') {
+    let r0, r1, r2, r3, r4;
+
+    // Rows 0-2 (Crown & Top of Hair)
+    if (outfit.crown === 'tiara') {
+        if (outfit.hairStyle === 'updo') {
+            r0 = "....BBHHHHBB...."; // High bun visible above tiara
+            r1 = "...BCCWCCBHHB..."; // Diamond tiara center with bun backdrop
+            r2 = "..BTTTTTTTTTB..."; // Gold tiara band
+        } else {
+            r0 = ".....BCCWCCB....";
+            r1 = "...BCCCCCCBB....";
+            r2 = "..BTTTTTTTTTB...";
+        }
+    } else if (outfit.crown === 'royal_crown') {
+        if (outfit.hairStyle === 'updo') {
+            r0 = "....BTRTRTB....."; // Ruby peaks
+            r1 = "...BTTTTTBHHB..."; // Crown band with royal bun visible
+            r2 = "..BTRTRTRTRTB...";
+        } else {
+            r0 = "....BTRTRTB.....";
+            r1 = "...BTTTTTTTB....";
+            r2 = "..BTRTRTRTRTB...";
+        }
+    } else if (outfit.crown === 'wreath') {
+        r0 = "....BGGPPGGB....";
+        r1 = "...BPPGGGGPPB...";
+        r2 = "..BGGPPGGPPGB...";
+    } else {
+        // No crown - pure hair
+        if (outfit.hairStyle === 'updo') {
+            r0 = "...BBHHHHHHBB..."; // High royal bun
+            r1 = "..BHHLLLLLLHHB.."; // Bun highlights
+            r2 = "..BHHLLLLLLHHB..";
+        } else if (outfit.hairStyle === 'braid') {
+            r0 = ".....BBBBBB.....";
+            r1 = "...BBHHHHHHBB...";
+            r2 = "..BHHHLLLLHHHB..";
+        } else { // curls
+            r0 = ".....BBBBBB.....";
+            r1 = "...BBHHHHHHBB...";
+            r2 = "..BHHHLLLLHHHB..";
+        }
+    }
+
+    // Rows 3-4 (Hair bangs / bow / forehead)
+    if (outfit.hairStyle === 'updo') {
+        if (outfit.crown !== 'none') {
+            r3 = "...BHHHHHHHHB...";
+            r4 = "...BHHHHHHHHB...";
+        } else {
+            r3 = "..BHHPPBBPPHHB..";
+            r4 = "...BHHWWWWPPHB..";
+        }
+    } else if (outfit.hairStyle === 'braid') {
+        if (outfit.crown !== 'none') {
+            r3 = "..BHHLLLLLLHHB..";
+            r4 = "..BHHHHHHHHHHB..";
+        } else {
+            r3 = "..BHHPPBBPPHHB..";
+            r4 = "..BHHPPWWPPHHB..";
+        }
+    } else { // curls
+        if (outfit.crown !== 'none') {
+            r3 = "..BHHLLLLLLHHB..";
+            r4 = "..BHHHHHHHHHHB..";
+        } else {
+            r3 = "..BHHPPBBPPHHB..";
+            r4 = "..BHHPPWWPPHHB..";
+        }
+    }
+
+    // Rows 5-9 (Face, Eyes, Cheeks, Mouth, Neck & Side Hair/Braid/Curls)
+    let r5, r6, r7, r8, r9;
+    if (outfit.hairStyle === 'updo') {
+        // Sleek royal updo with exposed neck and delicate curls
+        r5 = "...BHSSSSSSHB...";
+        r6 = "...BHSWBSSWBSHB.";
+        r7 = "...BHSSSSSSHB...";
+        r8 = "...BHSSSWWSSHB..";
+        r9 = "....BSSSSSSB....";
+    } else if (outfit.hairStyle === 'braid') {
+        // Long royal braid draping over left shoulder down front
+        r5 = ".BHHSSSSSSSSHB..";
+        r6 = "BHLHSWBSSWBSHB..";
+        r7 = "BHHHSSSSSSSSHB..";
+        r8 = ".BHLBSSSWWSSSHB.";
+        r9 = ".BHHBSSSSBHHB...";
+    } else {
+        // Voluminous, bouncy flowing curls expanding out wide on both sides
+        r5 = ".BHHSSSSSSSSHHB.";
+        r6 = "BHLHSWBSSWBSHLHB";
+        r7 = "BHHHSSSSSSSSHHHB";
+        r8 = "BHLHBSSSWWSSBHLB";
+        r9 = "BHHBSSSSSSSSBHHB";
+    }
+
+    // Rows 10-12 (Bodice & Sleeves, plus braid/curls cascading)
+    let r10, r11, r12;
+    if (outfit.hairStyle === 'braid') {
+        // Braid clearly running down left side of bodice
+        if (outfit.dressStyle === 'ballgown') {
+            r10 = "BHLHBPPPPBHHB...";
+            r11 = "BLHLBPWWPBHHB...";
+            r12 = "BHLHBPPPPBHHB...";
+        } else if (outfit.dressStyle === 'peplum') {
+            r10 = "BHLBSSSSSSBPPB..";
+            r11 = "BLHLBPPPPPBPPB..";
+            r12 = "BHLBBPPPPPPBBB..";
+        } else {
+            r10 = "BHLHBSSSSBHHB...";
+            r11 = "BLHLBPPPPBHHB...";
+            r12 = "BHLHBPPPPBHHB...";
+        }
+    } else if (outfit.hairStyle === 'curls') {
+        // Bouncy ringlet curls resting on shoulders
+        if (outfit.dressStyle === 'ballgown') {
+            r10 = "BHLHBPPPPPPBHLHB";
+            r11 = ".BHHBPWWPPBHHB..";
+            r12 = "..BBBPPPPPPBBB..";
+        } else if (outfit.dressStyle === 'peplum') {
+            r10 = "BHLPBSSSSSSBPLHB";
+            r11 = ".BPPBPPPPPPBPPB.";
+            r12 = "..BBBPPPPPPBBB..";
+        } else {
+            r10 = "BHLHBPPPPPPBHLHB";
+            r11 = ".BHHBPPPPPPBHHB.";
+            r12 = "..BBBPPPPPPBBB..";
+        }
+    } else {
+        // Sleek updo bodice
+        if (outfit.dressStyle === 'ballgown') {
+            r10 = "..BHHBPPPPBHHB..";
+            r11 = "..BHHBPWWPBHHB..";
+            r12 = "..BHHBPPPPBHHB..";
+        } else if (outfit.dressStyle === 'peplum') {
+            r10 = ".BPPBSSSSSSBPPB.";
+            r11 = ".BPPBPPPPPPBPPB.";
+            r12 = "..BBBPPPPPPBBB..";
+        } else {
+            r10 = "..BHHBSSSSBHHB..";
+            r11 = "..BHHBPPPPBHHB..";
+            r12 = "..BHHBPPPPBHHB..";
+        }
+    }
+
+    // Rows 13-17 (Waist, Skirt, Hands)
+    let r13, r14, r15, r16, r17;
+    if (frameType === 'swim') {
+        r12 = "...BSSBPPPPBSSB.";
+        r13 = "..BFFFFFFFFFFFFB";
+        r14 = "..BFfWWFFFfWWfFB";
+        r15 = "..BffffffffffffB";
+        r16 = "...BBBBBBBBBBBB.";
+        r17 = "....BSSB..BSSB..";
+    } else if (outfit.dressStyle === 'ballgown') {
+        if (outfit.hairStyle === 'braid') {
+            r13 = "BPPBBPPPPPPBSSB."; // Braid ribbon tie
+            r14 = "BHLBPPPPPPPPBSSB"; // Braid tassel
+        } else {
+            r13 = ".BSSBPPPPPPBSSB.";
+            r14 = "BSSBPPPPPPPPBSSB";
+        }
+        r15 = "BPPPPPPPPPPPPPPB";
+        r16 = "BPPPPPPWWPPPPPPB";
+        r17 = "BBBBBBBBBBBBBBBB";
+    } else if (outfit.dressStyle === 'peplum') {
+        if (outfit.hairStyle === 'braid') {
+            r13 = "BPPBWWWWWWWBSSB.";
+            r14 = "BHLBPPPPPPBSSB..";
+        } else {
+            r13 = ".BSSBWWWWWWWBSSB";
+            r14 = ".BSSBPPPPPPBSSB.";
+        }
+        r15 = "..BBBPPPPPPBBB..";
+        r16 = "...BPPPPPPPPB...";
+        r17 = "...BBBBBBBBBB...";
+    } else if (outfit.dressStyle === 'mermaid') {
+        if (outfit.hairStyle === 'braid') {
+            r13 = "BPPBBPPPPPPBSSB.";
+            r14 = "BHLBPPPPPPBSSB..";
+        } else {
+            r13 = ".BSSBPPPPPPBSSB.";
+            r14 = ".BSSBPPPPPPBSSB.";
+        }
+        r15 = "..BBBPPPPPPBBB..";
+        r16 = "..BPPPPPPPPPPB..";
+        r17 = "..BBBBBBBBBBBB..";
+    } else { // play
+        if (frameType === 'walk_0') {
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBPPPPBBSSB.." : "..BSSBPPPPBBSSB.";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLB.BPPPPBBSSB." : "..BSSBPPPPBBSSB.";
+            r15 = "...BBBPPPPPBSSB.";
+            r16 = "...BPPPPPPPPB...";
+            r17 = "...BBBBBBBBBB...";
+        } else if (frameType === 'walk_2') {
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBBPPPPBSSB.." : ".BSSBBPPPPBSSB..";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLBBBPPPPBSSB.." : ".BSSBBPPPPBSSB..";
+            r15 = ".BSSBPPPPPBBB...";
+            r16 = "...BPPPPPPPPB...";
+            r17 = "...BBBBBBBBBB...";
+        } else if (frameType === 'jump') {
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLBPPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
+            r15 = "..BB.PPPPPP.BB..";
+            r16 = "...BPPPPPPPPB...";
+            r17 = "...BBBBBBBBBB...";
+        } else {
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLBPPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
+            r15 = "..BBBPPPPPPBBB..";
+            r16 = "...BPPPPPPPPB...";
+            r17 = "...BBBBBBBBBB...";
+        }
+    }
+
+    // Rows 18-19 (Legs and Shoes)
+    let r18, r19;
+    if (frameType === 'swim') {
+        r18 = "...BWWWB..BWWWB.";
+        r19 = "....BBB....BBB..";
+    } else if (frameType === 'walk_0') {
+        r18 = "....BSSB...BSSB.";
+        r19 = "...BWWWB...BWWWB";
+    } else if (frameType === 'walk_2') {
+        r18 = "....BSSB.BSSB...";
+        r19 = "...BWWWB.BWWWB..";
+    } else if (frameType === 'jump') {
+        r18 = "....BSSB.BSSB...";
+        r19 = "...BWWWB.BWWWB..";
+    } else {
+        r18 = "....BSSB.BSSB...";
+        r19 = "...BWWWB.BWWWB..";
+    }
+
+    let rows = [r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19];
+
+    // Overlay Scepter if selected and not swimming
+    if (outfit.scepter !== 'none' && frameType !== 'swim') {
+        const replaceChar = (str, idx, ch) => str.substring(0, idx) + ch + str.substring(idx + 1);
+        let topChar = 'Y';
+        if (outfit.scepter === 'heart') topChar = 'P';
+        else if (outfit.scepter === 'rose') topChar = 'R';
+
+        rows[10] = replaceChar(rows[10], 14, topChar);
+        rows[10] = replaceChar(rows[10], 15, 'B');
+        rows[11] = replaceChar(rows[11], 13, 'B');
+        rows[11] = replaceChar(rows[11], 14, topChar);
+        rows[11] = replaceChar(rows[11], 15, 'B');
+        rows[12] = replaceChar(rows[12], 14, 'M');
+        rows[12] = replaceChar(rows[12], 15, 'B');
+        rows[13] = replaceChar(rows[13], 15, 'M');
+        rows[14] = replaceChar(rows[14], 15, 'M');
+        rows[15] = replaceChar(rows[15], 15, 'M');
+        rows[16] = replaceChar(rows[16], 15, 'B');
+    }
+
+    return rows;
+}
+
+function renderPixelTextureGlobal(scene, key, width, height, pixelRows, palette, pixelSize = 2) {
+    if (scene.textures && scene.textures.exists(key)) {
+        let texture = scene.textures.get(key);
+        let src = texture.getSourceImage();
+        if (src && typeof src.getContext === 'function') {
+            let ctx = src.getContext('2d');
+            ctx.clearRect(0, 0, width, height);
+            for (let y = 0; y < pixelRows.length; y++) {
+                let row = pixelRows[y];
+                for (let x = 0; x < row.length; x++) {
+                    let ch = row[x];
+                    if (ch !== '.' && palette[ch] !== undefined) {
+                        ctx.fillStyle = '#' + palette[ch].toString(16).padStart(6, '0');
+                        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                    }
+                }
+            }
+            if (typeof texture.refresh === 'function') {
+                texture.refresh();
+            }
+            return;
+        }
+        scene.textures.remove(key);
+    }
+    let g = scene.add.graphics();
+    for (let y = 0; y < pixelRows.length; y++) {
+        let row = pixelRows[y];
+        for (let x = 0; x < row.length; x++) {
+            let ch = row[x];
+            if (ch !== '.' && palette[ch] !== undefined) {
+                g.fillStyle(palette[ch], 1);
+                g.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+    g.generateTexture(key, width, height);
+    g.destroy();
+}
+
+function generateAllAmeliaTextures(scene, outfit) {
+    const palette = getAmeliaPalette(outfit);
+
+    // 1. Idle & Base
+    const idleMatrix = buildAmeliaMatrix(outfit, 'idle');
+    renderPixelTextureGlobal(scene, 'amelia', 32, 40, idleMatrix, palette, 2);
+    renderPixelTextureGlobal(scene, 'amelia_idle', 32, 40, idleMatrix, palette, 2);
+
+    // 2. Walk
+    const walk0Matrix = buildAmeliaMatrix(outfit, 'walk_0');
+    renderPixelTextureGlobal(scene, 'amelia_walk_0', 32, 40, walk0Matrix, palette, 2);
+    renderPixelTextureGlobal(scene, 'amelia_walk_1', 32, 40, idleMatrix, palette, 2);
+    const walk2Matrix = buildAmeliaMatrix(outfit, 'walk_2');
+    renderPixelTextureGlobal(scene, 'amelia_walk_2', 32, 40, walk2Matrix, palette, 2);
+
+    // 3. Jump
+    const jumpMatrix = buildAmeliaMatrix(outfit, 'jump');
+    renderPixelTextureGlobal(scene, 'amelia_jump', 32, 40, jumpMatrix, palette, 2);
+
+    // 4. Swim with floaties
+    const floatieColors = [0xFF0000, 0xFFFF00, 0x00E000, 0x9400D3];
+    const floatieShades = [0x990000, 0xCC9900, 0x008800, 0x550055];
+    const swimMatrix = buildAmeliaMatrix(outfit, 'swim');
+    for (let i = 0; i < floatieColors.length; i++) {
+        let aPal = Object.assign({}, palette, { 'F': floatieColors[i], 'f': floatieShades[i] });
+        renderPixelTextureGlobal(scene, 'amelia_swim_' + i, 32, 40, swimMatrix, aPal, 2);
+    }
+
+    // 5. Ensure animations exist (textures updated in-place, existing anims remain valid!)
+    let targetScene = scene.anims ? scene : (scene.scene ? scene.scene.get('GameScene') : null);
+    if (targetScene && targetScene.anims) {
+        if (!targetScene.anims.exists('amelia_idle')) {
+            targetScene.anims.create({
+                key: 'amelia_idle',
+                frames: [{ key: 'amelia_idle' }],
+                frameRate: 1
+            });
+        }
+        if (!targetScene.anims.exists('amelia_walk')) {
+            targetScene.anims.create({
+                key: 'amelia_walk',
+                frames: [
+                    { key: 'amelia_walk_0' },
+                    { key: 'amelia_walk_1' },
+                    { key: 'amelia_walk_2' },
+                    { key: 'amelia_walk_1' }
+                ],
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+        if (!targetScene.anims.exists('amelia_jump')) {
+            targetScene.anims.create({
+                key: 'amelia_jump',
+                frames: [{ key: 'amelia_jump' }],
+                frameRate: 1
+            });
+        }
+    }
+}
+
 // --- SCENES ---
 
 class BootScene extends Phaser.Scene {
@@ -354,23 +806,15 @@ class BootScene extends Phaser.Scene {
         this.generatePixelTexture('riley_walk_2', 32, 48, riley_walk_2, RILEY_PALETTE, 2);
         this.generatePixelTexture('riley_jump', 32, 48, riley_jump, RILEY_PALETTE, 2);
 
-        // Generate Amelia Textures (32x40)
-        this.generatePixelTexture('amelia', 32, 40, amelia_idle, AMELIA_PALETTE, 2);
-        this.generatePixelTexture('amelia_idle', 32, 40, amelia_idle, AMELIA_PALETTE, 2);
-        this.generatePixelTexture('amelia_walk_0', 32, 40, amelia_walk_0, AMELIA_PALETTE, 2);
-        this.generatePixelTexture('amelia_walk_1', 32, 40, amelia_walk_1, AMELIA_PALETTE, 2);
-        this.generatePixelTexture('amelia_walk_2', 32, 40, amelia_walk_2, AMELIA_PALETTE, 2);
-        this.generatePixelTexture('amelia_jump', 32, 40, amelia_jump, AMELIA_PALETTE, 2);
+        // Generate Amelia Textures (32x40) using Royal Makeover Generator
+        generateAllAmeliaTextures(this, window.ameliaOutfit);
 
-        // Generate Floatie variations
+        // Generate Floatie variations for Riley
         const floatieColors = [0xFF0000, 0xFFFF00, 0x00E000, 0x9400D3];
         const floatieShades = [0x990000, 0xCC9900, 0x008800, 0x550055];
         for (let i = 0; i < floatieColors.length; i++) {
             let rPal = Object.assign({}, RILEY_PALETTE, { 'F': floatieColors[i], 'f': floatieShades[i] });
             this.generatePixelTexture('riley_swim_' + i, 32, 48, riley_swim, rPal, 2);
-
-            let aPal = Object.assign({}, AMELIA_PALETTE, { 'F': floatieColors[i], 'f': floatieShades[i] });
-            this.generatePixelTexture('amelia_swim_' + i, 32, 40, amelia_swim, aPal, 2);
         }
 
         // --- 8-BIT FUNNEL VISION CARTOON PALETTE & TEXTURES ---
@@ -4870,35 +5314,42 @@ class ElevatorMenuScene extends Phaser.Scene {
         const cy = this.scale.height / 2;
 
         this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x000000, 0.7);
-        this.add.rectangle(cx, cy, 360, 270, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
+        this.add.rectangle(cx, cy, 380, 310, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
         
-        this.add.text(cx, cy - 100, 'MIDSHIP ELEVATOR', {
+        this.add.text(cx, cy - 120, 'MIDSHIP ELEVATOR', {
             fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.add.text(cx, cy - 75, 'SELECT DESTINATION', {
+        this.add.text(cx, cy - 95, 'SELECT DESTINATION', {
             fontSize: '9px', fill: '#A0D0FF', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
         const floors = [
-            { label: 'Deck 12 (Hero Zone)', y: 975 },
-            { label: 'Deck 11 (Pools)', y: 1255 }
+            { label: 'Deck 12 (Hero Zone)', type: 'deck', y: 975 },
+            { label: 'Deck 11 (Pools)', type: 'deck', y: 1255 },
+            { label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' }
         ];
 
         this.menuItems = [];
-        let startY = cy - 35;
+        let startY = cy - 55;
 
         floors.forEach((floor, index) => {
-            let btn = this.add.text(cx, startY + (index * 42), floor.label, {
-                fontSize: '10px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 14, y: 10 },
+            let btn = this.add.text(cx, startY + (index * 38), floor.label, {
+                fontSize: '9px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 14, y: 8 },
                 fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
             const item = {
                 btn: btn,
                 isCancel: false,
-                action: () => this.travelToFloor(floor.y)
+                action: () => {
+                    if (floor.type === 'boutique') {
+                        this.travelToBoutique();
+                    } else {
+                        this.travelToFloor(floor.y);
+                    }
+                }
             };
             this.menuItems.push(item);
 
@@ -4907,8 +5358,8 @@ class ElevatorMenuScene extends Phaser.Scene {
         });
 
         // Cancel option
-        let cancelBtn = this.add.text(cx, startY + (floors.length * 42) + 6, '[ CANCEL ]', {
-            fontSize: '10px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 14, y: 8 },
+        let cancelBtn = this.add.text(cx, startY + (floors.length * 38) + 6, '[ CANCEL ]', {
+            fontSize: '9px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 14, y: 7 },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
@@ -4923,7 +5374,7 @@ class ElevatorMenuScene extends Phaser.Scene {
         cancelBtn.on('pointerdown', () => cancelItem.action());
 
         // Navigation hint
-        this.add.text(cx, cy + 105, '▲/▼: SELECT   ENTER: TRAVEL', {
+        this.add.text(cx, cy + 124, '▲/▼: SELECT   ENTER: TRAVEL', {
             fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
@@ -5027,8 +5478,868 @@ class ElevatorMenuScene extends Phaser.Scene {
         this.scene.stop();
         this.scene.resume('GameScene');
     }
+
+    travelToBoutique() {
+        this.gameScene.selectedCharacter = 'amelia';
+        this.gameScene.characterName = 'Amelia';
+        if (this.gameScene.hudPlayerIcon) {
+            this.gameScene.hudPlayerIcon.setTexture('amelia_idle');
+        }
+        if (this.gameScene.hudPlayerName) {
+            this.gameScene.hudPlayerName.setText('AMELIA');
+        }
+        if (this.gameScene.layoutHUD) {
+            this.gameScene.layoutHUD(this.gameScene.scale.width, this.gameScene.scale.height);
+        }
+        if (this.gameScene.player) {
+            this.gameScene.player.setTexture('amelia_idle');
+            this.gameScene.player.body.setSize(22, 16);
+            this.gameScene.player.body.setOffset(5, 24);
+            if (this.gameScene.player.anims) {
+                this.gameScene.player.anims.play('amelia_idle', true);
+            }
+        }
+        this.scene.stop();
+        this.scene.launch('BoutiqueScene', { gameScene: this.gameScene });
+    }
 }
 
-config.scene = [BootScene, TitleScene, CharacterSelectScene, GameScene, ElevatorMenuScene];
+// =========================================================================
+// BIBBIDI BOBBIDI BOUTIQUE 8-BIT ICON GRAPHICS
+// =========================================================================
+
+const ICON_WIG_MATRIX = [
+    ".....OOOOOO.....",
+    "...OOHHHHLLOO...",
+    "..OHHHHHHLLLLO..",
+    ".OHHHDDDDHLLLLO.",
+    ".OHHDFFFFDHLLLO.",
+    ".OHDFFFFFFDHLLO.",
+    ".OHDFFFFFFDHLLO.",
+    ".OHDFFFFFFDHLLO.",
+    ".OHHDFFFFDHHLLO.",
+    "..OHHDDDHHLLLO..",
+    "...OOHHHHLLOO...",
+    "......OSSO......",
+    "......OSSO......",
+    ".....OBBBBO.....",
+    "....OBBBBBBO....",
+    "....OOOOOOOO...."
+];
+
+const ICON_DRESS_MATRIX = [
+    "....OWWWWWWO....",
+    "....OMMMMMMO....",
+    "...OMMMMMMMMO...",
+    "...OMMLLLLMMO...",
+    "....OGGGGGGO....",
+    "....OGGGGGGO....",
+    "...OMMLLLLMMO...",
+    "..OMMMLLLLMMMO..",
+    ".OMMMMLLLLMMMMO.",
+    ".OMMMMLLLLMMMMO.",
+    "OMMMMMLLLLMMMMMO",
+    "OMMMDDLLLLDDMMMO",
+    "OMMDDDLLLLDDDMMO",
+    "OMMDDDLLLLDDDMMO",
+    ".OWWWWWWWWWWWWO.",
+    "..OOOOOOOOOOOO.."
+];
+
+const ICON_CROWN_MATRIX = [
+    "......W.........",
+    "...W..O..W......",
+    "..LOLOLLOLOL....",
+    "..OGGGOGGGGO....",
+    ".OGGGLGGGLGGGO..",
+    ".OGLRGLRGGLRGO..",
+    "OGGLRGGLRGGLRGGO",
+    "OGDDDDDDDDDDDDGO",
+    "OGLLGGLLGGLLGGGO",
+    "OGDDRGGDDBGGDGGO",
+    "OGDDDDDDDDDDDDGO",
+    ".OGGGGGGGGGGGGO.",
+    "..OOOOOOOOOOOO..",
+    "................",
+    "................",
+    "................"
+];
+
+const ICON_WAND_MATRIX = [
+    "..........W.....",
+    "........W.......",
+    "......OLLLO.....",
+    "....OOLGGGLOO...",
+    "...OLGGCPPGGLO..",
+    "..OLGCPWWPCGGLO.",
+    "...OLGGCPPGGLO..",
+    "....OOLGGGLOO...",
+    "......ODDDO.....",
+    ".....OGGGLO.....",
+    ".....OGDGLO.....",
+    "....OGGGLO......",
+    "....OGDGLO......",
+    "...OGGGLO.......",
+    "..OGWDDDO.......",
+    "...OOOOO........"
+];
+
+function generateBoutiqueIcons(scene) {
+    const wigPal = {
+        'O': 0x000000,
+        'H': 0xB86820,
+        'L': 0xF0A840,
+        'D': 0x703810,
+        'S': 0xC0C0C0,
+        'B': 0x707070,
+        'F': 0xFFE0BD
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_wig', 32, 32, ICON_WIG_MATRIX, wigPal, 2);
+
+    const dressPal = {
+        'O': 0x000000,
+        'M': 0x4898F8,
+        'L': 0x88D0FF,
+        'D': 0x1858B8,
+        'G': 0xFFD700,
+        'W': 0xFFFFFF
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_dress', 32, 32, ICON_DRESS_MATRIX, dressPal, 2);
+
+    const crownPal = {
+        'O': 0x000000,
+        'G': 0xFFD700,
+        'L': 0xFFF080,
+        'D': 0xB8860B,
+        'R': 0xFF2040,
+        'B': 0x30A0FF,
+        'W': 0xFFFFFF
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_crown', 32, 32, ICON_CROWN_MATRIX, crownPal, 2);
+
+    const wandPal = {
+        'O': 0x000000,
+        'G': 0xFFD700,
+        'L': 0xFFF8A0,
+        'D': 0xB8860B,
+        'P': 0xFF40A0,
+        'C': 0x50F0FF,
+        'W': 0xFFFFFF
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_wand', 32, 32, ICON_WAND_MATRIX, wandPal, 2);
+}
+
+// =========================================================================
+// BIBBIDI BOBBIDI BOUTIQUE SCENE (8-BIT RPG MAKEOVER SALON)
+// =========================================================================
+
+class BoutiqueScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'BoutiqueScene' });
+    }
+
+    init(data) {
+        this.gameScene = data.gameScene;
+        this.previewSprite = null;
+        this.isClosing = false;
+        this.mirrorSparkles = [];
+        this.tierTabElements = [];
+        this.colorSwatchElements = [];
+        this.activeTierIdx = 1; // Default to DRESS (0: WIG, 1: DRESS, 2: CROWN, 3: WAND)
+        this.canSubmit = false;
+        this.swipeStartX = 0;
+        this.swipeStartY = 0;
+        this.swipeStartTime = 0;
+    }
+
+    create() {
+        this.events.once('shutdown', () => {
+            this.previewSprite = null;
+            this.mirrorSparkles = [];
+            this.tierTabElements = [];
+            this.colorSwatchElements = [];
+        });
+
+        generateBoutiqueIcons(this);
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
+        const isPortrait = H > W && W < 700;
+
+        // Scaling factor so everything scales up proportionally
+        const scaleFactor = isPortrait
+            ? Math.max(1.0, Math.min(1.4, W / 360))
+            : Math.max(1.0, Math.min(2.0, H / 450));
+        this.scaleFactor = scaleFactor;
+
+        this.currentOutfit = Object.assign({}, window.ameliaOutfit || DEFAULT_AMELIA_OUTFIT);
+
+        // 4 Category Tiers above character: WIG, DRESS, CROWN, WAND
+        this.tiers = [
+            {
+                id: 'wig',
+                name: 'WIG',
+                iconKey: 'boutique_icon_wig',
+                key: 'hairStyle',
+                options: BOUTIQUE_CONFIG.hairStyles,
+                colorKey: 'hairColor',
+                colors: BOUTIQUE_CONFIG.hairColors
+            },
+            {
+                id: 'dress',
+                name: 'DRESS',
+                iconKey: 'boutique_icon_dress',
+                key: 'dressStyle',
+                options: BOUTIQUE_CONFIG.dressStyles,
+                colorKey: 'dressColor',
+                colors: BOUTIQUE_CONFIG.dressColors
+            },
+            {
+                id: 'crown',
+                name: 'CROWN',
+                iconKey: 'boutique_icon_crown',
+                key: 'crown',
+                options: BOUTIQUE_CONFIG.crowns,
+                colorKey: null,
+                colors: null
+            },
+            {
+                id: 'wand',
+                name: 'WAND',
+                iconKey: 'boutique_icon_wand',
+                key: 'scepter',
+                options: BOUTIQUE_CONFIG.scepters,
+                colorKey: null,
+                colors: null
+            }
+        ];
+
+        // 1. Royal Salon Background & Framing
+        this.add.rectangle(cx, cy, W, H, 0x140620).setDepth(0);
+        let bgGraphics = this.add.graphics().setDepth(1);
+        bgGraphics.fillStyle(0x200B32, 0.6);
+        for (let x = 0; x < W; x += 32) {
+            bgGraphics.fillRect(x, 0, 16, H);
+        }
+        this.add.rectangle(cx, cy, W - 16, H - 16).setStrokeStyle(3, 0xFFD700).setDepth(2);
+        this.add.rectangle(cx, cy, W - 24, H - 24).setStrokeStyle(1, 0xFF88D8).setDepth(2);
+
+        // Corner decorative stars
+        const cornerPad = Math.round(20 * scaleFactor);
+        ['✦', '✦', '✦', '✦'].forEach((star, idx) => {
+            let sx = (idx % 2 === 0) ? cornerPad : W - cornerPad;
+            let sy = (idx < 2) ? cornerPad : H - cornerPad;
+            this.add.text(sx, sy, star, { fontSize: `${Math.round(14 * scaleFactor)}px`, fill: '#FFD700' }).setOrigin(0.5).setDepth(3);
+        });
+
+        // Top Header
+        const headerFontSize = Math.round((isPortrait ? 11 : 13) * scaleFactor);
+        const headerY = Math.max(14, Math.round((isPortrait ? 18 : 16) * scaleFactor));
+        this.add.text(cx, headerY, '★ BIBBIDI BOBBIDI BOUTIQUE ★', {
+            fontSize: `${headerFontSize}px`,
+            fill: '#FFD700',
+            fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(4);
+
+        // 2. Tiered Category Selection (Row of 4 visual icons above Amelia)
+        const tabW = Math.round((isPortrait ? 56 : 68) * scaleFactor);
+        const tabH = Math.round((isPortrait ? 38 : 40) * scaleFactor);
+        const tabSpacing = Math.round((isPortrait ? 10 : 16) * scaleFactor);
+        const iconSize = Math.round((isPortrait ? 20 : 24) * scaleFactor);
+        const tabFontSize = Math.round((isPortrait ? 7 : 8) * scaleFactor);
+        const tierY = headerY + Math.round((isPortrait ? 27 : 28) * scaleFactor);
+
+        const totalTabsW = this.tiers.length * tabW + (this.tiers.length - 1) * tabSpacing;
+        const startTabX = cx - (totalTabsW / 2) + (tabW / 2);
+
+        this.tierTabElements = [];
+        this.tiers.forEach((tier, idx) => {
+            const tx = startTabX + idx * (tabW + tabSpacing);
+            const bgRect = this.add.rectangle(tx, tierY, tabW, tabH, 0x140620)
+                .setStrokeStyle(1, 0x482268)
+                .setDepth(5)
+                .setInteractive({ useHandCursor: true });
+
+            const iconSprite = this.add.image(tx, tierY - Math.round((isPortrait ? 5 : 5) * scaleFactor), tier.iconKey)
+                .setDisplaySize(iconSize, iconSize)
+                .setDepth(6);
+
+            const tabText = this.add.text(tx, tierY + Math.round((isPortrait ? 10 : 11) * scaleFactor), tier.name, {
+                fontSize: `${tabFontSize}px`,
+                fill: '#9080A8',
+                fontFamily: '"Press Start 2P", monospace'
+            }).setOrigin(0.5).setDepth(6);
+
+            const tabIndicator = this.add.text(tx, tierY + tabH / 2 + 2, '▼', {
+                fontSize: `${Math.round(8 * scaleFactor)}px`,
+                fill: '#FFD700'
+            }).setOrigin(0.5, 0).setDepth(6);
+
+            const clickHandler = () => this.selectTier(idx);
+            bgRect.on('pointerdown', clickHandler);
+            iconSprite.setInteractive({ useHandCursor: true }).on('pointerdown', clickHandler);
+            tabText.setInteractive({ useHandCursor: true }).on('pointerdown', clickHandler);
+
+            this.tierTabElements.push({
+                bg: bgRect,
+                icon: iconSprite,
+                text: tabText,
+                indicator: tabIndicator,
+                tx: tx,
+                ty: tierY
+            });
+        });
+
+        // 3. Carousel (Left arrow, Card with Item Title, Right arrow)
+        const carouselY = tierY + Math.round((isPortrait ? 33 : 34) * scaleFactor);
+        const cardW = Math.round((isPortrait ? 250 : 320) * scaleFactor);
+        const cardH = Math.round((isPortrait ? 26 : 28) * scaleFactor);
+        const arrowFontSize = Math.round((isPortrait ? 14 : 16) * scaleFactor);
+        const titleFontSize = Math.round((isPortrait ? 8 : 9) * scaleFactor);
+        const counterFontSize = Math.round((isPortrait ? 6 : 7) * scaleFactor);
+
+        // Left Arrow Button
+        const arrowOffset = cardW / 2 + Math.round((isPortrait ? 22 : 30) * scaleFactor);
+        this.leftArrowBtn = this.add.text(cx - arrowOffset, carouselY, '◀', {
+            fontSize: `${arrowFontSize}px`,
+            fill: '#FFD700',
+            backgroundColor: '#000000',
+            padding: { x: Math.round(12 * scaleFactor), y: Math.round(5 * scaleFactor) },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
+        this.leftArrowBtn.setStroke('#FFD700', 2);
+
+        this.leftArrowBtn.on('pointerdown', () => this.cycleCarousel(-1));
+        this.leftArrowBtn.on('pointerover', () => this.leftArrowBtn.setStyle({ fill: '#58F8F8' }));
+        this.leftArrowBtn.on('pointerout', () => this.leftArrowBtn.setStyle({ fill: '#FFD700' }));
+
+        // Center Card
+        this.carouselCard = this.add.rectangle(cx, carouselY, cardW, cardH, 0x16082A).setStrokeStyle(2, 0xFFD700).setDepth(5).setInteractive({ useHandCursor: true });
+        this.carouselTitleText = this.add.text(cx, carouselY - Math.round(3 * scaleFactor), '', {
+            fontSize: `${titleFontSize}px`,
+            fill: '#FFD700',
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6);
+        this.carouselCounterText = this.add.text(cx, carouselY + Math.round(8 * scaleFactor), '', {
+            fontSize: `${counterFontSize}px`,
+            fill: '#A0D0FF',
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6);
+
+        this.carouselCard.on('pointerdown', () => this.cycleCarousel(1));
+
+        // Right Arrow Button
+        this.rightArrowBtn = this.add.text(cx + arrowOffset, carouselY, '▶', {
+            fontSize: `${arrowFontSize}px`,
+            fill: '#FFD700',
+            backgroundColor: '#000000',
+            padding: { x: Math.round(12 * scaleFactor), y: Math.round(5 * scaleFactor) },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6).setInteractive({ useHandCursor: true });
+        this.rightArrowBtn.setStroke('#FFD700', 2);
+
+        this.rightArrowBtn.on('pointerdown', () => this.cycleCarousel(1));
+        this.rightArrowBtn.on('pointerover', () => this.rightArrowBtn.setStyle({ fill: '#58F8F8' }));
+        this.rightArrowBtn.on('pointerout', () => this.rightArrowBtn.setStyle({ fill: '#FFD700' }));
+
+        // 4. Color Swatches Palette (Directly below Carousel)
+        this.colorRowY = carouselY + Math.round((isPortrait ? 22 : 23) * scaleFactor);
+        const colorLabelFontSize = Math.round((isPortrait ? 7 : 8) * scaleFactor);
+        this.colorLabel = this.add.text(cx, this.colorRowY, '', {
+            fontSize: `${colorLabelFontSize}px`,
+            fill: '#F8A0C8',
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(6);
+
+        this.colorSwatchesContainer = this.add.container(0, 0).setDepth(6);
+
+        // Bottom Controls Layout (Buttons & Dialogue)
+        const btnY = H - Math.max(22, Math.round(24 * scaleFactor));
+        const btnSpacing = Math.round((isPortrait ? 110 : 180) * scaleFactor);
+        const btnFontSize = Math.round((isPortrait ? 8 : 9) * scaleFactor);
+        const btnPaddingX = Math.round((isPortrait ? 12 : 16) * scaleFactor);
+        const btnPaddingY = Math.round((isPortrait ? 6 : 8) * scaleFactor);
+
+        const dialogW = Math.min(W - Math.round(36 * scaleFactor), Math.round(720 * scaleFactor));
+        const dialogH = Math.round((isPortrait ? 40 : 44) * scaleFactor);
+        const dialogY = btnY - Math.round((isPortrait ? 42 : 38) * scaleFactor);
+        const dialogFontSize = Math.round((isPortrait ? 7 : 8) * scaleFactor);
+
+        this.add.rectangle(cx, dialogY, dialogW, dialogH, 0x000010, 0.95).setStrokeStyle(2, 0xFFD700).setDepth(7);
+        this.add.text(cx - dialogW / 2 + Math.round(14 * scaleFactor), dialogY, '🪄', {
+            fontSize: `${Math.round((isPortrait ? 14 : 16) * scaleFactor)}px`
+        }).setOrigin(0, 0.5).setDepth(8);
+
+        this.dialogueText = this.add.text(cx - dialogW / 2 + Math.round((isPortrait ? 36 : 44) * scaleFactor), dialogY, '', {
+            fontSize: `${dialogFontSize}px`,
+            fill: '#58F8F8',
+            fontFamily: '"Press Start 2P", monospace',
+            lineSpacing: 4,
+            wordWrap: { width: dialogW - Math.round((isPortrait ? 50 : 60) * scaleFactor) }
+        }).setOrigin(0, 0.5).setDepth(8);
+
+        // 5. Centered Magic Mirror & Amelia Preview (Dynamically fitted in exact screen center)
+        const swatchBottom = this.colorRowY + Math.round((isPortrait ? 25 : 27) * scaleFactor);
+        const dialogTop = dialogY - dialogH / 2;
+        const availH = Math.max(120, dialogTop - swatchBottom);
+        const midY = (swatchBottom + dialogTop) / 2;
+
+        const maxMirrorH = Math.min(availH - 8, Math.round((isPortrait ? 150 : 165) * scaleFactor));
+        const mirrorH = Math.max(110, maxMirrorH);
+        const mirrorW = Math.round(mirrorH * 1.35);
+        const mirrorX = cx;
+        const mirrorY = midY;
+
+        // Mirror Backing & Glass
+        this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH, 0x1E1238).setDepth(4);
+        let mirrorGlass = this.add.graphics().setDepth(5);
+        mirrorGlass.fillStyle(0x281A48, 1);
+        mirrorGlass.fillRect(mirrorX - mirrorW / 2 + 6, mirrorY - mirrorH / 2 + 6, mirrorW - 12, mirrorH - 12);
+        mirrorGlass.lineStyle(2, 0x483870, 0.7);
+        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 18, mirrorY - mirrorH / 2 + 12, mirrorX + mirrorW / 2 - 18, mirrorY + mirrorH / 2 - 12);
+        mirrorGlass.lineBetween(mirrorX - mirrorW / 2 + 36, mirrorY - mirrorH / 2 + 12, mirrorX + mirrorW / 2 - 12, mirrorY + mirrorH / 2 - 36);
+
+        // Frame & Ruby Jewel
+        this.add.rectangle(mirrorX, mirrorY, mirrorW, mirrorH).setStrokeStyle(3, 0xFFD700).setDepth(6);
+        this.add.rectangle(mirrorX, mirrorY, mirrorW - 6, mirrorH - 6).setStrokeStyle(1, 0xFF88D8).setDepth(6);
+        this.add.circle(mirrorX, mirrorY - mirrorH / 2, Math.round(6 * scaleFactor), 0xF83800).setStrokeStyle(2, 0xFFD700).setDepth(7);
+
+        // Velvet Royal Pedestal
+        const pedY = mirrorY + mirrorH / 2 - Math.round((isPortrait ? 10 : 12) * scaleFactor);
+        this.add.ellipse(mirrorX, pedY, mirrorW - 20, Math.round(20 * scaleFactor), 0xB81858).setStrokeStyle(2, 0xFFD700).setDepth(7);
+
+        // Floating sparkles
+        this.mirrorSparkles = [];
+        const sparkleCoords = [
+            { x: mirrorX - mirrorW / 2 - 12, y: mirrorY - 25 },
+            { x: mirrorX + mirrorW / 2 + 12, y: mirrorY - 35 },
+            { x: mirrorX - mirrorW / 2 + 16, y: mirrorY - mirrorH / 2 - 8 },
+            { x: mirrorX + mirrorW / 2 - 16, y: mirrorY + mirrorH / 2 + 8 }
+        ];
+        sparkleCoords.forEach((pt, idx) => {
+            let sp = this.add.text(pt.x, pt.y, (idx % 2 === 0 ? '✦' : '✧'), {
+                fontSize: `${Math.round(12 * scaleFactor)}px`,
+                fill: (idx % 2 === 0 ? '#FFD700' : '#58F8F8')
+            }).setOrigin(0.5).setDepth(8);
+            this.tweens.add({
+                targets: sp,
+                alpha: { from: 0.3, to: 1 },
+                scale: { from: 0.8, to: 1.3 },
+                y: pt.y - 5,
+                duration: 600 + (idx * 200),
+                yoyo: true,
+                repeat: -1
+            });
+            this.mirrorSparkles.push(sp);
+        });
+
+        // Amelia Live Preview Sprite (Feet anchored to velvet pedestal, scaled up inside mirror)
+        const ameliaH = mirrorH - Math.round((isPortrait ? 28 : 34) * scaleFactor);
+        const previewScale = Math.max(1.8, Math.min(5.5, ameliaH / 40));
+        this.currentPreviewScale = previewScale;
+        this.previewY = pedY;
+        this.updatePreviewTexture();
+        this.previewSprite = this.add.image(mirrorX, this.previewY, 'amelia_boutique_preview')
+            .setOrigin(0.5, 1)
+            .setScale(previewScale)
+            .setDepth(9);
+
+        // 7. Action Buttons (Bottom)
+        // Return Button
+        this.returnBtn = this.add.text(cx - btnSpacing, btnY, '❌ [ RETURN TO ELEVATOR ]', {
+            fontSize: `${btnFontSize}px`,
+            fill: '#FF6666',
+            backgroundColor: '#000000',
+            padding: { x: btnPaddingX, y: btnPaddingY },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(8).setInteractive({ useHandCursor: true });
+        this.returnBtn.setStroke('#FF6666', 1);
+        this.returnBtn.on('pointerdown', () => this.closeBoutique());
+        this.returnBtn.on('pointerover', () => this.returnBtn.setStyle({ fill: '#000000', backgroundColor: '#FF7777' }));
+        this.returnBtn.on('pointerout', () => this.returnBtn.setStyle({ fill: '#FF6666', backgroundColor: '#000000' }));
+
+        // Apply Makeover Button
+        this.applyBtn = this.add.text(cx + btnSpacing, btnY, '✨ [ EMBARK WITH MAKEOVER ]', {
+            fontSize: `${btnFontSize}px`,
+            fill: '#000000',
+            backgroundColor: '#FFD700',
+            padding: { x: btnPaddingX, y: btnPaddingY },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(8).setInteractive({ useHandCursor: true });
+        this.applyBtn.setStroke('#000000', 1);
+        this.applyBtn.on('pointerdown', () => this.applyMakeover());
+        this.applyBtn.on('pointerover', () => this.applyBtn.setStyle({ backgroundColor: '#FFF080' }));
+        this.applyBtn.on('pointerout', () => this.applyBtn.setStyle({ backgroundColor: '#FFD700' }));
+        // 8. Swipe Gestures (Mobile & Touch)
+        this.input.on('pointerdown', (pointer) => {
+            this.swipeStartX = pointer.x;
+            this.swipeStartY = pointer.y;
+            this.swipeStartTime = this.time.now;
+        });
+
+        this.input.on('pointerup', (pointer) => {
+            const dx = pointer.x - this.swipeStartX;
+            const dy = pointer.y - this.swipeStartY;
+            const dt = this.time.now - this.swipeStartTime;
+            // Horizontal swipe of at least 32px
+            if (Math.abs(dx) > 32 && Math.abs(dx) > Math.abs(dy) * 1.3 && dt < 600) {
+                if (dx < 0) {
+                    this.cycleCarousel(1); // Swipe left -> next
+                } else {
+                    this.cycleCarousel(-1); // Swipe right -> prev
+                }
+            }
+        });
+
+        // Keyboard Controls
+        if (this.input.keyboard) {
+            this.input.keyboard.on('keydown-LEFT', () => this.cycleCarousel(-1));
+            this.input.keyboard.on('keydown-A', () => this.cycleCarousel(-1));
+            this.input.keyboard.on('keydown-RIGHT', () => this.cycleCarousel(1));
+            this.input.keyboard.on('keydown-D', () => this.cycleCarousel(1));
+
+            this.input.keyboard.on('keydown-UP', () => this.cycleTier(-1));
+            this.input.keyboard.on('keydown-W', () => this.cycleTier(-1));
+            this.input.keyboard.on('keydown-DOWN', () => this.cycleTier(1));
+            this.input.keyboard.on('keydown-S', () => this.cycleTier(1));
+
+            this.input.keyboard.on('keydown-ONE', () => this.selectTier(0));
+            this.input.keyboard.on('keydown-TWO', () => this.selectTier(1));
+            this.input.keyboard.on('keydown-THREE', () => this.selectTier(2));
+            this.input.keyboard.on('keydown-FOUR', () => this.selectTier(3));
+
+            this.input.keyboard.on('keydown-C', () => this.cycleColor(1));
+
+            this.input.keyboard.on('keydown-ENTER', () => this.applyMakeover());
+            this.input.keyboard.on('keydown-SPACE', () => this.applyMakeover());
+            this.input.keyboard.on('keydown-ESC', () => this.closeBoutique());
+        }
+
+        // Render initial tier state
+        this.selectTier(this.activeTierIdx);
+    }
+
+    selectTier(idx) {
+        if (idx < 0) idx = this.tiers.length - 1;
+        if (idx >= this.tiers.length) idx = 0;
+        this.activeTierIdx = idx;
+
+        // Update Tab visual highlights
+        this.tierTabElements.forEach((tab, i) => {
+            const isActive = (i === this.activeTierIdx);
+            if (isActive) {
+                tab.bg.setFillStyle(0x3E1256, 1);
+                tab.bg.setStrokeStyle(2, 0xFFD700);
+                tab.text.setStyle({ fill: '#FFD700' });
+                tab.indicator.setVisible(true);
+                if (tab.icon) {
+                    this.tweens.add({
+                        targets: [tab.icon, tab.bg],
+                        scaleX: { from: 1.12, to: 1.0 },
+                        scaleY: { from: 1.12, to: 1.0 },
+                        duration: 160,
+                        ease: 'Back.easeOut'
+                    });
+                }
+            } else {
+                tab.bg.setFillStyle(0x140620, 0.9);
+                tab.bg.setStrokeStyle(1, 0x482268);
+                tab.text.setStyle({ fill: '#9080A8' });
+                tab.indicator.setVisible(false);
+            }
+        });
+
+        // Update carousel and colors for this tier
+        this.updateCarouselDisplay();
+        this.updateColorSwatches();
+        this.updateDialogue();
+    }
+
+    cycleTier(delta) {
+        this.selectTier(this.activeTierIdx + delta);
+    }
+
+    cycleCarousel(delta) {
+        const tier = this.tiers[this.activeTierIdx];
+        const currentVal = this.currentOutfit[tier.key];
+        const optList = tier.options;
+        let optIdx = optList.findIndex(o => o.id === currentVal);
+        if (optIdx === -1) optIdx = 0;
+        optIdx = (optIdx + delta + optList.length) % optList.length;
+        this.currentOutfit[tier.key] = optList[optIdx].id;
+
+        // Animate carousel card bounce
+        this.tweens.add({
+            targets: [this.carouselTitleText, this.carouselCard],
+            scaleX: { from: 1.08, to: 1.0 },
+            scaleY: { from: 1.08, to: 1.0 },
+            duration: 160,
+            ease: 'Back.easeOut'
+        });
+
+        // Animate preview sprite bounce
+        if (this.previewSprite && this.previewSprite.scene) {
+            const baseScale = this.currentPreviewScale || this.previewSprite.scaleX;
+            this.tweens.add({
+                targets: this.previewSprite,
+                scaleX: { from: baseScale * 1.05, to: baseScale },
+                scaleY: { from: baseScale * 1.05, to: baseScale },
+                duration: 160,
+                ease: 'Back.easeOut'
+            });
+        }
+
+        this.spawnMirrorSparkle();
+        this.updatePreviewTexture();
+        this.updateCarouselDisplay();
+        this.updateDialogue();
+    }
+
+    selectColor(colorId) {
+        const tier = this.tiers[this.activeTierIdx];
+        if (!tier.colorKey) return;
+        this.currentOutfit[tier.colorKey] = colorId;
+
+        this.spawnMirrorSparkle();
+        this.updatePreviewTexture();
+        this.updateColorSwatches();
+        this.updateDialogue();
+    }
+
+    cycleColor(delta) {
+        const tier = this.tiers[this.activeTierIdx];
+        if (!tier.colorKey || !tier.colors) return;
+        const currentVal = this.currentOutfit[tier.colorKey];
+        const colorList = tier.colors;
+        let colIdx = colorList.findIndex(c => c.id === currentVal);
+        if (colIdx === -1) colIdx = 0;
+        colIdx = (colIdx + delta + colorList.length) % colorList.length;
+        this.selectColor(colorList[colIdx].id);
+    }
+
+    updateCarouselDisplay() {
+        const tier = this.tiers[this.activeTierIdx];
+        const currentVal = this.currentOutfit[tier.key];
+        const optList = tier.options;
+        let optIdx = optList.findIndex(o => o.id === currentVal);
+        if (optIdx === -1) optIdx = 0;
+        const opt = optList[optIdx];
+
+        this.carouselTitleText.setText(opt.label);
+        this.carouselCounterText.setText(`( ${optIdx + 1} / ${optList.length} )`);
+    }
+
+    updateColorSwatches() {
+        const tier = this.tiers[this.activeTierIdx];
+        this.colorSwatchesContainer.removeAll(true);
+
+        const cx = this.scale.width / 2;
+        const isPortrait = this.scale.height > this.scale.width && this.scale.width < 700;
+        const scaleFactor = this.scaleFactor || 1.0;
+
+        if (tier.colors && tier.colorKey) {
+            const currentColor = this.currentOutfit[tier.colorKey];
+            const colors = tier.colors;
+            const currentObj = colors.find(c => c.id === currentColor) || colors[0];
+            const swatchSize = Math.round((isPortrait ? 22 : 26) * scaleFactor);
+            const spacing = Math.round((isPortrait ? 28 : 34) * scaleFactor);
+            const totalW = colors.length * spacing;
+            const startX = cx - (totalW / 2) + (spacing / 2);
+
+            const labelPrefix = (tier.id === 'wig' ? 'HAIR COLOR' : 'GOWN COLOR');
+            this.colorLabel.setText(`${labelPrefix}: [ ${currentObj.label.toUpperCase()} ]`);
+            this.colorLabel.setVisible(true);
+
+            colors.forEach((col, idx) => {
+                const sx = startX + (idx * spacing);
+                const sy = this.colorRowY + Math.round((isPortrait ? 13 : 15) * scaleFactor);
+                const isSelected = (col.id === currentColor);
+                const hexColor = col.main !== undefined ? col.main : col.H;
+
+                const swatchBg = this.add.rectangle(sx, sy, swatchSize, swatchSize, hexColor)
+                    .setStrokeStyle(isSelected ? 3 : 1, isSelected ? 0xFFD700 : 0x000000)
+                    .setInteractive({ useHandCursor: true });
+
+                this.colorSwatchesContainer.add(swatchBg);
+
+                if (isSelected) {
+                    const check = this.add.text(sx, sy, '✦', {
+                        fontSize: `${Math.round(12 * scaleFactor)}px`,
+                        fill: (hexColor === 0xF8E060 || hexColor === 0x78E0F8) ? '#000000' : '#FFFFFF'
+                    }).setOrigin(0.5);
+                    this.colorSwatchesContainer.add(check);
+                }
+
+                swatchBg.on('pointerdown', () => this.selectColor(col.id));
+                swatchBg.on('pointerover', () => {
+                    this.dialogueText.setText(`"FAIRY GODMOTHER: ${col.desc.toUpperCase()}"`);
+                });
+            });
+        } else {
+            // Category has no color choices (Crown or Wand)
+            this.colorLabel.setText(tier.id === 'crown' ? '✦ ROYAL TIARAS & HEADWEAR ✦' : '✦ ROYAL SCEPTERS & MAGIC WANDS ✦');
+            this.colorLabel.setVisible(true);
+        }
+    }
+
+    updateDialogue() {
+        const tier = this.tiers[this.activeTierIdx];
+        const opt = tier.options.find(o => o.id === this.currentOutfit[tier.key]) || tier.options[0];
+        let desc = opt.desc;
+        if (tier.colorKey && tier.colors) {
+            const col = tier.colors.find(c => c.id === this.currentOutfit[tier.colorKey]);
+            if (col && col.desc) {
+                desc = `${opt.desc} ${col.desc}`;
+            }
+        }
+        this.dialogueText.setText(`"FAIRY GODMOTHER: ${desc.toUpperCase()}"`);
+    }
+
+    spawnMirrorSparkle() {
+        if (!this.previewSprite) return;
+        let sx = this.previewSprite.x + (Math.random() * 40 - 20);
+        let sy = this.previewSprite.y - 60 + (Math.random() * 50 - 25);
+        let star = this.add.text(sx, sy, '✦', { fontSize: '14px', fill: '#FFD700' }).setOrigin(0.5).setDepth(20);
+        this.tweens.add({
+            targets: star,
+            scale: { from: 0.5, to: 1.5 },
+            alpha: { from: 1, to: 0 },
+            y: sy - 16,
+            duration: 350,
+            onComplete: () => star.destroy()
+        });
+    }
+
+    updatePreviewTexture() {
+        renderPixelTextureGlobal(
+            this,
+            'amelia_boutique_preview',
+            32,
+            40,
+            buildAmeliaMatrix(this.currentOutfit, 'idle'),
+            getAmeliaPalette(this.currentOutfit),
+            2
+        );
+        if (this.previewSprite && this.previewSprite.scene) {
+            this.previewSprite.setTexture('amelia_boutique_preview');
+        }
+    }
+
+    applyMakeover() {
+        // Save to global state
+        window.ameliaOutfit = Object.assign({}, this.currentOutfit);
+
+        // Magical screen flash and sparkle burst
+        this.cameras.main.flash(400, 255, 215, 0);
+
+        // Spawn magical starburst around Amelia
+        for (let i = 0; i < 16; i++) {
+            let angle = (i / 16) * Math.PI * 2;
+            let sx = this.previewSprite.x;
+            let sy = this.previewSprite.y - 60;
+            let star = this.add.text(sx, sy, (i % 2 === 0 ? '✦' : '★'), {
+                fontSize: '16px',
+                fill: (i % 2 === 0 ? '#FFD700' : '#FF88D8')
+            }).setOrigin(0.5).setDepth(25);
+
+            this.tweens.add({
+                targets: star,
+                x: sx + Math.cos(angle) * 70,
+                y: sy + Math.sin(angle) * 70,
+                alpha: { from: 1, to: 0 },
+                scale: { from: 1.5, to: 0.2 },
+                duration: 600,
+                ease: 'Cubic.easeOut',
+                onComplete: () => star.destroy()
+            });
+        }
+
+        // Regenerate all global Amelia textures in-place
+        generateAllAmeliaTextures(this.gameScene || this, window.ameliaOutfit);
+
+        // Update active player sprite & HUD icon in GameScene
+        if (this.gameScene) {
+            if (this.gameScene.player) {
+                this.gameScene.player.setTexture('amelia_idle');
+                this.gameScene.player.body.setSize(22, 16);
+                this.gameScene.player.body.setOffset(5, 24);
+                if (this.gameScene.player.anims) {
+                    this.gameScene.player.anims.play('amelia_idle', true);
+                }
+            }
+            if (this.gameScene.hudPlayerIcon) {
+                this.gameScene.hudPlayerIcon.setTexture('amelia_idle');
+            }
+        }
+
+        // Small delay so the player sees the magical burst before returning
+        setTimeout(() => {
+            this.closeBoutique();
+        }, 650);
+    }
+
+    closeBoutique() {
+        if (this.isClosing) return;
+        this.isClosing = true;
+        this.scene.resume('GameScene');
+        this.scene.stop('BoutiqueScene');
+        if (this.gameScene && this.gameScene.player && this.gameScene.player.body) {
+            const returnGroundY = this.gameScene.groundY || 1255;
+            this.gameScene.jumpZ = 0;
+            this.gameScene.jumpV = 0;
+            this.gameScene.isJumping = false;
+            this.gameScene.currentStair = null;
+
+            this.gameScene.player.x = 1250;
+            this.gameScene.groundY = returnGroundY;
+            this.gameScene.player.y = returnGroundY;
+            this.gameScene.player.setVisible(true);
+            this.gameScene.player.setAlpha(1);
+            this.gameScene.player.setActive(true);
+            this.gameScene.player.setDepth(Math.round(returnGroundY));
+            this.gameScene.player.body.reset(1250, returnGroundY);
+
+            if (this.gameScene.selectedCharacter === 'riley') {
+                this.gameScene.player.body.setSize(22, 16);
+                this.gameScene.player.body.setOffset(5, 32);
+            } else {
+                this.gameScene.player.body.setSize(22, 16);
+                this.gameScene.player.body.setOffset(5, 24);
+            }
+
+            if (this.gameScene.playerShadow) {
+                this.gameScene.playerShadow.setPosition(1250, returnGroundY + 18);
+                this.gameScene.playerShadow.setDepth(returnGroundY - 1);
+                this.gameScene.playerShadow.setVisible(true);
+            }
+
+            this.gameScene.selectedCharacter = 'amelia';
+            this.gameScene.characterName = 'Amelia';
+            if (this.gameScene.hudPlayerName) {
+                this.gameScene.hudPlayerName.setText('AMELIA');
+            }
+            if (this.gameScene.hudPlayerIcon) {
+                this.gameScene.hudPlayerIcon.setTexture('amelia_idle');
+            }
+            if (this.gameScene.layoutHUD) {
+                this.gameScene.layoutHUD(this.gameScene.scale.width, this.gameScene.scale.height);
+            }
+
+            this.gameScene.cameras.main.startFollow(this.gameScene.player, true, 0.08, 0.08);
+            this.gameScene.nearElevator = true;
+            if (this.gameScene.elevatorPromptText) {
+                this.gameScene.elevatorPromptText.setVisible(true);
+                this.gameScene.elevatorPromptText.x = 1250;
+                this.gameScene.elevatorPromptText.y = returnGroundY - 60;
+            }
+        }
+    }
+}
+
+config.scene = [BootScene, TitleScene, CharacterSelectScene, GameScene, ElevatorMenuScene, BoutiqueScene];
 window.game = new Phaser.Game(config);
 const game = window.game;
