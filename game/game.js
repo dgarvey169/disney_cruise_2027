@@ -398,6 +398,26 @@ function buildAmeliaMatrix(outfit, frameType = 'idle') {
 
 function renderPixelTextureGlobal(scene, key, width, height, pixelRows, palette, pixelSize = 2) {
     if (scene.textures && scene.textures.exists(key)) {
+        let texture = scene.textures.get(key);
+        let src = texture.getSourceImage();
+        if (src && typeof src.getContext === 'function') {
+            let ctx = src.getContext('2d');
+            ctx.clearRect(0, 0, width, height);
+            for (let y = 0; y < pixelRows.length; y++) {
+                let row = pixelRows[y];
+                for (let x = 0; x < row.length; x++) {
+                    let ch = row[x];
+                    if (ch !== '.' && palette[ch] !== undefined) {
+                        ctx.fillStyle = '#' + palette[ch].toString(16).padStart(6, '0');
+                        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                    }
+                }
+            }
+            if (typeof texture.refresh === 'function') {
+                texture.refresh();
+            }
+            return;
+        }
         scene.textures.remove(key);
     }
     let g = scene.add.graphics();
@@ -443,33 +463,36 @@ function generateAllAmeliaTextures(scene, outfit) {
         renderPixelTextureGlobal(scene, 'amelia_swim_' + i, 32, 40, swimMatrix, aPal, 2);
     }
 
-    // 5. Update animations in GameScene if active
+    // 5. Ensure animations exist (textures updated in-place, existing anims remain valid!)
     let targetScene = scene.anims ? scene : (scene.scene ? scene.scene.get('GameScene') : null);
     if (targetScene && targetScene.anims) {
-        ['amelia_idle', 'amelia_walk', 'amelia_jump'].forEach(key => {
-            if (targetScene.anims.exists(key)) targetScene.anims.remove(key);
-        });
-        targetScene.anims.create({
-            key: 'amelia_idle',
-            frames: [{ key: 'amelia_idle' }],
-            frameRate: 1
-        });
-        targetScene.anims.create({
-            key: 'amelia_walk',
-            frames: [
-                { key: 'amelia_walk_0' },
-                { key: 'amelia_walk_1' },
-                { key: 'amelia_walk_2' },
-                { key: 'amelia_walk_1' }
-            ],
-            frameRate: 8,
-            repeat: -1
-        });
-        targetScene.anims.create({
-            key: 'amelia_jump',
-            frames: [{ key: 'amelia_jump' }],
-            frameRate: 1
-        });
+        if (!targetScene.anims.exists('amelia_idle')) {
+            targetScene.anims.create({
+                key: 'amelia_idle',
+                frames: [{ key: 'amelia_idle' }],
+                frameRate: 1
+            });
+        }
+        if (!targetScene.anims.exists('amelia_walk')) {
+            targetScene.anims.create({
+                key: 'amelia_walk',
+                frames: [
+                    { key: 'amelia_walk_0' },
+                    { key: 'amelia_walk_1' },
+                    { key: 'amelia_walk_2' },
+                    { key: 'amelia_walk_1' }
+                ],
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+        if (!targetScene.anims.exists('amelia_jump')) {
+            targetScene.anims.create({
+                key: 'amelia_jump',
+                frames: [{ key: 'amelia_jump' }],
+                frameRate: 1
+            });
+        }
     }
 }
 
@@ -5457,19 +5480,23 @@ class ElevatorMenuScene extends Phaser.Scene {
     }
 
     travelToBoutique() {
-        if (this.gameScene.selectedCharacter !== 'amelia') {
-            this.gameScene.selectedCharacter = 'amelia';
-            if (this.gameScene.hudPlayerIcon) {
-                this.gameScene.hudPlayerIcon.setTexture('amelia_idle');
-            }
-            if (this.gameScene.hudPlayerName) {
-                this.gameScene.hudPlayerName.setText('AMELIA');
-            }
-            if (this.gameScene.player) {
-                this.gameScene.player.setTexture('amelia_idle');
-                if (this.gameScene.player.anims) {
-                    this.gameScene.player.anims.play('amelia_idle', true);
-                }
+        this.gameScene.selectedCharacter = 'amelia';
+        this.gameScene.characterName = 'Amelia';
+        if (this.gameScene.hudPlayerIcon) {
+            this.gameScene.hudPlayerIcon.setTexture('amelia_idle');
+        }
+        if (this.gameScene.hudPlayerName) {
+            this.gameScene.hudPlayerName.setText('AMELIA');
+        }
+        if (this.gameScene.layoutHUD) {
+            this.gameScene.layoutHUD(this.gameScene.scale.width, this.gameScene.scale.height);
+        }
+        if (this.gameScene.player) {
+            this.gameScene.player.setTexture('amelia_idle');
+            this.gameScene.player.body.setSize(22, 16);
+            this.gameScene.player.body.setOffset(5, 24);
+            if (this.gameScene.player.anims) {
+                this.gameScene.player.anims.play('amelia_idle', true);
             }
         }
         this.scene.stop();
@@ -5488,9 +5515,22 @@ class BoutiqueScene extends Phaser.Scene {
 
     init(data) {
         this.gameScene = data.gameScene;
+        this.previewSprite = null;
+        this.isClosing = false;
+        this.rowElements = [];
+        this.mirrorSparkles = [];
+        this.categories = [];
+        this.selectedRow = 0;
+        this.canSubmit = false;
     }
 
     create() {
+        this.events.once('shutdown', () => {
+            this.previewSprite = null;
+            this.rowElements = [];
+            this.mirrorSparkles = [];
+        });
+
         const W = this.scale.width;
         const H = this.scale.height;
         const cx = W / 2;
@@ -5846,7 +5886,7 @@ class BoutiqueScene extends Phaser.Scene {
             getAmeliaPalette(this.currentOutfit),
             2
         );
-        if (this.previewSprite) {
+        if (this.previewSprite && this.previewSprite.scene) {
             this.previewSprite.setTexture('amelia_boutique_preview');
         }
     }
@@ -5940,13 +5980,15 @@ class BoutiqueScene extends Phaser.Scene {
             });
         }
 
-        // Regenerate all global Amelia textures
+        // Regenerate all global Amelia textures in-place
         generateAllAmeliaTextures(this.gameScene || this, window.ameliaOutfit);
 
         // Update active player sprite & HUD icon in GameScene
         if (this.gameScene) {
             if (this.gameScene.player) {
                 this.gameScene.player.setTexture('amelia_idle');
+                this.gameScene.player.body.setSize(22, 16);
+                this.gameScene.player.body.setOffset(5, 24);
                 if (this.gameScene.player.anims) {
                     this.gameScene.player.anims.play('amelia_idle', true);
                 }
@@ -5957,16 +5999,65 @@ class BoutiqueScene extends Phaser.Scene {
         }
 
         // Small delay so the player sees the magical burst before returning
-        this.time.delayedCall(650, () => {
+        setTimeout(() => {
             this.closeBoutique();
-        });
+        }, 650);
     }
 
     closeBoutique() {
-        this.scene.stop('BoutiqueScene');
+        if (this.isClosing) return;
+        this.isClosing = true;
         this.scene.resume('GameScene');
+        this.scene.stop('BoutiqueScene');
         if (this.gameScene && this.gameScene.player && this.gameScene.player.body) {
-            this.gameScene.player.body.reset(this.gameScene.player.x, this.gameScene.groundY);
+            const returnGroundY = this.gameScene.groundY || 1255;
+            this.gameScene.jumpZ = 0;
+            this.gameScene.jumpV = 0;
+            this.gameScene.isJumping = false;
+            this.gameScene.currentStair = null;
+
+            this.gameScene.player.x = 1250;
+            this.gameScene.groundY = returnGroundY;
+            this.gameScene.player.y = returnGroundY;
+            this.gameScene.player.setVisible(true);
+            this.gameScene.player.setAlpha(1);
+            this.gameScene.player.setActive(true);
+            this.gameScene.player.setDepth(Math.round(returnGroundY));
+            this.gameScene.player.body.reset(1250, returnGroundY);
+
+            if (this.gameScene.selectedCharacter === 'riley') {
+                this.gameScene.player.body.setSize(22, 16);
+                this.gameScene.player.body.setOffset(5, 32);
+            } else {
+                this.gameScene.player.body.setSize(22, 16);
+                this.gameScene.player.body.setOffset(5, 24);
+            }
+
+            if (this.gameScene.playerShadow) {
+                this.gameScene.playerShadow.setPosition(1250, returnGroundY + 18);
+                this.gameScene.playerShadow.setDepth(returnGroundY - 1);
+                this.gameScene.playerShadow.setVisible(true);
+            }
+
+            this.gameScene.selectedCharacter = 'amelia';
+            this.gameScene.characterName = 'Amelia';
+            if (this.gameScene.hudPlayerName) {
+                this.gameScene.hudPlayerName.setText('AMELIA');
+            }
+            if (this.gameScene.hudPlayerIcon) {
+                this.gameScene.hudPlayerIcon.setTexture('amelia_idle');
+            }
+            if (this.gameScene.layoutHUD) {
+                this.gameScene.layoutHUD(this.gameScene.scale.width, this.gameScene.scale.height);
+            }
+
+            this.gameScene.cameras.main.startFollow(this.gameScene.player, true, 0.08, 0.08);
+            this.gameScene.nearElevator = true;
+            if (this.gameScene.elevatorPromptText) {
+                this.gameScene.elevatorPromptText.setVisible(true);
+                this.gameScene.elevatorPromptText.x = 1250;
+                this.gameScene.elevatorPromptText.y = returnGroundY - 60;
+            }
         }
     }
 }
