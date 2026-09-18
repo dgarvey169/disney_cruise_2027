@@ -138,68 +138,148 @@ function getAmeliaPalette(outfit) {
 
 function buildAmeliaMatrix(outfit, frameType = 'idle') {
     let r0, r1, r2, r3, r4;
-    // Rows 0-2 (Crown & Hair top)
+
+    // Rows 0-2 (Crown & Top of Hair)
     if (outfit.crown === 'tiara') {
-        r0 = ".....BCCWCCB....";
-        r1 = "...BCCCCCCBB....";
-        r2 = "..BTTTTTTTTTB...";
+        if (outfit.hairStyle === 'updo') {
+            r0 = "....BBHHHHBB...."; // High bun visible above tiara
+            r1 = "...BCCWCCBHHB..."; // Diamond tiara center with bun backdrop
+            r2 = "..BTTTTTTTTTB..."; // Gold tiara band
+        } else {
+            r0 = ".....BCCWCCB....";
+            r1 = "...BCCCCCCBB....";
+            r2 = "..BTTTTTTTTTB...";
+        }
     } else if (outfit.crown === 'royal_crown') {
-        r0 = "....BTRTRTB.....";
-        r1 = "...BTTTTTTTB....";
-        r2 = "..BTRTRTRTRTB...";
+        if (outfit.hairStyle === 'updo') {
+            r0 = "....BTRTRTB....."; // Ruby peaks
+            r1 = "...BTTTTTBHHB..."; // Crown band with royal bun visible
+            r2 = "..BTRTRTRTRTB...";
+        } else {
+            r0 = "....BTRTRTB.....";
+            r1 = "...BTTTTTTTB....";
+            r2 = "..BTRTRTRTRTB...";
+        }
     } else if (outfit.crown === 'wreath') {
         r0 = "....BGGPPGGB....";
         r1 = "...BPPGGGGPPB...";
         r2 = "..BGGPPGGPPGB...";
     } else {
+        // No crown - pure hair
         if (outfit.hairStyle === 'updo') {
-            r0 = "....BBHHHHBB....";
-            r1 = "...BHHLLLLHHB...";
+            r0 = "...BBHHHHHHBB..."; // High royal bun
+            r1 = "..BHHLLLLLLHHB.."; // Bun highlights
+            r2 = "..BHHLLLLLLHHB..";
+        } else if (outfit.hairStyle === 'braid') {
+            r0 = ".....BBBBBB.....";
+            r1 = "...BBHHHHHHBB...";
             r2 = "..BHHHLLLLHHHB..";
-        } else {
+        } else { // curls
             r0 = ".....BBBBBB.....";
             r1 = "...BBHHHHHHBB...";
             r2 = "..BHHHLLLLHHHB..";
         }
     }
 
-    // Rows 3-4 (Forehead & Hair bangs/bow)
-    if (outfit.crown !== 'none') {
-        r3 = "..BHHLLLLLLHHB..";
-        r4 = "..BHHHHHHHHHHB..";
-    } else if (outfit.hairStyle === 'updo') {
-        r3 = "..BHHPPBBPPHHB..";
-        r4 = "..BHHPPWWPPHHB..";
-    } else {
-        r3 = "..BHHPPBBPPHHB..";
-        r4 = "..BHHPPWWPPHHB..";
+    // Rows 3-4 (Hair bangs / bow / forehead)
+    if (outfit.hairStyle === 'updo') {
+        if (outfit.crown !== 'none') {
+            r3 = "...BHHHHHHHHB...";
+            r4 = "...BHHHHHHHHB...";
+        } else {
+            r3 = "..BHHPPBBPPHHB..";
+            r4 = "...BHHWWWWPPHB..";
+        }
+    } else if (outfit.hairStyle === 'braid') {
+        if (outfit.crown !== 'none') {
+            r3 = "..BHHLLLLLLHHB..";
+            r4 = "..BHHHHHHHHHHB..";
+        } else {
+            r3 = "..BHHPPBBPPHHB..";
+            r4 = "..BHHPPWWPPHHB..";
+        }
+    } else { // curls
+        if (outfit.crown !== 'none') {
+            r3 = "..BHHLLLLLLHHB..";
+            r4 = "..BHHHHHHHHHHB..";
+        } else {
+            r3 = "..BHHPPBBPPHHB..";
+            r4 = "..BHHPPWWPPHHB..";
+        }
     }
 
-    // Rows 5-9 (Face, Eyes, Cheeks, Mouth, Neck)
-    let r5 = "..BHSSSSSSSSHB..";
-    let r6 = "..BHSWBSSWBSHB..";
-    let r7 = "..BHSSSSSSSSHB..";
-    let r8 = "..BHSSSWWSSSHB..";
-    let r9 = "..BHHBSSSSBHHB..";
+    // Rows 5-9 (Face, Eyes, Cheeks, Mouth, Neck & Side Hair/Braid/Curls)
+    let r5, r6, r7, r8, r9;
+    if (outfit.hairStyle === 'updo') {
+        // Sleek royal updo with exposed neck and delicate curls
+        r5 = "...BHSSSSSSHB...";
+        r6 = "...BHSWBSSWBSHB.";
+        r7 = "...BHSSSSSSHB...";
+        r8 = "...BHSSSWWSSHB..";
+        r9 = "....BSSSSSSB....";
+    } else if (outfit.hairStyle === 'braid') {
+        // Long royal braid draping over left shoulder down front
+        r5 = ".BHHSSSSSSSSHB..";
+        r6 = "BHLHSWBSSWBSHB..";
+        r7 = "BHHHSSSSSSSSHB..";
+        r8 = ".BHLBSSSWWSSSHB.";
+        r9 = ".BHHBSSSSBHHB...";
+    } else {
+        // Voluminous, bouncy flowing curls expanding out wide on both sides
+        r5 = ".BHHSSSSSSSSHHB.";
+        r6 = "BHLHSWBSSWBSHLHB";
+        r7 = "BHHHSSSSSSSSHHHB";
+        r8 = "BHLHBSSSWWSSBHLB";
+        r9 = "BHHBSSSSSSSSBHHB";
+    }
 
-    // Rows 10-12 (Bodice & Sleeves)
+    // Rows 10-12 (Bodice & Sleeves, plus braid/curls cascading)
     let r10, r11, r12;
-    if (outfit.dressStyle === 'ballgown') {
-        r10 = "..BHHBPPPPBHHB..";
-        r11 = "..BHHBPWWPBHHB..";
-        r12 = "..BHHBPPPPBHHB..";
-    } else if (outfit.dressStyle === 'peplum') {
-        r10 = ".BPPBSSSSSSBPPB.";
-        r11 = ".BPPBPPPPPPBPPB.";
-        r12 = "..BBBPPPPPPBBB..";
-    } else if (outfit.dressStyle === 'mermaid') {
-        r10 = "..BHHBSSSSBHHB..";
-        r11 = "..BHHBPPPPBHHB..";
-        r12 = "..BHHBPPPPBHHB..";
-    } else { // play
-        r10 = "..BHHBSSSSBHHB..";
-        r11 = "..BHHBPPPPBHHB..";
-        r12 = "..BHHBPPPPBHHB..";
+    if (outfit.hairStyle === 'braid') {
+        // Braid clearly running down left side of bodice
+        if (outfit.dressStyle === 'ballgown') {
+            r10 = "BHLHBPPPPBHHB...";
+            r11 = "BLHLBPWWPBHHB...";
+            r12 = "BHLHBPPPPBHHB...";
+        } else if (outfit.dressStyle === 'peplum') {
+            r10 = "BHLBSSSSSSBPPB..";
+            r11 = "BLHLBPPPPPBPPB..";
+            r12 = "BHLBBPPPPPPBBB..";
+        } else {
+            r10 = "BHLHBSSSSBHHB...";
+            r11 = "BLHLBPPPPBHHB...";
+            r12 = "BHLHBPPPPBHHB...";
+        }
+    } else if (outfit.hairStyle === 'curls') {
+        // Bouncy ringlet curls resting on shoulders
+        if (outfit.dressStyle === 'ballgown') {
+            r10 = "BHLHBPPPPPPBHLHB";
+            r11 = ".BHHBPWWPPBHHB..";
+            r12 = "..BBBPPPPPPBBB..";
+        } else if (outfit.dressStyle === 'peplum') {
+            r10 = "BHLPBSSSSSSBPLHB";
+            r11 = ".BPPBPPPPPPBPPB.";
+            r12 = "..BBBPPPPPPBBB..";
+        } else {
+            r10 = "BHLHBPPPPPPBHLHB";
+            r11 = ".BHHBPPPPPPBHHB.";
+            r12 = "..BBBPPPPPPBBB..";
+        }
+    } else {
+        // Sleek updo bodice
+        if (outfit.dressStyle === 'ballgown') {
+            r10 = "..BHHBPPPPBHHB..";
+            r11 = "..BHHBPWWPBHHB..";
+            r12 = "..BHHBPPPPBHHB..";
+        } else if (outfit.dressStyle === 'peplum') {
+            r10 = ".BPPBSSSSSSBPPB.";
+            r11 = ".BPPBPPPPPPBPPB.";
+            r12 = "..BBBPPPPPPBBB..";
+        } else {
+            r10 = "..BHHBSSSSBHHB..";
+            r11 = "..BHHBPPPPBHHB..";
+            r12 = "..BHHBPPPPBHHB..";
+        }
     }
 
     // Rows 13-17 (Waist, Skirt, Hands)
@@ -212,45 +292,60 @@ function buildAmeliaMatrix(outfit, frameType = 'idle') {
         r16 = "...BBBBBBBBBBBB.";
         r17 = "....BSSB..BSSB..";
     } else if (outfit.dressStyle === 'ballgown') {
-        r13 = ".BSSBPPPPPPBSSB.";
-        r14 = "BSSBPPPPPPPPBSSB";
+        if (outfit.hairStyle === 'braid') {
+            r13 = "BPPBBPPPPPPBSSB."; // Braid ribbon tie
+            r14 = "BHLBPPPPPPPPBSSB"; // Braid tassel
+        } else {
+            r13 = ".BSSBPPPPPPBSSB.";
+            r14 = "BSSBPPPPPPPPBSSB";
+        }
         r15 = "BPPPPPPPPPPPPPPB";
         r16 = "BPPPPPPWWPPPPPPB";
         r17 = "BBBBBBBBBBBBBBBB";
     } else if (outfit.dressStyle === 'peplum') {
-        r13 = ".BSSBWWWWWWWBSSB";
-        r14 = ".BSSBPPPPPPBSSB.";
+        if (outfit.hairStyle === 'braid') {
+            r13 = "BPPBWWWWWWWBSSB.";
+            r14 = "BHLBPPPPPPBSSB..";
+        } else {
+            r13 = ".BSSBWWWWWWWBSSB";
+            r14 = ".BSSBPPPPPPBSSB.";
+        }
         r15 = "..BBBPPPPPPBBB..";
         r16 = "...BPPPPPPPPB...";
         r17 = "...BBBBBBBBBB...";
     } else if (outfit.dressStyle === 'mermaid') {
-        r13 = ".BSSBPPPPPPBSSB.";
-        r14 = ".BSSBPPPPPPBSSB.";
+        if (outfit.hairStyle === 'braid') {
+            r13 = "BPPBBPPPPPPBSSB.";
+            r14 = "BHLBPPPPPPBSSB..";
+        } else {
+            r13 = ".BSSBPPPPPPBSSB.";
+            r14 = ".BSSBPPPPPPBSSB.";
+        }
         r15 = "..BBBPPPPPPBBB..";
         r16 = "..BPPPPPPPPPPB..";
         r17 = "..BBBBBBBBBBBB..";
     } else { // play
         if (frameType === 'walk_0') {
-            r13 = "..BSSBPPPPBBSSB.";
-            r14 = "..BSSBPPPPBBSSB.";
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBPPPPBBSSB.." : "..BSSBPPPPBBSSB.";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLB.BPPPPBBSSB." : "..BSSBPPPPBBSSB.";
             r15 = "...BBBPPPPPBSSB.";
             r16 = "...BPPPPPPPPB...";
             r17 = "...BBBBBBBBBB...";
         } else if (frameType === 'walk_2') {
-            r13 = ".BSSBBPPPPBSSB..";
-            r14 = ".BSSBBPPPPBSSB..";
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBBPPPPBSSB.." : ".BSSBBPPPPBSSB..";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLBBBPPPPBSSB.." : ".BSSBBPPPPBSSB..";
             r15 = ".BSSBPPPPPBBB...";
             r16 = "...BPPPPPPPPB...";
             r17 = "...BBBBBBBBBB...";
         } else if (frameType === 'jump') {
-            r13 = ".BSSBPPPPPPBSSB.";
-            r14 = ".BSSBPPPPPPBSSB.";
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLBPPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
             r15 = "..BB.PPPPPP.BB..";
             r16 = "...BPPPPPPPPB...";
             r17 = "...BBBBBBBBBB...";
         } else {
-            r13 = ".BSSBPPPPPPBSSB.";
-            r14 = ".BSSBPPPPPPBSSB.";
+            r13 = (outfit.hairStyle === 'braid') ? "BPPBBPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
+            r14 = (outfit.hairStyle === 'braid') ? "BHLBPPPPPPPBSSB." : ".BSSBPPPPPPBSSB.";
             r15 = "..BBBPPPPPPBBB..";
             r16 = "...BPPPPPPPPB...";
             r17 = "...BBBBBBBBBB...";
