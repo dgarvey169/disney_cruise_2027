@@ -1407,8 +1407,11 @@ class BootScene extends Phaser.Scene {
 
         // 8-Bit AquaMouse Transparent Slide Tube (40x40)
         g.fillStyle(0x000000, 1);
-        g.fillRect(0, 0, 40, 40);
-        g.fillStyle(0x58B8F8, 0.7);
+        g.fillRect(0, 0, 40, 2); // Top border
+        g.fillRect(0, 38, 40, 2); // Bottom border
+        g.fillRect(0, 0, 2, 40); // Left border
+        g.fillRect(38, 0, 2, 40); // Right border
+        g.fillStyle(0x58B8F8, 0.5); // More transparent
         g.fillRect(2, 2, 36, 36);
         g.fillStyle(0xFFFFFF, 0.75);
         g.fillRect(4, 4, 32, 2);
@@ -2472,7 +2475,7 @@ class GameScene extends Phaser.Scene {
         createStaircase(60, 1280, 7, 1, -1);
 
         // ----------------------------------------------------
-        // DECK 12 (Quiet Cove & Hero Zone) - y: 940 to 1000 (Depth: 60px)
+        // DECK 12 (Splashdown & Hero Zone) - y: 940 to 1000 (Depth: 60px)
         // ----------------------------------------------------
         this.add.tileSprite(0, 940, 530, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(530, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
@@ -2482,8 +2485,7 @@ class GameScene extends Phaser.Scene {
 
         doors.create(140, 910, 'door');
         this.add.text(80, 865, 'COVE CAFE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
-
-        this.add.text(590, 915, 'QUIET COVE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        this.add.text(590, 915, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(1680, 915, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         doors.create(2000, 910, 'door');
@@ -2495,12 +2497,7 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 13 (AquaMouse Deck) - y: 700 to 760 (Depth: 60px)
         // ----------------------------------------------------
-        this.add.tileSprite(0, 700, 230, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(230, 700, 240, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(470, 700, 1930, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
-
-        // AquaMouse Splashdown Pool
-        this.add.text(340, 675, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        this.add.tileSprite(0, 700, 2400, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
 
         this.add.text(1170, 675, 'AQUAMOUSE ENTRANCE', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
@@ -2538,13 +2535,11 @@ class GameScene extends Phaser.Scene {
         this.add.tileSprite(890, 1268, 300, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1282);
         this.add.tileSprite(530, 988, 200, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
         this.add.tileSprite(1700, 988, 200, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
-        this.add.tileSprite(230, 748, 240, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(762);
 
         this.pools = [
             { name: 'deck11_main', xMin: 890, xMax: 1190, yMin: 1220, yMax: 1280 },
-            { name: 'deck12_quiet', xMin: 530, xMax: 730, yMin: 940, yMax: 1000 },
-            { name: 'deck12_toystory', xMin: 1700, xMax: 1900, yMin: 940, yMax: 1000 },
-            { name: 'deck13_splashdown', xMin: 230, xMax: 470, yMin: 700, yMax: 760 }
+            { name: 'deck12_splashdown', xMin: 530, xMax: 730, yMin: 940, yMax: 1000 },
+            { name: 'deck12_toystory', xMin: 1700, xMax: 1900, yMin: 940, yMax: 1000 }
         ];
 
         // --- 3D DECK SLAB FASCIA (STRUCTURAL DECK THICKNESS) ---
@@ -2579,44 +2574,112 @@ class GameScene extends Phaser.Scene {
         // The AquaMouse Slide (circular loop around the deck!)
         let slideCurve = new Phaser.Curves.Spline([
             750, 360,
-            1000, 200,
-            1300, 250,
-            1200, 450,
-            800, 500,
-            500, 600,
-            350, 760
+            400, 150,
+            -50, 250,
+            -50, 500,
+            400, 700,
+            500, 900,
+            630, 1000
         ]);
 
         this.slideCurve = slideCurve;
-        // Draw the lift tube visually
-        let liftGraphics = this.add.graphics();
-        liftGraphics.lineStyle(40, 0xFFFFFF, 0.5); 
-        liftGraphics.beginPath();
-        liftGraphics.moveTo(1200, 750);
-        liftGraphics.lineTo(750, 360);
-        liftGraphics.strokePath();
-        liftGraphics.lineStyle(2, 0x0000FF, 1);
-        liftGraphics.beginPath();
-        liftGraphics.moveTo(1220, 740);
-        liftGraphics.lineTo(770, 350);
-        liftGraphics.moveTo(1180, 760);
-        liftGraphics.lineTo(730, 370);
-        liftGraphics.strokePath();
+        // Draw the lift tube visually with depth-sorted graphics segments
+        let liftCurve = new Phaser.Curves.Line([1200, 750, 750, 360]);
+        let liftPoints = liftCurve.getSpacedPoints(40);
+        for (let i = 0; i < liftPoints.length - 1; i++) {
+            let p1 = liftPoints[i];
+            let p2 = liftPoints[i+1];
+            let g = this.add.graphics();
+            g.lineStyle(40, 0x58D8F8, 0.85);
+            g.fillStyle(0x58D8F8, 0.85);
+            g.fillCircle(p1.x, p1.y, 20); // Round joint
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+            
+            g.lineStyle(2, 0x0000FF, 1);
+            g.beginPath();
+            g.moveTo(p1.x + 20, p1.y - 10);
+            g.lineTo(p2.x + 20, p2.y - 10);
+            g.moveTo(p1.x - 20, p1.y + 10);
+            g.lineTo(p2.x - 20, p2.y + 10);
+            g.strokePath();
+            
+            g.setDepth(p1.y + 1);
+        }
 
-        // Draw the looping slide visually
-        let slideGraphics = this.add.graphics();
-        // Main transparent blue tube
-        slideGraphics.lineStyle(40, 0x87CEFA, 0.6); 
-        slideCurve.draw(slideGraphics, 64);
+        // Villain Mountain Enclosure (Solid-colored structure around the forward funnel)
+        let mountainG = this.add.graphics().setDepth(365); // In front of Top Deck (340) and lift tube top (361)
+        mountainG.fillStyle(0x303040, 1);
+        mountainG.fillRoundedRect(680, 200, 140, 160, 20); // Dark grey mountain base
+        mountainG.fillStyle(0x404050, 1);
+        mountainG.fillRoundedRect(700, 150, 100, 100, 20); // Peak
+        this.add.text(750, 220, 'VILLAIN\nMOUNTAIN', { fontSize: '9px', fill: '#FF4444', fontFamily: '"Press Start 2P", monospace', align: 'center', stroke: '#000000', strokeThickness: 2 }).setOrigin(0.5).setDepth(366);
+
+        // Toxic Green Smoke Emitter
+        let pg = this.make.graphics({x: 0, y: 0, add: false});
+        pg.fillStyle(0xFFFFFF, 1);
+        pg.fillRect(0, 0, 8, 8);
+        pg.generateTexture('smoke_particle', 8, 8);
         
-        // Orange stripe
-        slideGraphics.lineStyle(4, 0xFF4500, 0.8);
-        slideCurve.draw(slideGraphics, 64);
-        
-        // Yellow stripe (offset slightly by drawing the same curve with a slight translation? Or just keep one stripe)
-        // Let's just have a thick orange/yellow core
-        slideGraphics.lineStyle(2, 0xFFD700, 1);
-        slideCurve.draw(slideGraphics, 64);
+        let smokeEmitter = this.add.particles(750, 160, 'smoke_particle', {
+            speed: { min: 10, max: 40 },
+            angle: { min: 250, max: 290 },
+            scale: { start: 1, end: 3 },
+            alpha: { start: 0.8, end: 0 },
+            lifespan: 3000,
+            frequency: 300,
+            tint: [ 0x33FF33, 0x00AA00, 0x88FF33 ], // toxic green variations
+            blendMode: 'NORMAL'
+        });
+        smokeEmitter.setDepth(364); // Rising from behind the peak
+        // Brightly colored exit flume at Deck 12 Splashdown
+        let flumeG = this.add.graphics().setDepth(1001);
+        flumeG.fillStyle(0xFF5500, 1); // Bright orange flume
+        flumeG.fillRoundedRect(600, 950, 60, 50, 10);
+        flumeG.fillStyle(0xFFFF00, 1); // Yellow stripes
+        flumeG.fillRect(610, 950, 5, 50);
+        flumeG.fillRect(645, 950, 5, 50);
+
+        // Draw the looping slide visually with depth-sorted graphics segments
+        let slidePoints = slideCurve.getSpacedPoints(180); // Increased points for smoother larger curve
+        for (let i = 0; i < slidePoints.length - 1; i++) {
+            let p1 = slidePoints[i];
+            let p2 = slidePoints[i+1];
+            let g = this.add.graphics();
+            
+            // Clear acrylic tube
+            g.lineStyle(40, 0x88CCFF, 0.45);
+            g.fillStyle(0x88CCFF, 0.45);
+            g.fillCircle(p1.x, p1.y, 20); // Round joint
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+            
+            // White shiny reflection on the top edge of the tube
+            g.lineStyle(4, 0xFFFFFF, 0.7);
+            g.beginPath();
+            g.moveTo(p1.x - 10, p1.y - 10);
+            g.lineTo(p2.x - 10, p2.y - 10);
+            g.strokePath();
+            
+            // Industrial metallic flanges every 10 segments
+            if (i % 10 === 0) {
+                g.lineStyle(6, 0xAAAAAA, 1); // Grey metal ring
+                g.beginPath();
+                g.moveTo(p1.x - 22, p1.y - 22);
+                g.lineTo(p1.x + 22, p1.y + 22);
+                g.strokePath();
+                // Add tiny bolts (dots)
+                g.fillStyle(0x444444, 1);
+                g.fillCircle(p1.x - 18, p1.y - 18, 2);
+                g.fillCircle(p1.x + 18, p1.y + 18, 2);
+            }
+            
+            g.setDepth(Math.max(p1.y + 1, 815));
+        }
 
         // --- TOP-MOUNTED CAPCOM RETRO HUD ---
         this.score = 2500;
@@ -2862,40 +2925,76 @@ class GameScene extends Phaser.Scene {
                     // Keep player seated on raft during lift
                     this.player.x = this.raft.x;
                     this.player.y = this.raft.y - 24;
+                    // Dynamic depth ordering to sit inside the lift tube
+                    this.raft.setDepth(this.raft.y);
+                    this.player.setDepth(this.raft.y);
                 },
                 onComplete: () => {
-                    // 2. Slide Tween
-                    let pathObj = { t: 0 };
-                    this.tweens.add({
-                        targets: pathObj,
-                        t: 1,
-                        ease: 'Sine.easeInOut',
-                        duration: 4000,
-                        onUpdate: () => {
-                            let p = this.slideCurve.getPoint(pathObj.t);
-                            this.raft.x = p.x;
-                            this.raft.y = p.y;
-                            this.player.x = p.x;
-                            this.player.y = p.y - 24; // Seated on raft
-                        },
-                        onComplete: () => {
-                            // 3. Splashdown & Hop Out into Deck 13 Pool
-                            this.ridingRaft = false;
-                            this.score += 1500;
-                            this.currentDeck = 'deck13';
-                            this.groundY = 735;
-                            this.jumpZ = 12;
-                            this.jumpV = 200;
-                            this.isJumping = true;
-                            if (this.player && this.player.body) {
-                                this.player.body.enable = true;
-                                this.player.body.allowGravity = false;
-                                this.player.setVelocity(-120, 0);
-                                this.player.body.reset(350, 735 - (this.player.body.height / 2));
+                    // Show Villain Dialogue Box inside Villain Mountain
+                    let quotes = [
+                        "FOOLS! PREPARE FOR\nTHE DROP...",
+                        "YOU THINK THIS IS\nA JOKE? BWAHAHA!",
+                        "THE UNDERWORLD\nAWAITS YOU...",
+                        "MWAHAHAHA!\nHOLD ON TIGHT!"
+                    ];
+                    let quote = quotes[Math.floor(Math.random() * quotes.length)];
+                    
+                    let dialogBg = this.add.graphics().setDepth(4000).setScrollFactor(0);
+                    dialogBg.fillStyle(0x000000, 0.8);
+                    dialogBg.lineStyle(2, 0x33FF33, 1);
+                    dialogBg.fillRoundedRect(this.cameras.main.width/2 - 150, 60, 300, 60, 8);
+                    dialogBg.strokeRoundedRect(this.cameras.main.width/2 - 150, 60, 300, 60, 8);
+                    
+                    let dialogText = this.add.text(this.cameras.main.width/2, 90, quote, {
+                        fontFamily: '"Press Start 2P", monospace',
+                        fontSize: '10px',
+                        fill: '#33FF33',
+                        align: 'center',
+                        lineSpacing: 8
+                    }).setOrigin(0.5).setDepth(4001).setScrollFactor(0);
+
+                    // Pause inside the mountain for 2.5 seconds
+                    this.time.delayedCall(2500, () => {
+                        dialogBg.destroy();
+                        dialogText.destroy();
+                        
+                        // 2. Slide Tween
+                        let pathObj = { t: 0 };
+                        this.tweens.add({
+                            targets: pathObj,
+                            t: 1,
+                            ease: 'Sine.easeInOut',
+                            duration: 4000,
+                            onUpdate: () => {
+                                let p = this.slideCurve.getPoint(pathObj.t);
+                                this.raft.x = p.x;
+                                this.raft.y = p.y;
+                                this.player.x = p.x;
+                                this.player.y = p.y - 24; // Seated on raft
+                                // Dynamic depth ordering to sit inside the slide tube (elevated over Deck 13 railing)
+                                let d = Math.max(p.y, 814); 
+                                this.raft.setDepth(d);
+                                this.player.setDepth(d);
+                            },
+                            onComplete: () => {
+                                // 3. Splashdown & Hop Out into Deck 12 Pool
+                                this.ridingRaft = false;
+                                this.score += 1500;
+                                this.currentDeck = 'deck12';
+                                this.groundY = 975;
+                                this.jumpZ = 12;
+                                this.jumpV = 200;
+                                this.isJumping = true;
+                                if (this.player && this.player.body) {
+                                    this.player.body.enable = true;
+                                    this.player.body.allowGravity = false;
+                                    this.player.setVelocity(-120, 0);
+                                    this.player.body.reset(630, 975 - (this.player.body.height / 2));
+                                }
+                                this.raft.x = 1200;
+                                this.raft.y = 730;
                             }
-                            this.raft.x = 1200;
-                            this.raft.y = 730;
-                        }
+                        });
                     });
                 }
             });
