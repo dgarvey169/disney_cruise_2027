@@ -2591,20 +2591,64 @@ class GameScene extends Phaser.Scene {
         ]);
 
         this.slideCurve = slideCurve;
-        // Draw the lift tube visually
+        // Draw the lift tube visually with depth-sorted graphics segments
         let liftCurve = new Phaser.Curves.Line([1200, 750, 750, 360]);
         let liftPoints = liftCurve.getSpacedPoints(40);
-        liftPoints.forEach((p) => {
-            let segment = this.add.sprite(p.x, p.y, 'slide_tube');
-            segment.setDepth(p.y + 1);
-        });
+        for (let i = 0; i < liftPoints.length - 1; i++) {
+            let p1 = liftPoints[i];
+            let p2 = liftPoints[i+1];
+            let g = this.add.graphics();
+            g.lineStyle(40, 0xFFFFFF, 0.5);
+            g.fillStyle(0xFFFFFF, 0.5);
+            g.fillCircle(p1.x, p1.y, 20); // Round joint
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+            
+            g.lineStyle(2, 0x0000FF, 1);
+            g.beginPath();
+            g.moveTo(p1.x + 20, p1.y - 10);
+            g.lineTo(p2.x + 20, p2.y - 10);
+            g.moveTo(p1.x - 20, p1.y + 10);
+            g.lineTo(p2.x - 20, p2.y + 10);
+            g.strokePath();
+            
+            g.setDepth(p1.y + 1);
+        }
 
-        // Draw the looping slide visually
+        // Draw the looping slide visually with depth-sorted graphics segments
         let slidePoints = slideCurve.getSpacedPoints(150);
-        slidePoints.forEach((p) => {
-            let segment = this.add.sprite(p.x, p.y, 'slide_tube');
-            segment.setDepth(p.y + 1);
-        });
+        for (let i = 0; i < slidePoints.length - 1; i++) {
+            let p1 = slidePoints[i];
+            let p2 = slidePoints[i+1];
+            let g = this.add.graphics();
+            
+            // Main transparent blue tube
+            g.lineStyle(40, 0x87CEFA, 0.6);
+            g.fillStyle(0x87CEFA, 0.6);
+            g.fillCircle(p1.x, p1.y, 20); // Round joint
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+            
+            // Orange stripe
+            g.lineStyle(4, 0xFF4500, 0.8);
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+            
+            // Yellow stripe
+            g.lineStyle(2, 0xFFD700, 1);
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+            
+            g.setDepth(p1.y + 1);
+        }
 
         // --- TOP-MOUNTED CAPCOM RETRO HUD ---
         this.score = 2500;
