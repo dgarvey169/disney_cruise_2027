@@ -5505,6 +5505,131 @@ class ElevatorMenuScene extends Phaser.Scene {
 }
 
 // =========================================================================
+// BIBBIDI BOBBIDI BOUTIQUE 8-BIT ICON GRAPHICS
+// =========================================================================
+
+const ICON_WIG_MATRIX = [
+    ".....OOOOOO.....",
+    "...OOHHHHLLOO...",
+    "..OHHHHHHLLLLO..",
+    ".OHHHDDDDHLLLLO.",
+    ".OHHDFFFFDHLLLO.",
+    ".OHDFFFFFFDHLLO.",
+    ".OHDFFFFFFDHLLO.",
+    ".OHDFFFFFFDHLLO.",
+    ".OHHDFFFFDHHLLO.",
+    "..OHHDDDHHLLLO..",
+    "...OOHHHHLLOO...",
+    "......OSSO......",
+    "......OSSO......",
+    ".....OBBBBO.....",
+    "....OBBBBBBO....",
+    "....OOOOOOOO...."
+];
+
+const ICON_DRESS_MATRIX = [
+    "....OWWWWWWO....",
+    "....OMMMMMMO....",
+    "...OMMMMMMMMO...",
+    "...OMMLLLLMMO...",
+    "....OGGGGGGO....",
+    "....OGGGGGGO....",
+    "...OMMLLLLMMO...",
+    "..OMMMLLLLMMMO..",
+    ".OMMMMLLLLMMMMO.",
+    ".OMMMMLLLLMMMMO.",
+    "OMMMMMLLLLMMMMMO",
+    "OMMMDDLLLLDDMMMO",
+    "OMMDDDLLLLDDDMMO",
+    "OMMDDDLLLLDDDMMO",
+    ".OWWWWWWWWWWWWO.",
+    "..OOOOOOOOOOOO.."
+];
+
+const ICON_CROWN_MATRIX = [
+    "......W.........",
+    "...W..O..W......",
+    "..LOLOLLOLOL....",
+    "..OGGGOGGGGO....",
+    ".OGGGLGGGLGGGO..",
+    ".OGLRGLRGGLRGO..",
+    "OGGLRGGLRGGLRGGO",
+    "OGDDDDDDDDDDDDGO",
+    "OGLLGGLLGGLLGGGO",
+    "OGDDRGGDDBGGDGGO",
+    "OGDDDDDDDDDDDDGO",
+    ".OGGGGGGGGGGGGO.",
+    "..OOOOOOOOOOOO..",
+    "................",
+    "................",
+    "................"
+];
+
+const ICON_WAND_MATRIX = [
+    "..........W.....",
+    "........W.......",
+    "......OLLLO.....",
+    "....OOLGGGLOO...",
+    "...OLGGCPPGGLO..",
+    "..OLGCPWWPCGGLO.",
+    "...OLGGCPPGGLO..",
+    "....OOLGGGLOO...",
+    "......ODDDO.....",
+    ".....OGGGLO.....",
+    ".....OGDGLO.....",
+    "....OGGGLO......",
+    "....OGDGLO......",
+    "...OGGGLO.......",
+    "..OGWDDDO.......",
+    "...OOOOO........"
+];
+
+function generateBoutiqueIcons(scene) {
+    const wigPal = {
+        'O': 0x000000,
+        'H': 0xB86820,
+        'L': 0xF0A840,
+        'D': 0x703810,
+        'S': 0xC0C0C0,
+        'B': 0x707070,
+        'F': 0xFFE0BD
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_wig', 32, 32, ICON_WIG_MATRIX, wigPal, 2);
+
+    const dressPal = {
+        'O': 0x000000,
+        'M': 0x4898F8,
+        'L': 0x88D0FF,
+        'D': 0x1858B8,
+        'G': 0xFFD700,
+        'W': 0xFFFFFF
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_dress', 32, 32, ICON_DRESS_MATRIX, dressPal, 2);
+
+    const crownPal = {
+        'O': 0x000000,
+        'G': 0xFFD700,
+        'L': 0xFFF080,
+        'D': 0xB8860B,
+        'R': 0xFF2040,
+        'B': 0x30A0FF,
+        'W': 0xFFFFFF
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_crown', 32, 32, ICON_CROWN_MATRIX, crownPal, 2);
+
+    const wandPal = {
+        'O': 0x000000,
+        'G': 0xFFD700,
+        'L': 0xFFF8A0,
+        'D': 0xB8860B,
+        'P': 0xFF40A0,
+        'C': 0x50F0FF,
+        'W': 0xFFFFFF
+    };
+    renderPixelTextureGlobal(scene, 'boutique_icon_wand', 32, 32, ICON_WAND_MATRIX, wandPal, 2);
+}
+
+// =========================================================================
 // BIBBIDI BOBBIDI BOUTIQUE SCENE (8-BIT RPG MAKEOVER SALON)
 // =========================================================================
 
@@ -5535,6 +5660,8 @@ class BoutiqueScene extends Phaser.Scene {
             this.colorSwatchElements = [];
         });
 
+        generateBoutiqueIcons(this);
+
         const W = this.scale.width;
         const H = this.scale.height;
         const cx = W / 2;
@@ -5547,8 +5674,7 @@ class BoutiqueScene extends Phaser.Scene {
             {
                 id: 'wig',
                 name: 'WIG',
-                icon: '💇',
-                label: '💇 WIG',
+                iconKey: 'boutique_icon_wig',
                 key: 'hairStyle',
                 options: BOUTIQUE_CONFIG.hairStyles,
                 colorKey: 'hairColor',
@@ -5557,8 +5683,7 @@ class BoutiqueScene extends Phaser.Scene {
             {
                 id: 'dress',
                 name: 'DRESS',
-                icon: '👗',
-                label: '👗 DRESS',
+                iconKey: 'boutique_icon_dress',
                 key: 'dressStyle',
                 options: BOUTIQUE_CONFIG.dressStyles,
                 colorKey: 'dressColor',
@@ -5567,8 +5692,7 @@ class BoutiqueScene extends Phaser.Scene {
             {
                 id: 'crown',
                 name: 'CROWN',
-                icon: '👑',
-                label: '👑 CROWN',
+                iconKey: 'boutique_icon_crown',
                 key: 'crown',
                 options: BOUTIQUE_CONFIG.crowns,
                 colorKey: null,
@@ -5577,8 +5701,7 @@ class BoutiqueScene extends Phaser.Scene {
             {
                 id: 'wand',
                 name: 'WAND',
-                icon: '🪄',
-                label: '🪄 WAND',
+                iconKey: 'boutique_icon_wand',
                 key: 'scepter',
                 options: BOUTIQUE_CONFIG.scepters,
                 colorKey: null,
@@ -5614,32 +5737,45 @@ class BoutiqueScene extends Phaser.Scene {
             strokeThickness: 3
         }).setOrigin(0.5).setDepth(4);
 
-        // 2. Tiered Category Tabs (Row of 4 icons above the character)
-        const tierY = headerY + (isPortrait ? 28 : 26);
-        const tabW = isPortrait ? 76 : 108;
-        const tabH = isPortrait ? 24 : 26;
-        const totalTabsW = this.tiers.length * (tabW + (isPortrait ? 6 : 10));
+        // 2. Tiered Category Selection (Row of 4 visual icons above Amelia)
+        const tierY = headerY + (isPortrait ? 30 : 28);
+        const tabW = isPortrait ? 52 : 64;
+        const tabH = isPortrait ? 42 : 46;
+        const tabSpacing = isPortrait ? 10 : 16;
+        const totalTabsW = this.tiers.length * tabW + (this.tiers.length - 1) * tabSpacing;
         const startTabX = cx - (totalTabsW / 2) + (tabW / 2);
 
         this.tierTabElements = [];
         this.tiers.forEach((tier, idx) => {
-            const tx = startTabX + idx * (tabW + (isPortrait ? 6 : 10));
-            const bgRect = this.add.rectangle(tx, tierY, tabW, tabH, 0x1E0A30).setDepth(5).setInteractive({ useHandCursor: true });
-            const tabText = this.add.text(tx, tierY, tier.label, {
-                fontSize: isPortrait ? '7px' : '8px',
-                fill: '#FFFFFF',
+            const tx = startTabX + idx * (tabW + tabSpacing);
+            const bgRect = this.add.rectangle(tx, tierY, tabW, tabH, 0x140620)
+                .setStrokeStyle(1, 0x482268)
+                .setDepth(5)
+                .setInteractive({ useHandCursor: true });
+
+            const iconSprite = this.add.image(tx, tierY - (isPortrait ? 6 : 7), tier.iconKey)
+                .setDisplaySize(isPortrait ? 22 : 26, isPortrait ? 22 : 26)
+                .setDepth(6);
+
+            const tabText = this.add.text(tx, tierY + (isPortrait ? 11 : 13), tier.name, {
+                fontSize: isPortrait ? '6px' : '7px',
+                fill: '#9080A8',
                 fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setDepth(6);
-            const tabIndicator = this.add.text(tx, tierY + tabH / 2 + 3, '▼', {
+
+            const tabIndicator = this.add.text(tx, tierY + tabH / 2 + 2, '▼', {
                 fontSize: '8px',
                 fill: '#FFD700'
             }).setOrigin(0.5, 0).setDepth(6);
 
-            bgRect.on('pointerdown', () => this.selectTier(idx));
-            tabText.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.selectTier(idx));
+            const clickHandler = () => this.selectTier(idx);
+            bgRect.on('pointerdown', clickHandler);
+            iconSprite.setInteractive({ useHandCursor: true }).on('pointerdown', clickHandler);
+            tabText.setInteractive({ useHandCursor: true }).on('pointerdown', clickHandler);
 
             this.tierTabElements.push({
                 bg: bgRect,
+                icon: iconSprite,
                 text: tabText,
                 indicator: tabIndicator,
                 tx: tx,
@@ -5648,7 +5784,7 @@ class BoutiqueScene extends Phaser.Scene {
         });
 
         // 3. Carousel (Left arrow, Card with Item Title, Right arrow)
-        const carouselY = tierY + (isPortrait ? 32 : 32);
+        const carouselY = tierY + (isPortrait ? 38 : 38);
         const cardW = isPortrait ? 220 : 300;
         const cardH = isPortrait ? 28 : 30;
 
@@ -5697,7 +5833,7 @@ class BoutiqueScene extends Phaser.Scene {
         this.rightArrowBtn.on('pointerout', () => this.rightArrowBtn.setStyle({ fill: '#FFD700' }));
 
         // 4. Color Swatches Palette (Directly below Carousel)
-        this.colorRowY = carouselY + (isPortrait ? 24 : 24);
+        this.colorRowY = carouselY + (isPortrait ? 24 : 26);
         this.colorLabel = this.add.text(cx, this.colorRowY, '', {
             fontSize: isPortrait ? '6px' : '7px',
             fill: '#F8A0C8',
@@ -5864,14 +6000,23 @@ class BoutiqueScene extends Phaser.Scene {
         this.tierTabElements.forEach((tab, i) => {
             const isActive = (i === this.activeTierIdx);
             if (isActive) {
-                tab.bg.setFillStyle(0x4A156B);
+                tab.bg.setFillStyle(0x3E1256, 1);
                 tab.bg.setStrokeStyle(2, 0xFFD700);
                 tab.text.setStyle({ fill: '#FFD700' });
                 tab.indicator.setVisible(true);
+                if (tab.icon) {
+                    this.tweens.add({
+                        targets: [tab.icon, tab.bg],
+                        scaleX: { from: 1.12, to: 1.0 },
+                        scaleY: { from: 1.12, to: 1.0 },
+                        duration: 160,
+                        ease: 'Back.easeOut'
+                    });
+                }
             } else {
-                tab.bg.setFillStyle(0x1E0A30);
-                tab.bg.setStrokeStyle(1, 0x603080);
-                tab.text.setStyle({ fill: '#FFFFFF' });
+                tab.bg.setFillStyle(0x140620, 0.9);
+                tab.bg.setStrokeStyle(1, 0x482268);
+                tab.text.setStyle({ fill: '#9080A8' });
                 tab.indicator.setVisible(false);
             }
         });
@@ -5965,17 +6110,19 @@ class BoutiqueScene extends Phaser.Scene {
         if (tier.colors && tier.colorKey) {
             const currentColor = this.currentOutfit[tier.colorKey];
             const colors = tier.colors;
-            const swatchSize = isPortrait ? 18 : 22;
-            const spacing = isPortrait ? 24 : 28;
+            const currentObj = colors.find(c => c.id === currentColor) || colors[0];
+            const swatchSize = isPortrait ? 20 : 22;
+            const spacing = isPortrait ? 26 : 28;
             const totalW = colors.length * spacing;
             const startX = cx - (totalW / 2) + (spacing / 2);
 
-            this.colorLabel.setText(tier.id === 'hair' ? 'HAIR COLOR PALETTE:' : 'GOWN COLOR PALETTE:');
+            const labelPrefix = (tier.id === 'wig' ? 'HAIR COLOR' : 'GOWN COLOR');
+            this.colorLabel.setText(`${labelPrefix}: [ ${currentObj.label.toUpperCase()} ]`);
             this.colorLabel.setVisible(true);
 
             colors.forEach((col, idx) => {
                 const sx = startX + (idx * spacing);
-                const sy = this.colorRowY + (isPortrait ? 12 : 14);
+                const sy = this.colorRowY + (isPortrait ? 13 : 15);
                 const isSelected = (col.id === currentColor);
                 const hexColor = col.main !== undefined ? col.main : col.H;
 
@@ -5987,7 +6134,7 @@ class BoutiqueScene extends Phaser.Scene {
 
                 if (isSelected) {
                     const check = this.add.text(sx, sy, '✦', {
-                        fontSize: '9px',
+                        fontSize: '10px',
                         fill: (hexColor === 0xF8E060 || hexColor === 0x78E0F8) ? '#000000' : '#FFFFFF'
                     }).setOrigin(0.5);
                     this.colorSwatchesContainer.add(check);
