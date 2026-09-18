@@ -2477,7 +2477,9 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 12 (Quiet Cove & Hero Zone) - y: 940 to 1000 (Depth: 60px)
         // ----------------------------------------------------
-        this.add.tileSprite(0, 940, 530, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(0, 940, 230, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(230, 940, 240, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
+        this.add.tileSprite(470, 940, 60, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(530, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(730, 940, 970, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.tileSprite(1700, 940, 200, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
@@ -2485,7 +2487,7 @@ class GameScene extends Phaser.Scene {
 
         doors.create(140, 910, 'door');
         this.add.text(80, 865, 'COVE CAFE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
-
+        this.add.text(340, 915, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(590, 915, 'QUIET COVE', { fontSize: '9px', fill: '#00F8A0', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(1680, 915, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
@@ -2498,12 +2500,7 @@ class GameScene extends Phaser.Scene {
         // ----------------------------------------------------
         // DECK 13 (AquaMouse Deck) - y: 700 to 760 (Depth: 60px)
         // ----------------------------------------------------
-        this.add.tileSprite(0, 700, 230, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(230, 700, 240, 60, 'pool_3d_basin').setOrigin(0, 0).setDepth(1);
-        this.add.tileSprite(470, 700, 1930, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
-
-        // AquaMouse Splashdown Pool
-        this.add.text(340, 675, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        this.add.tileSprite(0, 700, 2400, 60, 'deck_3d').setOrigin(0, 0).setDepth(1);
 
         this.add.text(1170, 675, 'AQUAMOUSE ENTRANCE', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
@@ -2541,13 +2538,13 @@ class GameScene extends Phaser.Scene {
         this.add.tileSprite(890, 1268, 300, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1282);
         this.add.tileSprite(530, 988, 200, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
         this.add.tileSprite(1700, 988, 200, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
-        this.add.tileSprite(230, 748, 240, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(762);
+        this.add.tileSprite(230, 988, 240, 14, 'pool_front_coping_3d').setOrigin(0, 0).setDepth(1002);
 
         this.pools = [
             { name: 'deck11_main', xMin: 890, xMax: 1190, yMin: 1220, yMax: 1280 },
             { name: 'deck12_quiet', xMin: 530, xMax: 730, yMin: 940, yMax: 1000 },
             { name: 'deck12_toystory', xMin: 1700, xMax: 1900, yMin: 940, yMax: 1000 },
-            { name: 'deck13_splashdown', xMin: 230, xMax: 470, yMin: 700, yMax: 760 }
+            { name: 'deck12_splashdown', xMin: 230, xMax: 470, yMin: 940, yMax: 1000 }
         ];
 
         // --- 3D DECK SLAB FASCIA (STRUCTURAL DECK THICKNESS) ---
@@ -2582,12 +2579,12 @@ class GameScene extends Phaser.Scene {
         // The AquaMouse Slide (circular loop around the deck!)
         let slideCurve = new Phaser.Curves.Spline([
             750, 360,
-            1000, 200,
-            1300, 250,
-            1200, 450,
-            800, 500,
-            500, 600,
-            350, 760
+            600, 200,
+            300, 250,
+            200, 450,
+            400, 600,
+            500, 800,
+            350, 1000
         ]);
 
         this.slideCurve = slideCurve;
@@ -2917,11 +2914,11 @@ class GameScene extends Phaser.Scene {
                             this.player.setDepth(p.y);
                         },
                         onComplete: () => {
-                            // 3. Splashdown & Hop Out into Deck 13 Pool
+                            // 3. Splashdown & Hop Out into Deck 12 Pool
                             this.ridingRaft = false;
                             this.score += 1500;
-                            this.currentDeck = 'deck13';
-                            this.groundY = 735;
+                            this.currentDeck = 'deck12';
+                            this.groundY = 975;
                             this.jumpZ = 12;
                             this.jumpV = 200;
                             this.isJumping = true;
@@ -2929,7 +2926,7 @@ class GameScene extends Phaser.Scene {
                                 this.player.body.enable = true;
                                 this.player.body.allowGravity = false;
                                 this.player.setVelocity(-120, 0);
-                                this.player.body.reset(350, 735 - (this.player.body.height / 2));
+                                this.player.body.reset(350, 975 - (this.player.body.height / 2));
                             }
                             this.raft.x = 1200;
                             this.raft.y = 730;
