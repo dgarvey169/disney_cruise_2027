@@ -1407,8 +1407,11 @@ class BootScene extends Phaser.Scene {
 
         // 8-Bit AquaMouse Transparent Slide Tube (40x40)
         g.fillStyle(0x000000, 1);
-        g.fillRect(0, 0, 40, 40);
-        g.fillStyle(0x58B8F8, 0.7);
+        g.fillRect(0, 0, 40, 2); // Top border
+        g.fillRect(0, 38, 40, 2); // Bottom border
+        g.fillRect(0, 0, 2, 40); // Left border
+        g.fillRect(38, 0, 2, 40); // Right border
+        g.fillStyle(0x58B8F8, 0.5); // More transparent
         g.fillRect(2, 2, 36, 36);
         g.fillStyle(0xFFFFFF, 0.75);
         g.fillRect(4, 4, 32, 2);
@@ -2589,34 +2592,19 @@ class GameScene extends Phaser.Scene {
 
         this.slideCurve = slideCurve;
         // Draw the lift tube visually
-        let liftGraphics = this.add.graphics();
-        liftGraphics.lineStyle(40, 0xFFFFFF, 0.5); 
-        liftGraphics.beginPath();
-        liftGraphics.moveTo(1200, 750);
-        liftGraphics.lineTo(750, 360);
-        liftGraphics.strokePath();
-        liftGraphics.lineStyle(2, 0x0000FF, 1);
-        liftGraphics.beginPath();
-        liftGraphics.moveTo(1220, 740);
-        liftGraphics.lineTo(770, 350);
-        liftGraphics.moveTo(1180, 760);
-        liftGraphics.lineTo(730, 370);
-        liftGraphics.strokePath();
+        let liftCurve = new Phaser.Curves.Line([1200, 750, 750, 360]);
+        let liftPoints = liftCurve.getSpacedPoints(40);
+        liftPoints.forEach((p) => {
+            let segment = this.add.sprite(p.x, p.y, 'slide_tube');
+            segment.setDepth(p.y + 1);
+        });
 
         // Draw the looping slide visually
-        let slideGraphics = this.add.graphics();
-        // Main transparent blue tube
-        slideGraphics.lineStyle(40, 0x87CEFA, 0.6); 
-        slideCurve.draw(slideGraphics, 64);
-        
-        // Orange stripe
-        slideGraphics.lineStyle(4, 0xFF4500, 0.8);
-        slideCurve.draw(slideGraphics, 64);
-        
-        // Yellow stripe (offset slightly by drawing the same curve with a slight translation? Or just keep one stripe)
-        // Let's just have a thick orange/yellow core
-        slideGraphics.lineStyle(2, 0xFFD700, 1);
-        slideCurve.draw(slideGraphics, 64);
+        let slidePoints = slideCurve.getSpacedPoints(150);
+        slidePoints.forEach((p) => {
+            let segment = this.add.sprite(p.x, p.y, 'slide_tube');
+            segment.setDepth(p.y + 1);
+        });
 
         // --- TOP-MOUNTED CAPCOM RETRO HUD ---
         this.score = 2500;
@@ -2862,6 +2850,9 @@ class GameScene extends Phaser.Scene {
                     // Keep player seated on raft during lift
                     this.player.x = this.raft.x;
                     this.player.y = this.raft.y - 24;
+                    // Dynamic depth ordering to sit inside the lift tube
+                    this.raft.setDepth(this.raft.y);
+                    this.player.setDepth(this.raft.y);
                 },
                 onComplete: () => {
                     // 2. Slide Tween
@@ -2877,6 +2868,9 @@ class GameScene extends Phaser.Scene {
                             this.raft.y = p.y;
                             this.player.x = p.x;
                             this.player.y = p.y - 24; // Seated on raft
+                            // Dynamic depth ordering to sit inside the slide tube
+                            this.raft.setDepth(p.y);
+                            this.player.setDepth(p.y);
                         },
                         onComplete: () => {
                             // 3. Splashdown & Hop Out into Deck 13 Pool
