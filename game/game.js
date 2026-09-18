@@ -2617,6 +2617,23 @@ class GameScene extends Phaser.Scene {
         mountainG.fillRoundedRect(700, 150, 100, 100, 20); // Peak
         this.add.text(750, 220, 'VILLAIN\nMOUNTAIN', { fontSize: '9px', fill: '#FF4444', fontFamily: '"Press Start 2P", monospace', align: 'center', stroke: '#000000', strokeThickness: 2 }).setOrigin(0.5).setDepth(366);
 
+        // Toxic Green Smoke Emitter
+        let pg = this.make.graphics({x: 0, y: 0, add: false});
+        pg.fillStyle(0xFFFFFF, 1);
+        pg.fillRect(0, 0, 8, 8);
+        pg.generateTexture('smoke_particle', 8, 8);
+        
+        let smokeEmitter = this.add.particles(750, 160, 'smoke_particle', {
+            speed: { min: 10, max: 40 },
+            angle: { min: 250, max: 290 },
+            scale: { start: 1, end: 3 },
+            alpha: { start: 0.8, end: 0 },
+            lifespan: 3000,
+            frequency: 300,
+            tint: [ 0x33FF33, 0x00AA00, 0x88FF33 ], // toxic green variations
+            blendMode: 'NORMAL'
+        });
+        smokeEmitter.setDepth(364); // Rising from behind the peak
         // Brightly colored exit flume at Deck 12 Splashdown
         let flumeG = this.add.graphics().setDepth(1001);
         flumeG.fillStyle(0xFF5500, 1); // Bright orange flume
@@ -2913,42 +2930,71 @@ class GameScene extends Phaser.Scene {
                     this.player.setDepth(this.raft.y);
                 },
                 onComplete: () => {
-                    // 2. Slide Tween
-                    let pathObj = { t: 0 };
-                    this.tweens.add({
-                        targets: pathObj,
-                        t: 1,
-                        ease: 'Sine.easeInOut',
-                        duration: 4000,
-                        onUpdate: () => {
-                            let p = this.slideCurve.getPoint(pathObj.t);
-                            this.raft.x = p.x;
-                            this.raft.y = p.y;
-                            this.player.x = p.x;
-                            this.player.y = p.y - 24; // Seated on raft
-                            // Dynamic depth ordering to sit inside the slide tube (elevated over Deck 13 railing)
-                            let d = Math.max(p.y, 814); 
-                            this.raft.setDepth(d);
-                            this.player.setDepth(d);
-                        },
-                        onComplete: () => {
-                            // 3. Splashdown & Hop Out into Deck 12 Pool
-                            this.ridingRaft = false;
-                            this.score += 1500;
-                            this.currentDeck = 'deck12';
-                            this.groundY = 975;
-                            this.jumpZ = 12;
-                            this.jumpV = 200;
-                            this.isJumping = true;
-                            if (this.player && this.player.body) {
-                                this.player.body.enable = true;
-                                this.player.body.allowGravity = false;
-                                this.player.setVelocity(-120, 0);
-                                this.player.body.reset(630, 975 - (this.player.body.height / 2));
+                    // Show Villain Dialogue Box inside Villain Mountain
+                    let quotes = [
+                        "FOOLS! PREPARE FOR\nTHE DROP...",
+                        "YOU THINK THIS IS\nA JOKE? BWAHAHA!",
+                        "THE UNDERWORLD\nAWAITS YOU...",
+                        "MWAHAHAHA!\nHOLD ON TIGHT!"
+                    ];
+                    let quote = quotes[Math.floor(Math.random() * quotes.length)];
+                    
+                    let dialogBg = this.add.graphics().setDepth(4000).setScrollFactor(0);
+                    dialogBg.fillStyle(0x000000, 0.8);
+                    dialogBg.lineStyle(2, 0x33FF33, 1);
+                    dialogBg.fillRoundedRect(this.cameras.main.width/2 - 150, 60, 300, 60, 8);
+                    dialogBg.strokeRoundedRect(this.cameras.main.width/2 - 150, 60, 300, 60, 8);
+                    
+                    let dialogText = this.add.text(this.cameras.main.width/2, 90, quote, {
+                        fontFamily: '"Press Start 2P", monospace',
+                        fontSize: '10px',
+                        fill: '#33FF33',
+                        align: 'center',
+                        lineSpacing: 8
+                    }).setOrigin(0.5).setDepth(4001).setScrollFactor(0);
+
+                    // Pause inside the mountain for 2.5 seconds
+                    this.time.delayedCall(2500, () => {
+                        dialogBg.destroy();
+                        dialogText.destroy();
+                        
+                        // 2. Slide Tween
+                        let pathObj = { t: 0 };
+                        this.tweens.add({
+                            targets: pathObj,
+                            t: 1,
+                            ease: 'Sine.easeInOut',
+                            duration: 4000,
+                            onUpdate: () => {
+                                let p = this.slideCurve.getPoint(pathObj.t);
+                                this.raft.x = p.x;
+                                this.raft.y = p.y;
+                                this.player.x = p.x;
+                                this.player.y = p.y - 24; // Seated on raft
+                                // Dynamic depth ordering to sit inside the slide tube (elevated over Deck 13 railing)
+                                let d = Math.max(p.y, 814); 
+                                this.raft.setDepth(d);
+                                this.player.setDepth(d);
+                            },
+                            onComplete: () => {
+                                // 3. Splashdown & Hop Out into Deck 12 Pool
+                                this.ridingRaft = false;
+                                this.score += 1500;
+                                this.currentDeck = 'deck12';
+                                this.groundY = 975;
+                                this.jumpZ = 12;
+                                this.jumpV = 200;
+                                this.isJumping = true;
+                                if (this.player && this.player.body) {
+                                    this.player.body.enable = true;
+                                    this.player.body.allowGravity = false;
+                                    this.player.setVelocity(-120, 0);
+                                    this.player.body.reset(630, 975 - (this.player.body.height / 2));
+                                }
+                                this.raft.x = 1200;
+                                this.raft.y = 730;
                             }
-                            this.raft.x = 1200;
-                            this.raft.y = 730;
-                        }
+                        });
                     });
                 }
             });
