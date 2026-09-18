@@ -2491,9 +2491,7 @@ class GameScene extends Phaser.Scene {
         this.add.text(340, 675, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
         this.add.text(1170, 675, 'AQUAMOUSE ENTRANCE', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
-        
-        doors.create(2240, 670, 'door');
-        this.add.text(2170, 625, 'CURRENTS BAR', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+
 
         // AquaMouse Raft Lift
         this.raft = this.physics.add.sprite(1200, 730, 'raft');
