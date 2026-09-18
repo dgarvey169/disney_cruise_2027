@@ -2521,18 +2521,15 @@ class GameScene extends Phaser.Scene {
         this.add.tileSprite(700, 320, 100, 20, 'deck_3d').setOrigin(0, 0).setDepth(1);
         this.add.text(670, 275, 'AQUAMOUSE LAUNCH', { fontSize: '9px', fill: '#FFD700', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
-        // Midship Elevators & Interaction Zones
+        // Midship Elevators & Interaction Zones (Decks 11 & 12)
         this.elevators = this.physics.add.staticGroup();
-        // Deck 11, 12, 13 Visuals
-        this.elevators.create(1250, 1190, 'elevator_door').setDepth(1190);
-        this.elevators.create(1250, 910, 'elevator_door').setDepth(910);
-        this.elevators.create(1250, 670, 'elevator_door').setDepth(670);
+        this.elevators.create(1250, 1190, 'elevator_door').setDepth(1190); // Deck 11
+        this.elevators.create(1250, 910, 'elevator_door').setDepth(910);   // Deck 12
         
         // Interaction Zones
         this.elevatorZones = this.physics.add.staticGroup();
         this.elevatorZones.add(this.add.zone(1250, 1255, 60, 60)); // Deck 11
         this.elevatorZones.add(this.add.zone(1250, 975, 60, 60));  // Deck 12
-        this.elevatorZones.add(this.add.zone(1250, 735, 60, 60));  // Deck 13
         // Enable physics on zones
         this.elevatorZones.getChildren().forEach(z => this.physics.add.existing(z, true));
 
@@ -4774,25 +4771,24 @@ class ElevatorMenuScene extends Phaser.Scene {
         const cy = this.scale.height / 2;
 
         this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x000000, 0.7);
-        this.add.rectangle(cx, cy, 360, 320, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
+        this.add.rectangle(cx, cy, 360, 270, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
         
-        this.add.text(cx, cy - 120, 'MIDSHIP ELEVATOR', {
+        this.add.text(cx, cy - 100, 'MIDSHIP ELEVATOR', {
             fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.add.text(cx, cy - 95, 'SELECT DESTINATION', {
+        this.add.text(cx, cy - 75, 'SELECT DESTINATION', {
             fontSize: '9px', fill: '#A0D0FF', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
         const floors = [
-            { label: 'Deck 13 (AquaMouse)', y: 735 },
             { label: 'Deck 12 (Hero Zone)', y: 975 },
             { label: 'Deck 11 (Pools)', y: 1255 }
         ];
 
         this.menuItems = [];
-        let startY = cy - 50;
+        let startY = cy - 35;
 
         floors.forEach((floor, index) => {
             let btn = this.add.text(cx, startY + (index * 42), floor.label, {
@@ -4828,7 +4824,7 @@ class ElevatorMenuScene extends Phaser.Scene {
         cancelBtn.on('pointerdown', () => cancelItem.action());
 
         // Navigation hint
-        this.add.text(cx, cy + 130, '▲/▼: SELECT   ENTER: TRAVEL', {
+        this.add.text(cx, cy + 105, '▲/▼: SELECT   ENTER: TRAVEL', {
             fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
@@ -4840,13 +4836,12 @@ class ElevatorMenuScene extends Phaser.Scene {
 
         this.arrowTween = null;
 
-        // Determine default selected floor (select current floor or Deck 13)
+        // Determine default selected floor (select current floor or Deck 12)
         let defaultIdx = 0;
         if (this.gameScene && this.gameScene.groundY) {
             let gy = this.gameScene.groundY;
-            if (gy > 1120) defaultIdx = 2;      // Deck 11
-            else if (gy > 850) defaultIdx = 1;  // Deck 12
-            else defaultIdx = 0;               // Deck 13
+            if (gy > 1120) defaultIdx = 1;      // Deck 11
+            else defaultIdx = 0;                // Deck 12
         }
 
         this.setSelectedIndex(defaultIdx);
