@@ -7517,13 +7517,18 @@ class EdgeClubScene extends Phaser.Scene {
         if (this.heldSmoothie) return;
         retroArcadeAudio.playPowerup();
         this.smoothieBoostTimer = 10000;
-        this.heldSmoothie = this.add.image(this.player.x, this.player.y - 40, 'edge_smoothie').setDepth(this.player.depth + 1);
+        const handOffsetX = this.player.flipX ? -11 : 11;
+        const handOffsetY = 3;
+        this.heldSmoothie = this.add.image(this.player.x + handOffsetX, this.player.y + handOffsetY, 'edge_smoothie')
+            .setScale(0.75)
+            .setFlipX(this.player.flipX)
+            .setDepth(this.player.depth + 1);
 
         // Flash screen with pastel aura
         this.cameras.main.flash(200, 0, 229, 255);
 
         // Floating message
-        let msg = this.add.text(this.player.x, this.player.y - 60, '+SPEED BOOST!', {
+        let msg = this.add.text(this.player.x, this.player.y - 50, '+SPEED BOOST!', {
             fontSize: '9px', fill: '#00E5FF', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5).setDepth(2500);
@@ -7639,11 +7644,6 @@ class EdgeClubScene extends Phaser.Scene {
             this.smoothieBoostTimer -= delta;
             this.playerSpeed = 240;
 
-            if (this.heldSmoothie) {
-                this.heldSmoothie.setPosition(this.player.x, this.player.y - 36);
-                this.heldSmoothie.setDepth(this.player.depth + 1);
-            }
-
             // Rainbow trail sparkles
             this.sparkleTimer += delta;
             if (this.sparkleTimer > 120) {
@@ -7741,6 +7741,15 @@ class EdgeClubScene extends Phaser.Scene {
 
         this.playerShadow.setPosition(this.player.x, this.groundY + 16);
         this.playerShadow.setDepth(Math.round(this.groundY) - 1);
+
+        // Update held smoothie position in Riley's hand
+        if (this.heldSmoothie) {
+            const handOffsetX = this.player.flipX ? -11 : 11;
+            const handOffsetY = 3;
+            this.heldSmoothie.setPosition(this.player.x + handOffsetX, this.player.y + handOffsetY);
+            this.heldSmoothie.setFlipX(this.player.flipX);
+            this.heldSmoothie.setDepth(this.player.depth + 1);
+        }
 
         // Player Animations
         if (this.isJumping) {
