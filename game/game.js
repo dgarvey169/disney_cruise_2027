@@ -2665,10 +2665,10 @@ function generateEdgeAndArcadeTextures(scene) {
 
     // 20. Power-Ups (P, S, B, STAR) (18x18)
     const pCapsules = [
-        { key: 'shooter_powerup_P', border: 0xffd700, bg: 0x554400, txt: 'P', col: 0xffd700 },
-        { key: 'shooter_powerup_S', border: 0x00e5ff, bg: 0x004455, txt: 'S', col: 0x00e5ff },
-        { key: 'shooter_powerup_B', border: 0xff5500, bg: 0x552200, txt: 'B', col: 0xff5500 },
-        { key: 'shooter_powerup_STAR', border: 0xff2a85, bg: 0x551133, txt: '★', col: 0xff2a85 }
+        { key: 'shooter_powerup_P', border: 0x00e5ff, bg: 0x003355, txt: 'P', col: 0x00e5ff },
+        { key: 'shooter_powerup_S', border: 0x00ff66, bg: 0x004422, txt: 'S', col: 0x00ff66 },
+        { key: 'shooter_powerup_B', border: 0xff7700, bg: 0x552200, txt: 'B', col: 0xff7700 },
+        { key: 'shooter_powerup_STAR', border: 0xffd700, bg: 0x554400, txt: '★', col: 0xffd700 }
     ];
     pCapsules.forEach(p => {
         g.fillStyle(0x000000, 1);
@@ -2697,6 +2697,7 @@ function generateEdgeAndArcadeTextures(scene) {
             g.fillRect(9, 8, 2, 5);
             g.fillRect(5, 12, 6, 2);
         } else {
+            // Star [★] Points Badge
             g.fillRect(8, 4, 2, 10);
             g.fillRect(4, 8, 10, 2);
             g.fillRect(6, 6, 6, 6);
@@ -2715,12 +2716,25 @@ function generateEdgeAndArcadeTextures(scene) {
     g.generateTexture('shooter_shield', 46, 46);
     g.clear();
 
+    // 21b. Invulnerability Forcefield Aura (46x46)
+    g.lineStyle(2, 0xffd700, 1);
+    g.strokeCircle(23, 23, 21);
+    g.lineStyle(1, 0x00e5ff, 0.9);
+    g.strokeCircle(23, 23, 18);
+    g.fillStyle(0xffd700, 0.22);
+    g.fillCircle(23, 23, 20);
+    g.generateTexture('shooter_invuln_shield', 46, 46);
+    g.clear();
+
     // 22. Bullets
-    g.fillStyle(0xff3d00, 1);
-    g.fillCircle(3, 3, 3);
-    g.fillStyle(0xffff00, 1);
-    g.fillCircle(3, 3, 1.5);
-    g.generateTexture('shooter_bullet_enemy', 6, 6);
+    // Downward pointed red-and-white laser missile dart (8x14) - distinctly hostile, cannot be mistaken for a powerup!
+    g.fillStyle(0xff0022, 1);
+    g.fillTriangle(4, 14, 0, 0, 8, 0);
+    g.fillStyle(0xff7700, 1);
+    g.fillTriangle(4, 12, 1, 1, 7, 1);
+    g.fillStyle(0xffffff, 1);
+    g.fillTriangle(4, 8, 2, 2, 6, 2);
+    g.generateTexture('shooter_bullet_enemy', 8, 14);
     g.clear();
 
     g.fillStyle(0xaa00ff, 1);
@@ -7995,6 +8009,7 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         this.thruster = this.add.image(this.player.x, this.player.y + 16, 'shooter_player_thruster').setDepth(19);
         this.shieldSprite = this.add.image(this.player.x, this.player.y, 'shooter_shield').setDepth(21).setVisible(false);
+        this.invulnShield = this.add.image(this.player.x, this.player.y, 'shooter_invuln_shield').setDepth(22).setVisible(false);
 
         // 6. Arcade Top HUD
         this.highScore = getEdgeHighScores()[0].score || 12500;
@@ -8390,12 +8405,12 @@ class ArcadeShooterScene extends Phaser.Scene {
             fontSize: '6px', fill: '#FF9100', fontFamily: '"Press Start 2P"'
         }).setOrigin(0.5).setDepth(42);
 
-        this.add.text(cx, cpoY + 52, 'ITEMS: [P]GUN [S]SHIELD [B]BOMB', {
+        this.add.text(cx, cpoY + 52, 'ITEMS: [P]GUN [S]SHIELD [B]BOMB [★]PTS', {
             fontSize: '5px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
         }).setOrigin(0.5).setDepth(42);
 
         if (cpoH >= 110) {
-            this.add.text(cx, cpoY + 64, 'MOBILE: TOUCH DRAG TO FLY + BUTTONS', {
+            this.add.text(cx, cpoY + 64, 'DODGE RED BULLETS! TOUCH DRAG / ARROWS', {
                 fontSize: '5px', fill: '#A0D0FF', fontFamily: '"Press Start 2P"'
             }).setOrigin(0.5).setDepth(42);
         }
@@ -8494,8 +8509,8 @@ class ArcadeShooterScene extends Phaser.Scene {
             fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
         }).setOrigin(0.5);
 
-        let t3 = this.add.text(0, -2, '• MOVE: ARROWS / WASD / TOUCH DRAG\n• FIRE: HOLD [SPACE] OR [Z] (AUTO)\n• BOMB: [X] OR [B] BLAST SCREEN', {
-            fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', align: 'left', lineSpacing: 5
+        let t3 = this.add.text(0, -2, '• MOVE: ARROWS / WASD / TOUCH DRAG\n• FIRE: HOLD [SPACE] OR [Z] (AUTO)\n• BOMB: [X] OR [B] BLAST SCREEN\n• DODGE RED BULLETS! CATCH [P][S][B][★]', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', align: 'left', lineSpacing: 4
         }).setOrigin(0.5);
 
         let t4 = this.add.text(0, 46, '>>> BLAST OFF! <<<', {
@@ -8910,26 +8925,29 @@ class ArcadeShooterScene extends Phaser.Scene {
         if (this.lives <= 0) {
             this.triggerGameOver();
         } else {
-            // Invulnerability Respawn at safe bottom center
-            const cx = this.playX + this.playW / 2;
-            const cy = this.playY + this.playH - 50;
-
+            // Keep ship in place under player control - never teleport or hide the ship!
             this.tweens.killTweensOf(this.player);
             this.tweens.killTweensOf(this.thruster);
 
-            this.player.setPosition(cx, cy);
+            this.player.setAlpha(1.0);
             this.player.setVisible(true);
-            this.thruster.setPosition(cx, cy + 16);
+            this.thruster.setAlpha(1.0);
             this.thruster.setVisible(true);
 
-            // Destroy enemy bullets immediately surrounding the respawn zone
+            // Destroy enemy bullets immediately surrounding the player in 110px radius
+            const px = this.player.x;
+            const py = this.player.y;
             this.enemyBullets.getChildren().forEach(b => {
-                if (Phaser.Math.Distance.Between(b.x, b.y, cx, cy) < 90) {
+                if (Phaser.Math.Distance.Between(b.x, b.y, px, py) < 110) {
                     b.destroy();
                 }
             });
 
+            // Activate invulnerability forcefield aura
             this.invulnerableTimer = 2400;
+            if (this.invulnShield) {
+                this.invulnShield.setPosition(px, py).setVisible(true).setScale(1.0);
+            }
         }
     }
 
@@ -8982,8 +9000,10 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.gameState = 'gameover';
         retroArcadeAudio.playGameOver();
         this.player.setVisible(false);
+        this.player.clearTint();
         this.thruster.setVisible(false);
         this.shieldSprite.setVisible(false);
+        if (this.invulnShield) this.invulnShield.setVisible(false);
 
         // Save High Score
         const updatedScores = saveEdgeHighScore(this.score, 'RILEY');
@@ -9048,6 +9068,8 @@ class ArcadeShooterScene extends Phaser.Scene {
         if (this.physics && this.physics.world && this.physics.world.gravity) {
             this.physics.world.gravity.y = 1000;
         }
+        if (this.invulnShield) this.invulnShield.setVisible(false);
+        if (this.player) this.player.clearTint();
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
         }
@@ -9108,17 +9130,30 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.thruster.setScale(Phaser.Math.Between(8, 12) / 10);
         this.shieldSprite.setPosition(this.player.x, this.player.y);
 
-        // Invulnerability Blinking Logic (solid 1.0 vs 0.35 semi-transparent; ship never disappears)
+        // Invulnerability Forcefield & Golden Sparkle Surge (Ship is 100% visible, never transparent or hidden!)
         if (this.invulnerableTimer > 0) {
             this.invulnerableTimer -= delta;
-            const isBlink = Math.floor(this.invulnerableTimer / 80) % 2 === 0;
-            const alphaVal = isBlink ? 0.35 : 1.0;
-            this.player.setAlpha(alphaVal);
-            this.thruster.setAlpha(alphaVal);
+            this.player.setAlpha(1.0);
+            this.thruster.setAlpha(1.0);
+
+            // Sparkling golden energy surge across hull
+            const isTint = Math.floor(this.invulnerableTimer / 70) % 2 === 0;
+            this.player.setTint(isTint ? 0xFFFFAA : 0xFFD700);
+
+            // Pulse glowing invulnerability forcefield around the ship
+            if (this.invulnShield) {
+                this.invulnShield.setPosition(this.player.x, this.player.y).setVisible(true);
+                const pulse = 1.0 + Math.sin(time * 0.015) * 0.12;
+                this.invulnShield.setScale(pulse);
+                this.invulnShield.setAlpha(0.75 + Math.sin(time * 0.02) * 0.25);
+            }
+
             if (this.invulnerableTimer <= 0) {
                 this.invulnerableTimer = 0;
-                this.player.setAlpha(1.0);
-                this.thruster.setAlpha(1.0);
+                this.player.clearTint();
+                if (this.invulnShield) {
+                    this.invulnShield.setVisible(false);
+                }
             }
         }
 
