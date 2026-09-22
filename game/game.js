@@ -7896,6 +7896,8 @@ class ArcadeShooterScene extends Phaser.Scene {
 
     create() {
         retroArcadeAudio.init();
+        // Disable gravity in arcade space shooter scene
+        this.physics.world.gravity.y = 0;
 
         const W = this.scale.width;
         const H = this.scale.height;
@@ -7922,7 +7924,7 @@ class ArcadeShooterScene extends Phaser.Scene {
         const monitorY = this.cabY + this.marqueeH + 10;
         const monitorH = (this.cabY + this.cabH - this.cpoH - 10) - monitorY;
         const maxMonitorW = this.cabW - ((W >= 768) ? 60 : 20);
-        const monitorW = Math.min(maxMonitorW, Math.round(monitorH * 0.96));
+        const monitorW = Math.min(maxMonitorW, Math.round(monitorH * 1.05));
 
         this.playW = monitorW;
         this.playH = monitorH;
@@ -7956,18 +7958,34 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.scanlineOverlay = this.add.tileSprite(cx, this.playY + this.playH / 2, this.playW, this.playH, 'shooter_scanlines')
             .setDepth(25).setAlpha(0.2);
 
-        // 4. Physics Groups (Configured with createCallback to guarantee entity visibility over CRT screen depth 2)
+        // 4. Physics Groups (Zero gravity & explicit depth hierarchy)
         this.playerLasers = this.physics.add.group({
-            createCallback: (item) => item.setDepth(15)
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(15);
+                if (item.body) item.body.allowGravity = false;
+            }
         });
         this.enemies = this.physics.add.group({
-            createCallback: (item) => item.setDepth(10)
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(10);
+                if (item.body) item.body.allowGravity = false;
+            }
         });
         this.enemyBullets = this.physics.add.group({
-            createCallback: (item) => item.setDepth(12)
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(12);
+                if (item.body) item.body.allowGravity = false;
+            }
         });
         this.powerups = this.physics.add.group({
-            createCallback: (item) => item.setDepth(14)
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(14);
+                if (item.body) item.body.allowGravity = false;
+            }
         });
 
         // 5. Player Starfighter
@@ -8129,6 +8147,9 @@ class ArcadeShooterScene extends Phaser.Scene {
         };
 
         this.events.once('shutdown', () => {
+            if (this.physics && this.physics.world && this.physics.world.gravity) {
+                this.physics.world.gravity.y = 1000;
+            }
             if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
@@ -8535,26 +8556,35 @@ class ArcadeShooterScene extends Phaser.Scene {
             // Dual parallel lasers
             let l1 = this.playerLasers.create(px - 7, py, 'shooter_laser_player').setDepth(15);
             let l2 = this.playerLasers.create(px + 7, py, 'shooter_laser_player').setDepth(15);
-            l1.setVelocityY(-480);
-            l2.setVelocityY(-480);
+            if (l1.body) l1.body.allowGravity = false;
+            if (l2.body) l2.body.allowGravity = false;
+            l1.setVelocityY(-560);
+            l2.setVelocityY(-560);
         } else if (this.weaponLevel === 2) {
             // Triple spread laser
             let l1 = this.playerLasers.create(px, py, 'shooter_laser_player').setDepth(15);
             let l2 = this.playerLasers.create(px - 9, py + 2, 'shooter_laser_spread').setDepth(15);
             let l3 = this.playerLasers.create(px + 9, py + 2, 'shooter_laser_spread').setDepth(15);
-            l1.setVelocity(0, -480);
-            l2.setVelocity(-140, -440);
-            l3.setVelocity(140, -440);
+            if (l1.body) l1.body.allowGravity = false;
+            if (l2.body) l2.body.allowGravity = false;
+            if (l3.body) l3.body.allowGravity = false;
+            l1.setVelocity(0, -560);
+            l2.setVelocity(-140, -500);
+            l3.setVelocity(140, -500);
         } else {
             // Quad heavy plasma
             let l1 = this.playerLasers.create(px - 6, py, 'shooter_laser_player').setDepth(15);
             let l2 = this.playerLasers.create(px + 6, py, 'shooter_laser_player').setDepth(15);
             let l3 = this.playerLasers.create(px - 14, py + 4, 'shooter_laser_spread').setDepth(15);
             let l4 = this.playerLasers.create(px + 14, py + 4, 'shooter_laser_spread').setDepth(15);
-            l1.setVelocity(0, -500);
-            l2.setVelocity(0, -500);
-            l3.setVelocity(-190, -430);
-            l4.setVelocity(190, -430);
+            if (l1.body) l1.body.allowGravity = false;
+            if (l2.body) l2.body.allowGravity = false;
+            if (l3.body) l3.body.allowGravity = false;
+            if (l4.body) l4.body.allowGravity = false;
+            l1.setVelocity(0, -580);
+            l2.setVelocity(0, -580);
+            l3.setVelocity(-190, -480);
+            l4.setVelocity(190, -480);
         }
     }
 
@@ -8866,6 +8896,7 @@ class ArcadeShooterScene extends Phaser.Scene {
             if (this.shieldHits <= 0) {
                 this.shieldSprite.setVisible(false);
             }
+            this.invulnerableTimer = 600; // Brief grace period so multi-bullet salvo doesn't instantly pierce life
             return;
         }
 
@@ -8879,20 +8910,26 @@ class ArcadeShooterScene extends Phaser.Scene {
         if (this.lives <= 0) {
             this.triggerGameOver();
         } else {
-            // Invulnerability Respawn
-            this.invulnerableTimer = 2200;
-            this.player.setAlpha(0.4);
-            this.tweens.add({
-                targets: this.player,
-                alpha: 0.8,
-                duration: 150,
-                yoyo: true,
-                repeat: 7,
-                onComplete: () => {
-                    this.player.setAlpha(1);
-                    this.invulnerableTimer = 0;
+            // Invulnerability Respawn at safe bottom center
+            const cx = this.playX + this.playW / 2;
+            const cy = this.playY + this.playH - 50;
+
+            this.tweens.killTweensOf(this.player);
+            this.tweens.killTweensOf(this.thruster);
+
+            this.player.setPosition(cx, cy);
+            this.player.setVisible(true);
+            this.thruster.setPosition(cx, cy + 16);
+            this.thruster.setVisible(true);
+
+            // Destroy enemy bullets immediately surrounding the respawn zone
+            this.enemyBullets.getChildren().forEach(b => {
+                if (Phaser.Math.Distance.Between(b.x, b.y, cx, cy) < 90) {
+                    b.destroy();
                 }
             });
+
+            this.invulnerableTimer = 2400;
         }
     }
 
@@ -9008,6 +9045,9 @@ class ArcadeShooterScene extends Phaser.Scene {
     }
 
     exitCabinet() {
+        if (this.physics && this.physics.world && this.physics.world.gravity) {
+            this.physics.world.gravity.y = 1000;
+        }
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
         }
@@ -9068,14 +9108,28 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.thruster.setScale(Phaser.Math.Between(8, 12) / 10);
         this.shieldSprite.setPosition(this.player.x, this.player.y);
 
+        // Invulnerability Blinking Logic (solid 1.0 vs 0.35 semi-transparent; ship never disappears)
+        if (this.invulnerableTimer > 0) {
+            this.invulnerableTimer -= delta;
+            const isBlink = Math.floor(this.invulnerableTimer / 80) % 2 === 0;
+            const alphaVal = isBlink ? 0.35 : 1.0;
+            this.player.setAlpha(alphaVal);
+            this.thruster.setAlpha(alphaVal);
+            if (this.invulnerableTimer <= 0) {
+                this.invulnerableTimer = 0;
+                this.player.setAlpha(1.0);
+                this.thruster.setAlpha(1.0);
+            }
+        }
+
         // Continuous Fire while Space/Z/Fire Button held
         if (this.cursors.space.isDown || this.keys.space.isDown || this.keys.z.isDown || this.touchFireActive) {
             this.fireLaser();
         }
 
-        // Clean off-screen player lasers
+        // Clean off-screen player lasers (all the way to the top of screen)
         this.playerLasers.getChildren().forEach(laser => {
-            if (laser.y < this.playY || laser.x < this.playX || laser.x > this.playX + this.playW) {
+            if (laser.y < this.playY - 16 || laser.y > this.playY + this.playH + 16 || laser.x < this.playX - 16 || laser.x > this.playX + this.playW + 16) {
                 laser.destroy();
             }
         });
