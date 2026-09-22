@@ -8260,8 +8260,12 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         // C. Molded CRT Monitor Bezel & Curved Corners (Depth 30)
         let mBezel = this.add.graphics().setDepth(30);
+        // Outer dark frame around the monitor (top, bottom, left, right bars)
         mBezel.fillStyle(0x0A0C16, 1);
-        mBezel.fillRect(this.playX - 10, this.playY - 10, this.playW + 20, this.playH + 20);
+        mBezel.fillRect(this.playX - 12, this.playY - 12, this.playW + 24, 12); // top bar
+        mBezel.fillRect(this.playX - 12, this.playY + this.playH, this.playW + 24, 12); // bottom bar
+        mBezel.fillRect(this.playX - 12, this.playY, 12, this.playH); // left bar
+        mBezel.fillRect(this.playX + this.playW, this.playY, 12, this.playH); // right bar
 
         mBezel.lineStyle(2, 0x00E5FF, 1);
         mBezel.strokeRect(this.playX - 4, this.playY - 4, this.playW + 8, this.playH + 8);
