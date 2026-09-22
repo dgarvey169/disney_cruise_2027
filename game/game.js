@@ -2766,6 +2766,14 @@ function generateEdgeAndArcadeTextures(scene) {
     g.generateTexture('shooter_explosion_3', 32, 32);
     g.clear();
 
+    // 24. CRT Monitor Scanlines (4x4 tile)
+    g.fillStyle(0x000000, 0);
+    g.fillRect(0, 0, 4, 2);
+    g.fillStyle(0x000000, 0.45);
+    g.fillRect(0, 2, 4, 2);
+    g.generateTexture('shooter_scanlines', 4, 4);
+    g.clear();
+
     g.destroy();
 }
 
@@ -7894,39 +7902,49 @@ class ArcadeShooterScene extends Phaser.Scene {
         const cx = W / 2;
         const cy = H / 2;
 
-        // CRT Playfield Dimensions
-        this.playW = Math.min(420, W - 24);
-        this.playH = Math.min(500, H - 24);
+        // 1. Responsive Arcade Cabinet Dimensions & Framing
+        if (W >= 768 && H >= 600) {
+            this.cabW = Math.min(680, W - 20);
+            this.cabH = Math.min(H - 16, 860);
+            this.marqueeH = Math.min(62, Math.max(48, Math.round(this.cabH * 0.08)));
+            this.cpoH = Math.min(126, Math.max(96, Math.round(this.cabH * 0.17)));
+        } else {
+            this.cabW = W - 10;
+            this.cabH = H - 10;
+            this.marqueeH = Math.max(36, Math.min(48, Math.round(this.cabH * 0.08)));
+            this.cpoH = Math.max(76, Math.min(105, Math.round(this.cabH * 0.17)));
+        }
+
+        this.cabX = cx - this.cabW / 2;
+        this.cabY = cy - this.cabH / 2;
+
+        // Recessed CRT Playfield inside the Cabinet
+        const monitorY = this.cabY + this.marqueeH + 10;
+        const monitorH = (this.cabY + this.cabH - this.cpoH - 10) - monitorY;
+        const maxMonitorW = this.cabW - ((W >= 768) ? 60 : 20);
+        const monitorW = Math.min(maxMonitorW, Math.round(monitorH * 0.96));
+
+        this.playW = monitorW;
+        this.playH = monitorH;
         this.playX = cx - this.playW / 2;
-        this.playY = cy - this.playH / 2;
+        this.playY = monitorY;
+        this.cpoY = this.cabY + this.cabH - this.cpoH - 6;
 
-        // 1. Arcade Cabinet Surround & Bezel
-        this.add.rectangle(cx, cy, W, H, 0x05050C).setDepth(0);
+        // Outer ambient letterbox
+        this.add.rectangle(cx, cy, W, H, 0x030308).setDepth(0);
 
-        // Cabinet Frame Graphics
-        let bezel = this.add.graphics().setDepth(1);
-        bezel.fillStyle(0x0B0C18, 1);
-        bezel.fillRect(this.playX - 12, this.playY - 32, this.playW + 24, this.playH + 44);
-        bezel.lineStyle(3, 0xFFD700, 1);
-        bezel.strokeRect(this.playX - 2, this.playY - 2, this.playW + 4, this.playH + 4);
-        bezel.lineStyle(1, 0x00E5FF, 1);
-        bezel.strokeRect(this.playX, this.playY, this.playW, this.playH);
+        // 2. Render Authentic Upright Arcade Cabinet Kit (Chassis, Wings, Marquee, Bezel)
+        this.renderArcadeCabinetChassis();
 
-        // Top Cabinet Marquee
-        this.add.text(cx, this.playY - 18, '★ GALAXY DESTINY ★', {
-            fontSize: '10px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
-            stroke: '#000000', strokeThickness: 2
-        }).setOrigin(0.5).setDepth(3);
-
-        // CRT Screen Area Background
-        this.add.rectangle(cx, cy, this.playW, this.playH, 0x02040D).setDepth(2);
+        // 3. CRT Monitor Screen Background
+        this.add.rectangle(cx, this.playY + this.playH / 2, this.playW, this.playH, 0x02040D).setDepth(2);
 
         // Parallax Stars
         this.stars = [];
-        for (let i = 0; i < 45; i++) {
+        for (let i = 0; i < 50; i++) {
             let sx = this.playX + Phaser.Math.Between(4, this.playW - 4);
             let sy = this.playY + Phaser.Math.Between(4, this.playH - 4);
-            let speed = (i % 2 === 0) ? 45 : 110;
+            let speed = (i % 2 === 0) ? 45 : 115;
             let col = (i % 2 === 0) ? '#406080' : '#A0D0FF';
             let char = (i % 3 === 0) ? '✦' : '•';
             let size = (i % 2 === 0) ? '6px' : '9px';
@@ -7934,13 +7952,25 @@ class ArcadeShooterScene extends Phaser.Scene {
             this.stars.push({ obj: star, speed: speed });
         }
 
-        // 2. Physics Groups
-        this.playerLasers = this.physics.add.group();
-        this.enemyBullets = this.physics.add.group();
-        this.enemies = this.physics.add.group();
-        this.powerups = this.physics.add.group();
+        // CRT Phosphor Scanlines Overlay
+        this.scanlineOverlay = this.add.tileSprite(cx, this.playY + this.playH / 2, this.playW, this.playH, 'shooter_scanlines')
+            .setDepth(25).setAlpha(0.2);
 
-        // 3. Player Starfighter
+        // 4. Physics Groups (Configured with createCallback to guarantee entity visibility over CRT screen depth 2)
+        this.playerLasers = this.physics.add.group({
+            createCallback: (item) => item.setDepth(15)
+        });
+        this.enemies = this.physics.add.group({
+            createCallback: (item) => item.setDepth(10)
+        });
+        this.enemyBullets = this.physics.add.group({
+            createCallback: (item) => item.setDepth(12)
+        });
+        this.powerups = this.physics.add.group({
+            createCallback: (item) => item.setDepth(14)
+        });
+
+        // 5. Player Starfighter
         this.player = this.physics.add.sprite(cx, this.playY + this.playH - 50, 'shooter_player').setDepth(20);
         this.player.body.allowGravity = false;
         this.player.body.setSize(24, 24);
@@ -7948,34 +7978,37 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.thruster = this.add.image(this.player.x, this.player.y + 16, 'shooter_player_thruster').setDepth(19);
         this.shieldSprite = this.add.image(this.player.x, this.player.y, 'shooter_shield').setDepth(21).setVisible(false);
 
-        // 4. Arcade Top HUD
+        // 6. Arcade Top HUD
         this.highScore = getEdgeHighScores()[0].score || 12500;
 
-        this.scoreText = this.add.text(this.playX + 8, this.playY + 8, '1UP 000000', {
+        this.scoreText = this.add.text(this.playX + 10, this.playY + 10, '1UP 000000', {
             fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace'
         }).setDepth(50);
 
-        this.highText = this.add.text(cx, this.playY + 8, `HIGH ${String(this.highScore).padStart(6, '0')}`, {
+        this.highText = this.add.text(cx, this.playY + 10, `HIGH ${String(this.highScore).padStart(6, '0')}`, {
             fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5, 0).setDepth(50);
 
-        this.waveText = this.add.text(this.playX + this.playW - 8, this.playY + 8, 'WAVE 01', {
+        this.waveText = this.add.text(this.playX + this.playW - 10, this.playY + 10, 'WAVE 01', {
             fontSize: '8px', fill: '#00E5FF', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(1, 0).setDepth(50);
 
         // Bottom Status HUD
-        this.bottomHud = this.add.text(this.playX + 8, this.playY + this.playH - 14, '', {
+        this.bottomHud = this.add.text(this.playX + 10, this.playY + this.playH - 16, '', {
             fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace'
         }).setDepth(50);
         this.updateBottomHUD();
 
         // Boss Health Bar UI
         this.bossBarContainer = this.add.graphics().setDepth(55).setVisible(false);
-        this.bossText = this.add.text(cx, this.playY + 24, '⚠ DREADNOUGHT ⚠', {
+        this.bossText = this.add.text(cx, this.playY + 26, '⚠ DREADNOUGHT ⚠', {
             fontSize: '8px', fill: '#FF2A85', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(56).setVisible(false);
 
-        // 5. Controls
+        // 7. Cabinet Control Panel Overlay (CPO) with illustrated joystick, instructions badge & arcade buttons
+        this.setupCabinetControlPanel();
+
+        // 8. Keyboard Controls & DOM listeners
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys({
             w: Phaser.Input.Keyboard.KeyCodes.W,
@@ -7991,8 +8024,33 @@ class ArcadeShooterScene extends Phaser.Scene {
         });
 
         this.input.keyboard.on('keydown-ESC', () => this.exitCabinet());
-        this.input.keyboard.on('keydown-X', () => this.detonateSmartBomb());
-        this.input.keyboard.on('keydown-B', () => this.detonateSmartBomb());
+        this.input.keyboard.on('keydown-X', () => {
+            if (this.bombBtn) this.bombBtn.setScale(0.92);
+            this.detonateSmartBomb();
+        });
+        this.input.keyboard.on('keyup-X', () => {
+            if (this.bombBtn) this.bombBtn.setScale(1);
+        });
+        this.input.keyboard.on('keydown-B', () => {
+            if (this.bombBtn) this.bombBtn.setScale(0.92);
+            this.detonateSmartBomb();
+        });
+        this.input.keyboard.on('keyup-B', () => {
+            if (this.bombBtn) this.bombBtn.setScale(1);
+        });
+
+        this.input.keyboard.on('keydown-SPACE', () => {
+            if (this.fireBtn) this.fireBtn.setScale(0.92);
+        });
+        this.input.keyboard.on('keyup-SPACE', () => {
+            if (this.fireBtn) this.fireBtn.setScale(1);
+        });
+        this.input.keyboard.on('keydown-Z', () => {
+            if (this.fireBtn) this.fireBtn.setScale(0.92);
+        });
+        this.input.keyboard.on('keyup-Z', () => {
+            if (this.fireBtn) this.fireBtn.setScale(1);
+        });
 
         // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
         const resetArcadeKeys = () => {
@@ -8014,12 +8072,15 @@ class ArcadeShooterScene extends Phaser.Scene {
                 if (this.keys.b) this.keys.b.isDown = false;
                 if (this.keys.enter) this.keys.enter.isDown = false;
             }
+            if (this.fireBtn) this.fireBtn.setScale(1);
+            if (this.bombBtn) this.bombBtn.setScale(1);
         };
 
         const onArcadeNativeKeyUp = (e) => {
             if (e.code === 'Space') {
                 if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
                 if (this.keys && this.keys.space) this.keys.space.isDown = false;
+                if (this.fireBtn) this.fireBtn.setScale(1);
             }
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
                 if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
@@ -8039,12 +8100,15 @@ class ArcadeShooterScene extends Phaser.Scene {
             }
             if (e.key === 'z' || e.key === 'Z') {
                 if (this.keys && this.keys.z) this.keys.z.isDown = false;
+                if (this.fireBtn) this.fireBtn.setScale(1);
             }
             if (e.key === 'x' || e.key === 'X') {
                 if (this.keys && this.keys.x) this.keys.x.isDown = false;
+                if (this.bombBtn) this.bombBtn.setScale(1);
             }
             if (e.key === 'b' || e.key === 'B') {
                 if (this.keys && this.keys.b) this.keys.b.isDown = false;
+                if (this.bombBtn) this.bombBtn.setScale(1);
             }
             if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
                 resetArcadeKeys();
@@ -8068,67 +8132,378 @@ class ArcadeShooterScene extends Phaser.Scene {
             if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
-        // Mobile Controls
-        this.setupMobileArcadeControls();
+        // 9. Touch Drag Steering on CRT screen (Mobile + Tablet)
+        this.setupTouchDragControls();
 
-        // 6. Overlaps & Collisions
+        // 10. Overlaps & Collisions
         this.physics.add.overlap(this.playerLasers, this.enemies, (laser, enemy) => this.hitEnemyWithLaser(laser, enemy));
         this.physics.add.overlap(this.enemyBullets, this.player, (bullet, player) => this.hitPlayerWithBullet(bullet));
         this.physics.add.overlap(this.enemies, this.player, (enemy, player) => this.hitPlayerWithEnemy(enemy));
         this.physics.add.overlap(this.powerups, this.player, (powerup, player) => this.collectPowerup(powerup));
 
-        // Wave Spawn Timer
+        // 11. Wave 1 Mission Briefing Attract Banner
+        this.showMissionBriefing();
+
+        // 12. Immediate Enemy Spawn (500ms) + Recurring Spawner
+        this.time.delayedCall(500, () => {
+            if (this.gameState === 'playing' && !this.bossActive) {
+                this.spawnWaveFormation();
+            }
+        });
+
         this.enemySpawnTimer = this.time.addEvent({
-            delay: 1400,
+            delay: 1300,
             loop: true,
             callback: () => this.spawnWaveFormation()
         });
     }
 
-    setupMobileArcadeControls() {
-        // Exit button
-        this.exitBtn = this.add.text(this.playX + this.playW - 4, this.playY - 26, '[ EXIT ]', {
-            fontSize: '8px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 6, y: 4 },
+    renderArcadeCabinetChassis() {
+        const cx = this.scale.width / 2;
+
+        // A. Cabinet Chassis & Side Panels (Depth 1)
+        let cab = this.add.graphics().setDepth(1);
+        cab.fillStyle(0x000000, 0.95);
+        cab.fillRect(this.cabX - 4, this.cabY - 4, this.cabW + 8, this.cabH + 8);
+
+        cab.fillStyle(0x0E101D, 1);
+        cab.fillRect(this.cabX, this.cabY, this.cabW, this.cabH);
+
+        const wingW = Math.max(12, Math.round((this.cabW - this.playW) / 2));
+
+        // Left Side Wing (Synthwave artwork & T-molding)
+        cab.fillStyle(0x16142B, 1);
+        cab.fillRect(this.cabX, this.cabY, wingW, this.cabH);
+        cab.lineStyle(3, 0xFF007F, 0.7);
+        cab.lineBetween(this.cabX + 4, this.cabY + 50, this.cabX + wingW - 4, this.cabY + 140);
+        cab.lineStyle(3, 0x00E5FF, 0.7);
+        cab.lineBetween(this.cabX + 4, this.cabY + 90, this.cabX + wingW - 4, this.cabY + 180);
+        cab.lineStyle(2, 0xFFD700, 0.7);
+        cab.lineBetween(this.cabX + 4, this.cabY + 130, this.cabX + wingW - 4, this.cabY + 220);
+
+        // Right Side Wing
+        cab.fillStyle(0x16142B, 1);
+        cab.fillRect(this.cabX + this.cabW - wingW, this.cabY, wingW, this.cabH);
+        cab.lineStyle(3, 0xFF007F, 0.7);
+        cab.lineBetween(this.cabX + this.cabW - 4, this.cabY + 50, this.cabX + this.cabW - wingW + 4, this.cabY + 140);
+        cab.lineStyle(3, 0x00E5FF, 0.7);
+        cab.lineBetween(this.cabX + this.cabW - 4, this.cabY + 90, this.cabX + this.cabW - wingW + 4, this.cabY + 180);
+        cab.lineStyle(2, 0xFFD700, 0.7);
+        cab.lineBetween(this.cabX + this.cabW - 4, this.cabY + 130, this.cabX + this.cabW - wingW + 4, this.cabY + 220);
+
+        // T-Molding Trim (Bright orange/gold rubber edge)
+        cab.fillStyle(0xFF5500, 1);
+        cab.fillRect(this.cabX, this.cabY, 4, this.cabH);
+        cab.fillRect(this.cabX + this.cabW - 4, this.cabY, 4, this.cabH);
+        cab.fillStyle(0xFFAA00, 1);
+        cab.fillRect(this.cabX + 1, this.cabY, 2, this.cabH);
+        cab.fillRect(this.cabX + this.cabW - 3, this.cabY, 2, this.cabH);
+
+        // Chrome Rivet Bolts along cabinet sides
+        for (let ry = this.cabY + 30; ry < this.cabY + this.cabH; ry += 65) {
+            cab.fillStyle(0x778899, 1);
+            cab.fillCircle(this.cabX + 8, ry, 2.5);
+            cab.fillCircle(this.cabX + this.cabW - 8, ry, 2.5);
+            cab.fillStyle(0xFFFFFF, 1);
+            cab.fillCircle(this.cabX + 7, ry - 1, 1);
+            cab.fillCircle(this.cabX + this.cabW - 9, ry - 1, 1);
+        }
+
+        // B. Top Illuminated Marquee (Depth 35)
+        let mq = this.add.graphics().setDepth(35);
+        mq.fillStyle(0x222538, 1);
+        mq.fillRect(this.cabX + 6, this.cabY + 6, this.cabW - 12, this.marqueeH);
+        mq.fillStyle(0x0A0518, 1);
+        mq.fillRect(this.cabX + 10, this.cabY + 10, this.cabW - 20, this.marqueeH - 8);
+
+        mq.lineStyle(2, 0xFFD700, 1);
+        mq.strokeRect(this.cabX + 10, this.cabY + 10, this.cabW - 20, this.marqueeH - 8);
+        mq.lineStyle(1, 0x00E5FF, 0.8);
+        mq.strokeRect(this.cabX + 12, this.cabY + 12, this.cabW - 24, this.marqueeH - 12);
+
+        // Speaker Grille Slits
+        const spkLeftX = this.cabX + 16;
+        const spkRightX = this.cabX + this.cabW - 52;
+        for (let s = 0; s < 4; s++) {
+            let sy = this.cabY + 15 + s * 6;
+            mq.fillStyle(0x000000, 1);
+            mq.fillRect(spkLeftX, sy, 26, 3);
+            mq.fillRect(spkRightX, sy, 26, 3);
+            mq.fillStyle(0x333348, 1);
+            mq.fillRect(spkLeftX, sy + 1, 26, 1);
+            mq.fillRect(spkRightX, sy + 1, 26, 1);
+        }
+
+        // Marquee Text
+        let mTitle = this.add.text(cx, this.cabY + 10 + (this.marqueeH - 8) / 2, '★ GALAXY DESTINY ★', {
+            fontSize: (this.cabW > 500) ? '12px' : '9px',
+            fill: '#FFD700',
+            fontFamily: '"Press Start 2P", monospace',
+            stroke: '#FF0055',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(36);
+
+        this.tweens.add({
+            targets: mTitle,
+            alpha: { from: 0.85, to: 1 },
+            duration: 650,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Exit Cabinet Button (in upper-right corner of Marquee)
+        this.exitBtn = this.add.text(this.cabX + this.cabW - 14, this.cabY + 12, '[ EXIT ]', {
+            fontSize: '7px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 5, y: 3 },
             fontFamily: '"Press Start 2P"'
         }).setOrigin(1, 0).setDepth(3000).setInteractive({ useHandCursor: true });
         this.exitBtn.on('pointerdown', () => this.exitCabinet());
 
-        if (!this.sys.game.device.os.desktop) {
-            const bx = this.scale.width - 55;
-            const by = this.scale.height - 60;
+        // C. Molded CRT Monitor Bezel & Curved Corners (Depth 30)
+        let mBezel = this.add.graphics().setDepth(30);
+        mBezel.fillStyle(0x0A0C16, 1);
+        mBezel.fillRect(this.playX - 10, this.playY - 10, this.playW + 20, this.playH + 20);
 
-            // Touch FIRE Button
-            this.fireBtn = this.add.circle(bx, by, 32, 0x00E5FF, 0.75).setDepth(3000).setInteractive();
-            this.add.text(bx, by, 'FIRE', { fontSize: '9px', fill: '#000000', fontFamily: '"Press Start 2P"' })
-                .setOrigin(0.5).setDepth(3001);
+        mBezel.lineStyle(2, 0x00E5FF, 1);
+        mBezel.strokeRect(this.playX - 4, this.playY - 4, this.playW + 8, this.playH + 8);
+        mBezel.lineStyle(1, 0xFFD700, 0.7);
+        mBezel.strokeRect(this.playX - 2, this.playY - 2, this.playW + 4, this.playH + 4);
 
-            this.fireBtn.on('pointerdown', () => { this.touchFireActive = true; this.fireLaser(); });
-            this.fireBtn.on('pointerup', () => { this.touchFireActive = false; });
-            this.fireBtn.on('pointerout', () => { this.touchFireActive = false; });
+        // 4 CRT Curved Corner Masks
+        const cR = 12;
+        mBezel.fillStyle(0x0A0C16, 1);
+        mBezel.fillTriangle(this.playX, this.playY, this.playX + cR, this.playY, this.playX, this.playY + cR);
+        mBezel.fillTriangle(this.playX + this.playW, this.playY, this.playX + this.playW - cR, this.playY, this.playX + this.playW, this.playY + cR);
+        mBezel.fillTriangle(this.playX, this.playY + this.playH, this.playX + cR, this.playY + this.playH, this.playX, this.playY + this.playH - cR);
+        mBezel.fillTriangle(this.playX + this.playW, this.playY + this.playH, this.playX + this.playW - cR, this.playY + this.playH, this.playX + this.playW, this.playY + this.playH - cR);
 
-            // Touch BOMB Button
-            this.bombBtn = this.add.circle(bx - 68, by, 28, 0xFF5500, 0.75).setDepth(3000).setInteractive();
-            this.add.text(bx - 68, by, 'BOMB', { fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' })
-                .setOrigin(0.5).setDepth(3001);
-            this.bombBtn.on('pointerdown', () => this.detonateSmartBomb());
+        // Bezel Stickers
+        this.add.text(this.playX + 8, this.playY - 8, '• DISNEY EDGE ARCADE •', {
+            fontSize: '6px', fill: '#00E5FF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0, 1).setDepth(32);
 
-            // Drag player directly
-            this.input.on('pointerdown', (pointer) => {
-                if (pointer.x >= this.playX && pointer.x <= this.playX + this.playW &&
-                    pointer.y >= this.playY && pointer.y <= this.playY + this.playH) {
-                    this.touchDragActive = true;
-                }
-            });
-            this.input.on('pointermove', (pointer) => {
-                if (this.touchDragActive && this.gameState === 'playing') {
-                    this.player.x = Phaser.Math.Clamp(pointer.x, this.playX + 16, this.playX + this.playW - 16);
-                    this.player.y = Phaser.Math.Clamp(pointer.y - 20, this.playY + 60, this.playY + this.playH - 30);
-                }
-            });
-            this.input.on('pointerup', () => {
-                this.touchDragActive = false;
-            });
+        this.add.text(this.playX + this.playW - 8, this.playY - 8, '★ 1 PLAY 25¢ ★', {
+            fontSize: '6px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(1, 1).setDepth(32);
+    }
+
+    setupCabinetControlPanel() {
+        const cx = this.scale.width / 2;
+        const cpoY = this.cpoY;
+        const cpoH = this.cpoH;
+
+        // Control Panel Deck Surface (Depth 40)
+        let cpoG = this.add.graphics().setDepth(40);
+        cpoG.fillStyle(0x181B28, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY, this.cabW - 12, cpoH);
+        cpoG.fillStyle(0x2B3147, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY, this.cabW - 12, 3);
+        cpoG.fillStyle(0x0C0D14, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY + cpoH - 4, this.cabW - 12, 4);
+
+        // Left & Right Chrome Clamps
+        cpoG.fillStyle(0x778899, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY, 8, cpoH);
+        cpoG.fillRect(this.cabX + this.cabW - 14, cpoY, 8, cpoH);
+
+        // --- 1. Left Section: Illustrated 8-Way Joystick ---
+        const joyX = this.cabX + Math.max(38, Math.round(this.cabW * 0.14));
+        const joyY = cpoY + Math.round(cpoH * 0.52);
+
+        // Black dust washer
+        cpoG.fillStyle(0x0D0D11, 1);
+        cpoG.fillCircle(joyX, joyY + 6, 16);
+        cpoG.lineStyle(1, 0x333344, 1);
+        cpoG.strokeCircle(joyX, joyY + 6, 16);
+
+        // Chrome joystick shaft
+        cpoG.fillStyle(0xCCD0E0, 1);
+        cpoG.fillRect(joyX - 3, joyY - 12, 6, 18);
+
+        // 3D Red Ball-Top Knob
+        cpoG.fillStyle(0xEE1133, 1);
+        cpoG.fillCircle(joyX, joyY - 14, 12);
+        cpoG.fillStyle(0xFFFFFF, 0.85);
+        cpoG.fillCircle(joyX - 3, joyY - 17, 3);
+
+        // Joystick Direction Arrows & Label
+        this.add.text(joyX, joyY + 24, 'STEER', {
+            fontSize: '6px', fill: '#00E5FF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+        this.add.text(joyX, joyY + 32, 'ARROWS / WASD', {
+            fontSize: '5px', fill: '#A0B0C0', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        // --- 2. Middle Section: Metal "HOW TO PLAY" Instruction Plate ---
+        const cardW = Math.min(270, Math.max(160, this.cabW - 230));
+        const cardX = cx - cardW / 2;
+        const cardH = cpoH - 14;
+
+        cpoG.fillStyle(0x0B1220, 1);
+        cpoG.fillRect(cardX, cpoY + 7, cardW, cardH);
+        cpoG.lineStyle(1, 0x00E5FF, 1);
+        cpoG.strokeRect(cardX, cpoY + 7, cardW, cardH);
+        cpoG.lineStyle(1, 0xFFD700, 0.8);
+        cpoG.strokeRect(cardX + 2, cpoY + 9, cardW - 4, cardH - 4);
+
+        // 4 Corner Screws
+        cpoG.fillStyle(0x8899AA, 1);
+        cpoG.fillCircle(cardX + 5, cpoY + 12, 1.5);
+        cpoG.fillCircle(cardX + cardW - 5, cpoY + 12, 1.5);
+        cpoG.fillCircle(cardX + 5, cpoY + 7 + cardH - 5, 1.5);
+        cpoG.fillCircle(cardX + cardW - 5, cpoY + 7 + cardH - 5, 1.5);
+
+        // Instruction Text on Plate
+        this.add.text(cx, cpoY + 15, '★ HOW TO PLAY ★', {
+            fontSize: '7px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        this.add.text(cx, cpoY + 28, 'FIRE: [SPACE] OR [Z] (AUTO-FIRE)', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        this.add.text(cx, cpoY + 40, 'BOMB: [X] OR [B] (SMART BOMB)', {
+            fontSize: '6px', fill: '#FF9100', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        this.add.text(cx, cpoY + 52, 'ITEMS: [P]GUN [S]SHIELD [B]BOMB', {
+            fontSize: '5px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        if (cpoH >= 110) {
+            this.add.text(cx, cpoY + 64, 'MOBILE: TOUCH DRAG TO FLY + BUTTONS', {
+                fontSize: '5px', fill: '#A0D0FF', fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5).setDepth(42);
         }
+
+        // --- 3. Right Section: Clickable & Touchable 3D Arcade Buttons ---
+        const btnFireX = this.cabX + this.cabW - Math.max(38, Math.round(this.cabW * 0.12));
+        const btnFireY = cpoY + Math.round(cpoH * 0.52);
+        const btnBombX = btnFireX - Math.max(44, Math.round(cpoH * 0.42));
+        const btnBombY = btnFireY + 4;
+
+        // FIRE Button (Red)
+        this.add.circle(btnFireX, btnFireY, 23, 0x111111).setDepth(41);
+        this.fireBtn = this.add.circle(btnFireX, btnFireY, 19, 0xFF2233).setDepth(42)
+            .setInteractive({ useHandCursor: true });
+        this.add.circle(btnFireX - 4, btnFireY - 6, 5, 0xFFAAAA, 0.65).setDepth(43);
+
+        this.add.text(btnFireX, btnFireY - 3, 'FIRE', {
+            fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+        this.add.text(btnFireX, btnFireY + 8, '[SPACE]', {
+            fontSize: '5px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+
+        this.fireBtn.on('pointerdown', () => {
+            this.touchFireActive = true;
+            this.fireBtn.setScale(0.92);
+            this.fireBtn.setFillStyle(0xCC1122);
+            this.fireLaser();
+        });
+        const releaseFireBtn = () => {
+            this.touchFireActive = false;
+            this.fireBtn.setScale(1);
+            this.fireBtn.setFillStyle(0xFF2233);
+        };
+        this.fireBtn.on('pointerup', releaseFireBtn);
+        this.fireBtn.on('pointerout', releaseFireBtn);
+
+        // BOMB Button (Orange/Yellow)
+        this.add.circle(btnBombX, btnBombY, 20, 0x111111).setDepth(41);
+        this.bombBtn = this.add.circle(btnBombX, btnBombY, 16, 0xFF7700).setDepth(42)
+            .setInteractive({ useHandCursor: true });
+        this.add.circle(btnBombX - 3, btnBombY - 5, 4, 0xFFDD88, 0.65).setDepth(43);
+
+        this.add.text(btnBombX, btnBombY - 3, 'BOMB', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+        this.add.text(btnBombX, btnBombY + 7, '[X]', {
+            fontSize: '5px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+
+        this.bombBtn.on('pointerdown', () => {
+            this.bombBtn.setScale(0.92);
+            this.bombBtn.setFillStyle(0xCC5500);
+            this.detonateSmartBomb();
+        });
+        const releaseBombBtn = () => {
+            this.bombBtn.setScale(1);
+            this.bombBtn.setFillStyle(0xFF7700);
+        };
+        this.bombBtn.on('pointerup', releaseBombBtn);
+        this.bombBtn.on('pointerout', releaseBombBtn);
+    }
+
+    setupTouchDragControls() {
+        // Direct finger-drag to steer ship anywhere across the CRT monitor
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.x >= this.playX && pointer.x <= this.playX + this.playW &&
+                pointer.y >= this.playY && pointer.y <= this.playY + this.playH) {
+                this.touchDragActive = true;
+            }
+        });
+        this.input.on('pointermove', (pointer) => {
+            if (this.touchDragActive && this.gameState === 'playing') {
+                this.player.x = Phaser.Math.Clamp(pointer.x, this.playX + 16, this.playX + this.playW - 16);
+                this.player.y = Phaser.Math.Clamp(pointer.y - 24, this.playY + 55, this.playY + this.playH - 30);
+            }
+        });
+        this.input.on('pointerup', () => {
+            this.touchDragActive = false;
+        });
+    }
+
+    showMissionBriefing() {
+        const cx = this.playX + this.playW / 2;
+        const cy = this.playY + this.playH / 2 - 20;
+
+        let brief = this.add.container(cx, cy).setDepth(65);
+        let bg = this.add.rectangle(0, 0, Math.min(360, this.playW - 24), 142, 0x000000, 0.92)
+            .setStrokeStyle(2, 0x00E5FF);
+
+        let t1 = this.add.text(0, -48, '★ MISSION BRIEFING ★', {
+            fontSize: '9px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+
+        let t2 = this.add.text(0, -30, 'DEFEND THE DISNEY DESTINY!', {
+            fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+
+        let t3 = this.add.text(0, -2, '• MOVE: ARROWS / WASD / TOUCH DRAG\n• FIRE: HOLD [SPACE] OR [Z] (AUTO)\n• BOMB: [X] OR [B] BLAST SCREEN', {
+            fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', align: 'left', lineSpacing: 5
+        }).setOrigin(0.5);
+
+        let t4 = this.add.text(0, 46, '>>> BLAST OFF! <<<', {
+            fontSize: '9px', fill: '#FF2A85', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+
+        brief.add([bg, t1, t2, t3, t4]);
+
+        this.tweens.add({
+            targets: t4,
+            alpha: 0.2,
+            duration: 250,
+            yoyo: true,
+            repeat: 6
+        });
+
+        this.missionBriefing = brief;
+        this.time.delayedCall(3400, () => {
+            this.dismissMissionBriefing();
+        });
+    }
+
+    dismissMissionBriefing() {
+        if (!this.missionBriefing || !this.missionBriefing.active) return;
+        let b = this.missionBriefing;
+        this.missionBriefing = null;
+        this.tweens.add({
+            targets: b,
+            alpha: 0,
+            y: b.y - 20,
+            duration: 350,
+            onComplete: () => b.destroy()
+        });
     }
 
     updateBottomHUD() {
@@ -8143,6 +8518,10 @@ class ArcadeShooterScene extends Phaser.Scene {
         if (now - this.lastShotTime < this.shotCooldown) return;
         this.lastShotTime = now;
 
+        if (this.missionBriefing && this.missionBriefing.active) {
+            this.dismissMissionBriefing();
+        }
+
         retroArcadeAudio.playLaser();
 
         const px = this.player.x;
@@ -8150,28 +8529,28 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         if (this.weaponLevel === 1) {
             // Dual parallel lasers
-            let l1 = this.playerLasers.create(px - 7, py, 'shooter_laser_player');
-            let l2 = this.playerLasers.create(px + 7, py, 'shooter_laser_player');
-            l1.setVelocityY(-460);
-            l2.setVelocityY(-460);
+            let l1 = this.playerLasers.create(px - 7, py, 'shooter_laser_player').setDepth(15);
+            let l2 = this.playerLasers.create(px + 7, py, 'shooter_laser_player').setDepth(15);
+            l1.setVelocityY(-480);
+            l2.setVelocityY(-480);
         } else if (this.weaponLevel === 2) {
             // Triple spread laser
-            let l1 = this.playerLasers.create(px, py, 'shooter_laser_player');
-            let l2 = this.playerLasers.create(px - 9, py + 2, 'shooter_laser_spread');
-            let l3 = this.playerLasers.create(px + 9, py + 2, 'shooter_laser_spread');
-            l1.setVelocity(0, -460);
-            l2.setVelocity(-130, -430);
-            l3.setVelocity(130, -430);
+            let l1 = this.playerLasers.create(px, py, 'shooter_laser_player').setDepth(15);
+            let l2 = this.playerLasers.create(px - 9, py + 2, 'shooter_laser_spread').setDepth(15);
+            let l3 = this.playerLasers.create(px + 9, py + 2, 'shooter_laser_spread').setDepth(15);
+            l1.setVelocity(0, -480);
+            l2.setVelocity(-140, -440);
+            l3.setVelocity(140, -440);
         } else {
             // Quad heavy plasma
-            let l1 = this.playerLasers.create(px - 6, py, 'shooter_laser_player');
-            let l2 = this.playerLasers.create(px + 6, py, 'shooter_laser_player');
-            let l3 = this.playerLasers.create(px - 14, py + 4, 'shooter_laser_spread');
-            let l4 = this.playerLasers.create(px + 14, py + 4, 'shooter_laser_spread');
-            l1.setVelocity(0, -480);
-            l2.setVelocity(0, -480);
-            l3.setVelocity(-180, -420);
-            l4.setVelocity(180, -420);
+            let l1 = this.playerLasers.create(px - 6, py, 'shooter_laser_player').setDepth(15);
+            let l2 = this.playerLasers.create(px + 6, py, 'shooter_laser_player').setDepth(15);
+            let l3 = this.playerLasers.create(px - 14, py + 4, 'shooter_laser_spread').setDepth(15);
+            let l4 = this.playerLasers.create(px + 14, py + 4, 'shooter_laser_spread').setDepth(15);
+            l1.setVelocity(0, -500);
+            l2.setVelocity(0, -500);
+            l3.setVelocity(-190, -430);
+            l4.setVelocity(190, -430);
         }
     }
 
@@ -8224,7 +8603,7 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         if (type <= 5) {
             // Alien Drone Swarm
-            let drone = this.enemies.create(startX, this.playY - 10, 'shooter_drone');
+            let drone = this.enemies.create(startX, this.playY - 10, 'shooter_drone').setDepth(10);
             drone.hp = 1;
             drone.scoreVal = 100;
             drone.setVelocityY(90 + this.wave * 10);
@@ -8233,7 +8612,7 @@ class ArcadeShooterScene extends Phaser.Scene {
             drone.lastShoot = this.time.now;
         } else if (type <= 8) {
             // Cosmic Cruiser
-            let cruiser = this.enemies.create(startX, this.playY - 12, 'shooter_cruiser');
+            let cruiser = this.enemies.create(startX, this.playY - 12, 'shooter_cruiser').setDepth(10);
             cruiser.hp = 3;
             cruiser.scoreVal = 250;
             cruiser.setVelocity(Phaser.Math.Between(-30, 30), 60 + this.wave * 8);
@@ -8241,7 +8620,7 @@ class ArcadeShooterScene extends Phaser.Scene {
             cruiser.lastShoot = this.time.now;
         } else {
             // Space Asteroid
-            let rock = this.enemies.create(startX, this.playY - 12, 'shooter_asteroid_large');
+            let rock = this.enemies.create(startX, this.playY - 12, 'shooter_asteroid_large').setDepth(10);
             rock.hp = 2;
             rock.scoreVal = 150;
             rock.isAsteroid = true;
@@ -8270,7 +8649,7 @@ class ArcadeShooterScene extends Phaser.Scene {
         });
 
         // Create Boss Dreadnought
-        let boss = this.enemies.create(this.playX + this.playW / 2, this.playY - 30, 'shooter_boss');
+        let boss = this.enemies.create(this.playX + this.playW / 2, this.playY - 30, 'shooter_boss').setDepth(11);
         boss.isBoss = true;
         boss.body.setSize(68, 44);
         boss.setVelocityY(40);
@@ -8315,14 +8694,14 @@ class ArcadeShooterScene extends Phaser.Scene {
         if (this.bossLaserTimer > 1200) {
             this.bossLaserTimer = 0;
             // Wing spread bullets
-            let b1 = this.enemyBullets.create(this.boss.x - 24, this.boss.y + 18, 'shooter_bullet_enemy');
-            let b2 = this.enemyBullets.create(this.boss.x + 24, this.boss.y + 18, 'shooter_bullet_enemy');
+            let b1 = this.enemyBullets.create(this.boss.x - 24, this.boss.y + 18, 'shooter_bullet_enemy').setDepth(12);
+            let b2 = this.enemyBullets.create(this.boss.x + 24, this.boss.y + 18, 'shooter_bullet_enemy').setDepth(12);
             b1.setVelocity(-40, 140);
             b2.setVelocity(40, 140);
 
             // Aimed energy core orb
             let angle = Phaser.Math.Angle.Between(this.boss.x, this.boss.y, this.player.x, this.player.y);
-            let b3 = this.enemyBullets.create(this.boss.x, this.boss.y + 20, 'shooter_bullet_boss');
+            let b3 = this.enemyBullets.create(this.boss.x, this.boss.y + 20, 'shooter_bullet_boss').setDepth(12);
             b3.setVelocity(Math.cos(angle) * 160, Math.sin(angle) * 160);
         }
     }
@@ -8367,7 +8746,7 @@ class ArcadeShooterScene extends Phaser.Scene {
             }
             // Drop powerups
             ['shooter_powerup_P', 'shooter_powerup_S', 'shooter_powerup_B', 'shooter_powerup_STAR'].forEach((key, idx) => {
-                let p = this.powerups.create(this.playX + 80 + idx * 70, this.playY + 60, key);
+                let p = this.powerups.create(this.playX + 80 + idx * 70, this.playY + 60, key).setDepth(14);
                 p.pType = key.replace('shooter_powerup_', '');
                 p.setVelocityY(70);
             });
@@ -8429,8 +8808,8 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         // Asteroid fragment splitting
         if (enemy.isAsteroid) {
-            let a1 = this.enemies.create(ex - 8, ey, 'shooter_asteroid_small');
-            let a2 = this.enemies.create(ex + 8, ey, 'shooter_asteroid_small');
+            let a1 = this.enemies.create(ex - 8, ey, 'shooter_asteroid_small').setDepth(10);
+            let a2 = this.enemies.create(ex + 8, ey, 'shooter_asteroid_small').setDepth(10);
             a1.hp = 1; a1.scoreVal = 75; a1.setVelocity(-50, 90);
             a2.hp = 1; a2.scoreVal = 75; a2.setVelocity(50, 90);
         }
@@ -8440,7 +8819,7 @@ class ArcadeShooterScene extends Phaser.Scene {
         if (dropRoll <= 18) {
             const keys = ['P', 'S', 'B', 'STAR'];
             const chosen = Phaser.Utils.Array.GetRandom(keys);
-            let p = this.powerups.create(ex, ey, 'shooter_powerup_' + chosen);
+            let p = this.powerups.create(ex, ey, 'shooter_powerup_' + chosen).setDepth(14);
             p.pType = chosen;
             p.setVelocityY(65);
         }
@@ -8449,7 +8828,7 @@ class ArcadeShooterScene extends Phaser.Scene {
     }
 
     spawnExplosion(x, y) {
-        let exp = this.add.sprite(x, y, 'shooter_explosion_0').setDepth(30);
+        let exp = this.add.sprite(x, y, 'shooter_explosion_0').setDepth(18);
         let frames = ['shooter_explosion_0', 'shooter_explosion_1', 'shooter_explosion_2', 'shooter_explosion_3'];
         frames.forEach((f, idx) => {
             this.time.delayedCall(idx * 50, () => {
@@ -8716,7 +9095,7 @@ class ArcadeShooterScene extends Phaser.Scene {
             // Enemy Shooting
             if (time - e.lastShoot > e.shootCooldown && e.y > this.playY + 20 && e.y < this.playY + this.playH - 60) {
                 e.lastShoot = time;
-                let b = this.enemyBullets.create(e.x, e.y + 10, 'shooter_bullet_enemy');
+                let b = this.enemyBullets.create(e.x, e.y + 10, 'shooter_bullet_enemy').setDepth(12);
                 b.setVelocityY(160 + this.wave * 12);
             }
 
