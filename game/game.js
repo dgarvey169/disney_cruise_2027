@@ -6025,6 +6025,10 @@ class ElevatorMenuScene extends Phaser.Scene {
                 this.gameScene.player.anims.play('riley_idle', true);
             }
         }
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(false);
+            this.gameScene.scene.sleep();
+        }
         this.scene.stop();
         this.scene.launch('EdgeClubScene', { gameScene: this.gameScene });
     }
@@ -7087,39 +7091,58 @@ class EdgeClubScene extends Phaser.Scene {
     create() {
         retroArcadeAudio.init();
 
-        const roomW = 960;
-        const roomH = 540;
+        // Ensure underlying GameScene is completely hidden and slept
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(false);
+            this.gameScene.scene.sleep();
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        const roomH = Math.max(540, H);
+        const roomW = Math.max(1600, W);
         this.roomW = roomW;
         this.roomH = roomH;
 
+        const floorH = Math.max(130, Math.round(roomH * 0.22));
+        const floorY = roomH - floorH;
+        this.floorY = floorY;
+        this.floorH = floorH;
+        this.groundY = floorY + 25;
+
         this.physics.world.setBounds(0, 0, roomW, roomH);
 
+        // 0. Solid background guaranteeing no underlying scene leakage
+        this.add.rectangle(0, 0, 10000, 10000, 0x07091B).setOrigin(0.5).setDepth(0);
+
         // 1. Room Background & Framing
-        this.add.tileSprite(roomW / 2, 210, roomW, 420, 'edge_wall').setDepth(1);
-        this.add.tileSprite(roomW / 2, 480, roomW, 120, 'edge_floor').setDepth(2);
+        this.add.tileSprite(roomW / 2, floorY / 2, roomW, floorY, 'edge_wall').setDepth(1);
+        this.add.tileSprite(roomW / 2, floorY + (floorH / 2), roomW, floorH, 'edge_floor').setDepth(2);
 
         // Floor curb divider line (gold & cyan trim)
         let curb = this.add.graphics().setDepth(3);
         curb.fillStyle(0x00E5FF, 1);
-        curb.fillRect(0, 418, roomW, 2);
+        curb.fillRect(0, floorY - 2, roomW, 2);
         curb.fillStyle(0xFFD700, 0.7);
-        curb.fillRect(0, 420, roomW, 2);
+        curb.fillRect(0, floorY, roomW, 2);
 
         // Starry Night Ocean Portholes
-        [210, 750].forEach(px => {
+        const portholeY = Math.max(140, Math.round(floorY * 0.38));
+        [Math.round(roomW * 0.16), Math.round(roomW * 0.5), Math.round(roomW * 0.84)].forEach(px => {
             let port = this.add.graphics().setDepth(4);
             port.fillStyle(0x1B263B, 1);
-            port.fillCircle(px, 160, 42);
+            port.fillCircle(px, portholeY, 42);
             port.fillStyle(0x0D1B2A, 1);
-            port.fillCircle(px, 160, 38);
+            port.fillCircle(px, portholeY, 38);
             port.fillStyle(0xFFD700, 1);
             port.lineStyle(3, 0xFFD700, 1);
-            port.strokeCircle(px, 160, 40);
+            port.strokeCircle(px, portholeY, 40);
 
             // Twinkling stars inside porthole
             for (let s = 0; s < 8; s++) {
                 let sx = px + Phaser.Math.Between(-30, 30);
-                let sy = 160 + Phaser.Math.Between(-30, 20);
+                let sy = portholeY + Phaser.Math.Between(-30, 20);
                 let star = this.add.text(sx, sy, '✦', { fontSize: '7px', fill: '#A0D0FF' }).setOrigin(0.5).setDepth(5);
                 this.tweens.add({
                     targets: star,
@@ -7131,14 +7154,15 @@ class EdgeClubScene extends Phaser.Scene {
             }
             // Ocean wave line inside porthole
             port.fillStyle(0x003366, 1);
-            port.fillRect(px - 36, 175, 72, 22);
+            port.fillRect(px - 36, portholeY + 15, 72, 22);
             port.fillStyle(0x005588, 1);
-            port.fillRect(px - 36, 175, 72, 3);
+            port.fillRect(px - 36, portholeY + 15, 72, 3);
         });
 
         // Giant Illuminated Neon Club Sign
-        this.neonSign = this.add.image(roomW / 2, 64, 'edge_neon_logo').setDepth(6);
-        this.neonTitleText = this.add.text(roomW / 2, 64, '★ EDGE TWEEN CLUB ★', {
+        const neonY = Math.max(50, Math.round(floorY * 0.14));
+        this.neonSign = this.add.image(roomW / 2, neonY, 'edge_neon_logo').setDepth(6);
+        this.neonTitleText = this.add.text(roomW / 2, neonY, '★ EDGE TWEEN CLUB ★', {
             fontSize: '12px',
             fill: '#00FFFF',
             fontFamily: '"Press Start 2P", monospace',
@@ -7154,7 +7178,38 @@ class EdgeClubScene extends Phaser.Scene {
             repeat: -1
         });
 
-        // Equalizer / DJ Booth at x = 900
+        // 2. Interactive Furniture & Stations
+        const elevX = 120;
+        const elevY = floorY - 32;
+        this.elevX = elevX;
+        this.elevY = elevY;
+
+        const barX = Math.round(roomW * 0.26);
+        const barY = floorY - 15;
+        this.barX = barX;
+        this.barY = barY;
+
+        const couchX = Math.round(roomW * 0.45);
+        const couchY = floorY - 5;
+        this.couchX = couchX;
+        this.couchY = couchY;
+
+        const ldrX = Math.round(roomW * 0.64);
+        const ldrY = floorY - 130;
+        this.ldrX = ldrX;
+        this.ldrY = ldrY;
+
+        const arcX = Math.round(roomW * 0.82);
+        const arcY = floorY - 30;
+        this.arcX = arcX;
+        this.arcY = arcY;
+
+        const djX = Math.min(roomW - 90, Math.round(roomW * 0.94));
+        const djY = floorY - 40;
+        this.djX = djX;
+        this.djY = djY;
+
+        // Equalizer / DJ Booth
         this.djG = this.add.graphics().setDepth(5);
         this.eqBars = [0.4, 0.7, 0.9, 0.5, 0.8, 0.3, 0.6];
         this.time.addEvent({
@@ -7167,56 +7222,55 @@ class EdgeClubScene extends Phaser.Scene {
             }
         });
 
-        // 2. Interactive Furniture & Stations
-        // Elevator Doors (x = 100)
-        this.elevatorDoor = this.add.image(100, 388, 'edge_elevator_door').setDepth(10);
-        this.add.text(100, 344, '[ DECK 5: EDGE ]', {
+        // Elevator Doors
+        this.elevatorDoor = this.add.image(elevX, elevY, 'edge_elevator_door').setDepth(10);
+        this.add.text(elevX, elevY - 44, '[ DECK 5: EDGE ]', {
             fontSize: '8px', fill: '#00FF66', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5).setDepth(11);
 
-        this.elevatorPrompt = this.add.text(100, 320, '[ ENTER: UPPER DECKS ]', {
+        this.elevatorPrompt = this.add.text(elevX, elevY - 68, '[ ENTER: UPPER DECKS ]', {
             fontSize: '8px', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 8, y: 4 },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setVisible(false).setDepth(2000);
 
-        // Smoothie Bar (x = 300)
-        this.add.image(300, 405, 'edge_bar').setDepth(10);
-        this.add.text(300, 370, 'CHILL BAR', {
+        // Smoothie Bar
+        this.add.image(barX, barY, 'edge_bar').setDepth(10);
+        this.add.text(barX, barY - 35, 'CHILL BAR', {
             fontSize: '8px', fill: '#FF2A85', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5).setDepth(11);
 
-        this.smoothiePrompt = this.add.text(300, 345, '[ ENTER: GRAB SMOOTHIE ]', {
+        this.smoothiePrompt = this.add.text(barX, barY - 60, '[ ENTER: GRAB SMOOTHIE ]', {
             fontSize: '8px', fill: '#00E5FF', backgroundColor: '#000000', padding: { x: 8, y: 4 },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setVisible(false).setDepth(2000);
 
-        // Lounge Sectional Couch & Leo (x = 480)
-        this.add.image(480, 415, 'edge_couch').setDepth(10);
-        this.leoSprite = this.add.image(460, 396, 'edge_npc_leo').setDepth(12);
+        // Lounge Sectional Couch & Leo
+        this.add.image(couchX, couchY, 'edge_couch').setDepth(10);
+        this.leoSprite = this.add.image(couchX - 20, couchY - 18, 'edge_npc_leo').setDepth(12);
 
-        // Wall Leaderboard Display (x = 640)
-        this.add.image(640, 290, 'edge_leaderboard').setDepth(10);
-        this.add.text(640, 270, 'HIGH SCORES', {
+        // Wall Leaderboard Display
+        this.add.image(ldrX, ldrY, 'edge_leaderboard').setDepth(10);
+        this.add.text(ldrX, ldrY - 20, 'HIGH SCORES', {
             fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setDepth(11);
 
         this.leaderboardTexts = [];
         for (let i = 0; i < 5; i++) {
-            let row = this.add.text(640, 286 + (i * 12), '', {
+            let row = this.add.text(ldrX, ldrY - 4 + (i * 12), '', {
                 fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setDepth(11);
             this.leaderboardTexts.push(row);
         }
         this.updateLeaderboardDisplay();
 
-        // Retro Arcade Cabinet & Maya (x = 790)
-        this.arcadeCabinet = this.add.image(790, 390, 'edge_arcade_cabinet').setDepth(10);
-        this.mayaSprite = this.add.image(835, 412, 'edge_npc_maya').setDepth(12);
+        // Retro Arcade Cabinet & Maya
+        this.arcadeCabinet = this.add.image(arcX, arcY, 'edge_arcade_cabinet').setDepth(10);
+        this.mayaSprite = this.add.image(arcX + 44, arcY + 22, 'edge_npc_maya').setDepth(12);
 
         // Cabinet Marquee Blink
-        this.marqueeText = this.add.text(790, 344, 'GALAXY DESTINY', {
+        this.marqueeText = this.add.text(arcX, arcY - 46, 'GALAXY DESTINY', {
             fontSize: '7px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5).setDepth(11);
@@ -7229,14 +7283,16 @@ class EdgeClubScene extends Phaser.Scene {
             repeat: -1
         });
 
-        this.arcadePrompt = this.add.text(790, 322, '[ ENTER: PLAY ARCADE ]', {
+        this.arcadePrompt = this.add.text(arcX, arcY - 68, '[ ENTER: PLAY ARCADE ]', {
             fontSize: '8px', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 8, y: 4 },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setVisible(false).setDepth(2000);
 
         // 3. Player Riley
-        this.playerShadow = this.add.ellipse(150, 460, 24, 8, 0x000000, 0.4).setDepth(444);
-        this.player = this.physics.add.sprite(150, 445, 'riley_idle').setDepth(445);
+        const spawnX = 180;
+        this.playerShadow = this.add.ellipse(spawnX, this.groundY + 16, 24, 8, 0x000000, 0.4).setDepth(Math.round(this.groundY) - 1);
+        this.player = this.physics.add.sprite(spawnX, this.groundY, 'riley_idle').setDepth(Math.round(this.groundY));
+        this.player.body.allowGravity = false;
         this.player.body.setSize(22, 16);
         this.player.body.setOffset(5, 32);
 
@@ -7313,6 +7369,73 @@ class EdgeClubScene extends Phaser.Scene {
 
         this.input.keyboard.on('keydown-ESC', () => this.returnToGameScene());
 
+        // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+        const resetKeyInputs = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keysWASD) {
+                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+        };
+
+        const onNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeyInputs();
+            }
+        };
+
+        window.addEventListener('blur', resetKeyInputs);
+        window.addEventListener('focus', resetKeyInputs);
+        window.addEventListener('keyup', onNativeKeyUp);
+        const onVisChange = () => { if (document.hidden) resetKeyInputs(); };
+        document.addEventListener('visibilitychange', onVisChange);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetKeyInputs);
+            window.removeEventListener('focus', resetKeyInputs);
+            window.removeEventListener('keyup', onNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisChange);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) {
+                this._cleanWindowListeners();
+            }
+        });
+
         // Mobile On-Screen Controls
         this.setupMobileControls();
 
@@ -7323,19 +7446,15 @@ class EdgeClubScene extends Phaser.Scene {
     }
 
     setupMobileControls() {
-        const cx = 80;
-        const cy = this.scale.height - 80;
-
-        // Top Left Exit Button (fixed on screen)
+        // Top Left Exit Button (fixed on screen) - available on all devices
         this.exitBtn = this.add.text(16, 16, '[ ◄ DECKS ]', {
             fontSize: '9px', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 8, y: 6 },
             fontFamily: '"Press Start 2P", monospace'
         }).setScrollFactor(0).setDepth(3000).setInteractive({ useHandCursor: true });
         this.exitBtn.on('pointerdown', () => this.returnToGameScene());
 
-        // Right side mobile Action & Jump buttons
-        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        if (isTouch) {
+        // Mobile touch controls only enabled on non-desktop devices
+        if (!this.sys.game.device.os.desktop) {
             const rx = this.scale.width - 70;
             const ry = this.scale.height - 70;
 
@@ -7439,6 +7558,7 @@ class EdgeClubScene extends Phaser.Scene {
 
     launchArcadeCabinet() {
         retroArcadeAudio.init();
+        this.scene.setVisible(false);
         this.scene.pause('EdgeClubScene');
         this.scene.launch('ArcadeShooterScene', { edgeScene: this });
     }
@@ -7499,12 +7619,12 @@ class EdgeClubScene extends Phaser.Scene {
         // Equalizer Bar Animation
         this.djG.clear();
         this.djG.fillStyle(0x111122, 1);
-        this.djG.fillRect(870, 380, 70, 36);
+        this.djG.fillRect(this.djX - 35, this.djY - 18, 70, 36);
         for (let i = 0; i < this.eqBars.length; i++) {
             const h = Math.round(this.eqBars[i] * 28);
             const col = (h > 20) ? 0xFF0055 : (h > 12) ? 0xFFD700 : 0x00E5FF;
             this.djG.fillStyle(col, 1);
-            this.djG.fillRect(875 + (i * 9), 412 - h, 6, h);
+            this.djG.fillRect((this.djX - 30) + (i * 9), (this.djY + 14) - h, 6, h);
         }
 
         // Hide speech bubble if expired
@@ -7551,22 +7671,46 @@ class EdgeClubScene extends Phaser.Scene {
             }
         }
 
-        // Player Controls
+        // Player Controls (Mutually exclusive & DOM keyup protected)
+        let isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                     (this.keysWASD.left && this.keysWASD.left.isDown) || 
+                     this.touchMoveDir === -1;
+
+        let isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                      (this.keysWASD.right && this.keysWASD.right.isDown) || 
+                      this.touchMoveDir === 1;
+
+        let isUp = (this.cursors.up && this.cursors.up.isDown) || 
+                   (this.keysWASD.up && this.keysWASD.up.isDown) || 
+                   this.touchMoveDepth === -1;
+
+        let isDown = (this.cursors.down && this.cursors.down.isDown) || 
+                     (this.keysWASD.down && this.keysWASD.down.isDown) || 
+                     this.touchMoveDepth === 1;
+
         let moveX = 0;
         let moveY = 0;
 
-        if (this.cursors.left.isDown || this.keysWASD.left.isDown || this.touchMoveDir === -1) {
+        if (isLeft && !isRight) {
             moveX = -1;
             this.player.setFlipX(true);
-        } else if (this.cursors.right.isDown || this.keysWASD.right.isDown || this.touchMoveDir === 1) {
+        } else if (isRight && !isLeft) {
             moveX = 1;
             this.player.setFlipX(false);
         }
 
-        if (this.cursors.up.isDown || this.keysWASD.up.isDown || this.touchMoveDepth === -1) {
+        if (isUp && !isDown) {
             moveY = -1;
-        } else if (this.cursors.down.isDown || this.keysWASD.down.isDown || this.touchMoveDepth === 1) {
+        } else if (isDown && !isUp) {
             moveY = 1;
+        }
+
+        // Diagonal normalization
+        let vx = moveX * this.playerSpeed;
+        let vy = moveY * (this.playerSpeed * 0.6);
+        if (moveX !== 0 && moveY !== 0) {
+            vx *= 0.7071;
+            vy *= 0.7071;
         }
 
         // Jump Handling
@@ -7585,18 +7729,18 @@ class EdgeClubScene extends Phaser.Scene {
         }
 
         // 2.5D Movement Execution
-        this.player.x += moveX * this.playerSpeed * dt;
+        this.player.x += vx * dt;
         this.player.x = Phaser.Math.Clamp(this.player.x, 70, this.roomW - 70);
 
-        this.groundY += moveY * (this.playerSpeed * 0.5) * dt;
-        this.groundY = Phaser.Math.Clamp(this.groundY, 415, 455);
+        this.groundY += vy * dt;
+        this.groundY = Phaser.Math.Clamp(this.groundY, this.floorY - 5, this.roomH - 25);
 
         this.player.y = this.groundY - this.jumpZ;
         this.player.setDepth(Math.round(this.groundY));
         this.player.body.reset(this.player.x, this.player.y);
 
         this.playerShadow.setPosition(this.player.x, this.groundY + 16);
-        this.playerShadow.setDepth(this.groundY - 1);
+        this.playerShadow.setDepth(Math.round(this.groundY) - 1);
 
         // Player Animations
         if (this.isJumping) {
@@ -7608,25 +7752,25 @@ class EdgeClubScene extends Phaser.Scene {
         }
 
         // Proximity Checks
-        // 1. Elevator Door (x = 100)
-        this.nearElevator = Math.abs(this.player.x - 100) < 50;
+        // 1. Elevator Door
+        this.nearElevator = Math.abs(this.player.x - this.elevX) < 55;
         this.elevatorPrompt.setVisible(this.nearElevator);
 
-        // 2. Smoothie Bar (x = 300)
-        this.nearSmoothie = Math.abs(this.player.x - 300) < 45;
+        // 2. Smoothie Bar
+        this.nearSmoothie = Math.abs(this.player.x - this.barX) < 50;
         this.smoothiePrompt.setVisible(this.nearSmoothie);
 
-        // 3. Arcade Cabinet (x = 790)
-        this.nearArcade = Math.abs(this.player.x - 790) < 55;
+        // 3. Arcade Cabinet
+        this.nearArcade = Math.abs(this.player.x - this.arcX) < 55;
         this.arcadePrompt.setVisible(this.nearArcade);
 
-        // 4. Leo Dialogue Proximity (x = 460)
-        if (Math.abs(this.player.x - 460) < 65 && !this.currentSpeaker) {
+        // 4. Leo Dialogue Proximity
+        if (Math.abs(this.player.x - (this.couchX - 20)) < 65 && !this.currentSpeaker) {
             this.showSpeechBubble(this.leoSprite, Phaser.Utils.Array.GetRandom(this.leoQuotes), time);
         }
 
-        // 5. Maya Dialogue Proximity (x = 835)
-        if (Math.abs(this.player.x - 835) < 60 && !this.currentSpeaker && !this.nearArcade) {
+        // 5. Maya Dialogue Proximity
+        if (Math.abs(this.player.x - (this.arcX + 44)) < 60 && !this.currentSpeaker && !this.nearArcade) {
             this.showSpeechBubble(this.mayaSprite, Phaser.Utils.Array.GetRandom(this.mayaQuotes), time);
         }
 
@@ -7639,7 +7783,16 @@ class EdgeClubScene extends Phaser.Scene {
     returnToGameScene() {
         if (this.isExiting) return;
         this.isExiting = true;
-        this.scene.resume('GameScene');
+
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(true);
+            this.gameScene.scene.wake();
+            this.gameScene.scene.resume();
+        }
         this.scene.stop('EdgeClubScene');
 
         if (this.gameScene && this.gameScene.player && this.gameScene.player.body) {
@@ -7780,6 +7933,7 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         // 3. Player Starfighter
         this.player = this.physics.add.sprite(cx, this.playY + this.playH - 50, 'shooter_player').setDepth(20);
+        this.player.body.allowGravity = false;
         this.player.body.setSize(24, 24);
 
         this.thruster = this.add.image(this.player.x, this.player.y + 16, 'shooter_player_thruster').setDepth(19);
@@ -7831,6 +7985,80 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-X', () => this.detonateSmartBomb());
         this.input.keyboard.on('keydown-B', () => this.detonateSmartBomb());
 
+        // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+        const resetArcadeKeys = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keys) {
+                if (this.keys.w) this.keys.w.isDown = false;
+                if (this.keys.a) this.keys.a.isDown = false;
+                if (this.keys.s) this.keys.s.isDown = false;
+                if (this.keys.d) this.keys.d.isDown = false;
+                if (this.keys.space) this.keys.space.isDown = false;
+                if (this.keys.z) this.keys.z.isDown = false;
+                if (this.keys.x) this.keys.x.isDown = false;
+                if (this.keys.b) this.keys.b.isDown = false;
+                if (this.keys.enter) this.keys.enter.isDown = false;
+            }
+        };
+
+        const onArcadeNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keys && this.keys.space) this.keys.space.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keys && this.keys.w) this.keys.w.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keys && this.keys.a) this.keys.a.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keys && this.keys.d) this.keys.d.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keys && this.keys.s) this.keys.s.isDown = false;
+            }
+            if (e.key === 'z' || e.key === 'Z') {
+                if (this.keys && this.keys.z) this.keys.z.isDown = false;
+            }
+            if (e.key === 'x' || e.key === 'X') {
+                if (this.keys && this.keys.x) this.keys.x.isDown = false;
+            }
+            if (e.key === 'b' || e.key === 'B') {
+                if (this.keys && this.keys.b) this.keys.b.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetArcadeKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetArcadeKeys);
+        window.addEventListener('focus', resetArcadeKeys);
+        window.addEventListener('keyup', onArcadeNativeKeyUp);
+        const onVis = () => { if (document.hidden) resetArcadeKeys(); };
+        document.addEventListener('visibilitychange', onVis);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetArcadeKeys);
+            window.removeEventListener('focus', resetArcadeKeys);
+            window.removeEventListener('keyup', onArcadeNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVis);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
+        });
+
         // Mobile Controls
         this.setupMobileArcadeControls();
 
@@ -7856,8 +8084,7 @@ class ArcadeShooterScene extends Phaser.Scene {
         }).setOrigin(1, 0).setDepth(3000).setInteractive({ useHandCursor: true });
         this.exitBtn.on('pointerdown', () => this.exitCabinet());
 
-        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-        if (isTouch) {
+        if (!this.sys.game.device.os.desktop) {
             const bx = this.scale.width - 55;
             const by = this.scale.height - 60;
 
@@ -8389,8 +8616,14 @@ class ArcadeShooterScene extends Phaser.Scene {
     }
 
     exitCabinet() {
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        if (this.edgeScene && this.edgeScene.scene) {
+            this.edgeScene.scene.setVisible(true);
+            this.edgeScene.scene.resume();
+        }
         this.scene.stop('ArcadeShooterScene');
-        this.scene.resume('EdgeClubScene');
         if (this.edgeScene && this.edgeScene.onReturnFromArcade) {
             this.edgeScene.onReturnFromArcade(this.score);
         }
@@ -8411,16 +8644,26 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         if (this.gameState !== 'playing') return;
 
-        // Player Movement
+        // Player Movement (Mutually exclusive & DOM keyup protected)
+        let isLeft = (this.cursors.left && this.cursors.left.isDown) || (this.keys.a && this.keys.a.isDown);
+        let isRight = (this.cursors.right && this.cursors.right.isDown) || (this.keys.d && this.keys.d.isDown);
+        let isUp = (this.cursors.up && this.cursors.up.isDown) || (this.keys.w && this.keys.w.isDown);
+        let isDown = (this.cursors.down && this.cursors.down.isDown) || (this.keys.s && this.keys.s.isDown);
+
         let vx = 0;
         let vy = 0;
         const pSpeed = 240;
 
-        if (this.cursors.left.isDown || this.keys.a.isDown) vx = -pSpeed;
-        else if (this.cursors.right.isDown || this.keys.d.isDown) vx = pSpeed;
+        if (isLeft && !isRight) vx = -pSpeed;
+        else if (isRight && !isLeft) vx = pSpeed;
 
-        if (this.cursors.up.isDown || this.keys.w.isDown) vy = -pSpeed;
-        else if (this.cursors.down.isDown || this.keys.s.isDown) vy = pSpeed;
+        if (isUp && !isDown) vy = -pSpeed;
+        else if (isDown && !isUp) vy = pSpeed;
+
+        if (vx !== 0 && vy !== 0) {
+            vx *= 0.7071;
+            vy *= 0.7071;
+        }
 
         if (!this.touchDragActive) {
             this.player.x += vx * dt;
