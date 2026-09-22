@@ -69,8 +69,28 @@
     - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI)
     - #45: Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
     - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
-    - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet)
+    - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet - Completed)
   - Storyboard documented in detail in `Issue_12_Storyboard.md`.
+
+- **Riley's Edge Tween Club Arcade (Issue #47 - Completed)**:
+  - **Elevator Navigation**: Added `Deck 5 (Edge Tween Club)` destination in `ElevatorMenuScene`. Selecting it automatically sets active character to Riley and launches `EdgeClubScene`.
+  - **Edge Tween Club Lounge (`EdgeClubScene`)**:
+    - Authentic late-80s Capcom/NES synthwave aesthetic: deep navy walls (`edge_wall`), neon blue/cyan light strips, illuminated diamond tile flooring (`edge_floor`), pulsing neon "EDGE" sign, starry night ocean portholes with twinkling stars, and an animated DJ equalizer station.
+    - **Tween NPCs**: Leo (lounging on sectional couch with headphones) and Maya (cheering by arcade cabinet) with proximity 8-bit Capcom speech bubbles.
+    - **Smoothie Bar ("Edge Chill Bar")**: Interactive counter where Riley can grab a tropical smoothie (`edge_smoothie`), gaining a sparkling rainbow aura and +50% speed boost.
+    - **Wall-Mounted CRT Leaderboard**: Displays Top 5 scores dynamically pulled from `localStorage` (`getEdgeHighScores()`).
+    - **Proximity Prompts**: Blinking retro action prompts for elevator, smoothie bar, and arcade cabinet (`[ ENTER: ... ]` / `[ TAP TO ... ]`).
+  - **"Game Within a Game": Retro Space Shooter ("GALAXY DESTINY" / `ArcadeShooterScene`)**:
+    - Authentic CRT arcade cabinet surround, golden/cyan border bezel, top marquee, and scanlines.
+    - Dual-layer parallax scrolling starfield.
+    - Player starfighter with flickering thrusters, dual laser cannons (upgradable to 3-way spread and quad heavy plasma), and energy shield forcefield.
+    - Enemy formations: Swooping Alien Drones, Armored Cosmic Cruisers, and tumbling Asteroids (splitting into mini fragments).
+    - Boss Battle: **The Destiny Dreadnought** (Wave 3, 120 HP with boss health bar, dual wing spread cannons, aimed homing energy orbs, multi-stage cascading explosions, and victory fanfare).
+    - Power-ups: `[P]` (Weapon upgrade), `[S]` (Energy Shield), `[B]` (Smart Bomb), and `[★]` (+1000 pts).
+    - Smart Bomb: Screen-clearing shockwave that vaporizes bullets and deals massive damage.
+    - **8-Bit Web Audio Synthesizer**: Pure Web Audio oscillators (square, triangle, sawtooth, noise) for laser zaps, explosion booms, powerup chimes, and bomb blasts with zero external dependencies.
+    - **Edge High Score Board Integration**: Updates player score, celebrates new high scores ("★ NEW HIGH SCORE! RILEY IS #1 ON THE EDGE BOARD!"), persists in `localStorage`, and immediately updates the Edge Club wall display upon return.
+    - **Controls**: Full keyboard (Arrow keys/WASD, Space/Z to shoot, X/B for bomb, ESC to exit) and mobile on-screen controls (touch drag/joystick, large FIRE and BOMB buttons, and quick exit).
 
 - **Currents Bar Doorway & Signage Removal (Issue #42 - Completed)**:
   - Removed unused doorway sprite and "CURRENTS BAR" banner on Deck 13 aft (`x = 2240`).
