@@ -2706,23 +2706,31 @@ function generateEdgeAndArcadeTextures(scene) {
         g.clear();
     });
 
-    // 21. Energy Shield (46x46)
+    // 21. Energy Shield (46x46) - 100% HOLLOW neon cyan energy barrier ring with perimeter nodes (ZERO center fill)
     g.lineStyle(2, 0x00e5ff, 1);
     g.strokeCircle(23, 23, 21);
-    g.lineStyle(1, 0xffffff, 0.7);
-    g.strokeCircle(23, 23, 18);
-    g.fillStyle(0x00e5ff, 0.15);
-    g.fillCircle(23, 23, 20);
+    g.lineStyle(1, 0xffffff, 0.9);
+    g.strokeCircle(23, 23, 19);
+    // 4 decorative shield emitter nodes on perimeter (center remains 100% transparent so ship is never obscured)
+    g.fillStyle(0x00ffff, 1);
+    g.fillRect(21, 0, 4, 3);
+    g.fillRect(21, 43, 4, 3);
+    g.fillRect(0, 21, 3, 4);
+    g.fillRect(43, 21, 3, 4);
     g.generateTexture('shooter_shield', 46, 46);
     g.clear();
 
-    // 21b. Invulnerability Forcefield Aura (46x46)
+    // 21b. Invulnerability Forcefield Aura (46x46) - 100% HOLLOW golden halo ring (ZERO center fill)
     g.lineStyle(2, 0xffd700, 1);
     g.strokeCircle(23, 23, 21);
-    g.lineStyle(1, 0x00e5ff, 0.9);
+    g.lineStyle(1, 0xffffff, 0.9);
     g.strokeCircle(23, 23, 18);
-    g.fillStyle(0xffd700, 0.22);
-    g.fillCircle(23, 23, 20);
+    // 4 gold power crystals on perimeter
+    g.fillStyle(0xffd700, 1);
+    g.fillRect(21, 0, 4, 3);
+    g.fillRect(21, 43, 4, 3);
+    g.fillRect(0, 21, 3, 4);
+    g.fillRect(43, 21, 3, 4);
     g.generateTexture('shooter_invuln_shield', 46, 46);
     g.clear();
 
@@ -8002,14 +8010,14 @@ class ArcadeShooterScene extends Phaser.Scene {
             }
         });
 
-        // 5. Player Starfighter
-        this.player = this.physics.add.sprite(cx, this.playY + this.playH - 50, 'shooter_player').setDepth(20);
+        // 5. Player Starfighter (Depth 22 - always in front of shield rings and aura effects)
+        this.player = this.physics.add.sprite(cx, this.playY + this.playH - 50, 'shooter_player').setDepth(22);
         this.player.body.allowGravity = false;
         this.player.body.setSize(24, 24);
 
-        this.thruster = this.add.image(this.player.x, this.player.y + 16, 'shooter_player_thruster').setDepth(19);
-        this.shieldSprite = this.add.image(this.player.x, this.player.y, 'shooter_shield').setDepth(21).setVisible(false);
-        this.invulnShield = this.add.image(this.player.x, this.player.y, 'shooter_invuln_shield').setDepth(22).setVisible(false);
+        this.thruster = this.add.image(this.player.x, this.player.y + 16, 'shooter_player_thruster').setDepth(21);
+        this.shieldSprite = this.add.image(this.player.x, this.player.y, 'shooter_shield').setDepth(20).setVisible(false);
+        this.invulnShield = this.add.image(this.player.x, this.player.y, 'shooter_invuln_shield').setDepth(19).setVisible(false);
 
         // 6. Arcade Top HUD
         this.highScore = getEdgeHighScores()[0].score || 12500;
@@ -8910,8 +8918,12 @@ class ArcadeShooterScene extends Phaser.Scene {
             this.cameras.main.shake(120, 0.01);
             if (this.shieldHits <= 0) {
                 this.shieldSprite.setVisible(false);
+            } else {
+                this.shieldSprite.setTint(0xFFAA00);
             }
-            this.invulnerableTimer = 600; // Brief grace period so multi-bullet salvo doesn't instantly pierce life
+            let deflect = this.add.circle(this.player.x, this.player.y, 25, 0x00E5FF, 0.6).setDepth(25);
+            this.tweens.add({ targets: deflect, radius: 44, alpha: 0, duration: 250, onComplete: () => deflect.destroy() });
+            this.invulnerableTimer = 400; // Brief grace period so multi-bullet salvo doesn't instantly pierce life
             return;
         }
 
@@ -8956,14 +8968,20 @@ class ArcadeShooterScene extends Phaser.Scene {
         powerup.destroy();
         retroArcadeAudio.playPowerup();
 
+        this.player.setVisible(true);
+        this.player.setAlpha(1.0);
+
         let label = '';
         if (type === 'P') {
             this.weaponLevel = Math.min(3, this.weaponLevel + 1);
             label = `WEAPON LVL ${this.weaponLevel}!`;
         } else if (type === 'S') {
             this.shieldHits = 2;
-            this.shieldSprite.setVisible(true);
-            label = 'SHIELD ON!';
+            this.shieldSprite.setVisible(true).clearTint();
+            this.invulnerableTimer = 0;
+            if (this.invulnShield) this.invulnShield.setVisible(false);
+            this.player.clearTint();
+            label = 'ENERGY SHIELD (2 HITS)!';
         } else if (type === 'B') {
             this.bombs = Math.min(5, this.bombs + 1);
             label = '+1 SMART BOMB!';
@@ -9125,10 +9143,14 @@ class ArcadeShooterScene extends Phaser.Scene {
             this.player.x = Phaser.Math.Clamp(this.player.x, this.playX + 16, this.playX + this.playW - 16);
             this.player.y = Phaser.Math.Clamp(this.player.y, this.playY + 60, this.playY + this.playH - 30);
         }
+        this.player.body.reset(this.player.x, this.player.y);
 
         this.thruster.setPosition(this.player.x, this.player.y + 16);
         this.thruster.setScale(Phaser.Math.Between(8, 12) / 10);
         this.shieldSprite.setPosition(this.player.x, this.player.y);
+        if (this.shieldHits > 0) {
+            this.shieldSprite.angle += 1.5;
+        }
 
         // Invulnerability Forcefield & Golden Sparkle Surge (Ship is 100% visible, never transparent or hidden!)
         if (this.invulnerableTimer > 0) {
@@ -9136,16 +9158,18 @@ class ArcadeShooterScene extends Phaser.Scene {
             this.player.setAlpha(1.0);
             this.thruster.setAlpha(1.0);
 
-            // Sparkling golden energy surge across hull
-            const isTint = Math.floor(this.invulnerableTimer / 70) % 2 === 0;
-            this.player.setTint(isTint ? 0xFFFFAA : 0xFFD700);
+            // Sparkling golden energy surge across hull (only when recovering from life loss, not during shield deflection)
+            if (this.shieldHits === 0) {
+                const isTint = Math.floor(this.invulnerableTimer / 70) % 2 === 0;
+                this.player.setTint(isTint ? 0xFFFFAA : 0xFFD700);
 
-            // Pulse glowing invulnerability forcefield around the ship
-            if (this.invulnShield) {
-                this.invulnShield.setPosition(this.player.x, this.player.y).setVisible(true);
-                const pulse = 1.0 + Math.sin(time * 0.015) * 0.12;
-                this.invulnShield.setScale(pulse);
-                this.invulnShield.setAlpha(0.75 + Math.sin(time * 0.02) * 0.25);
+                // Pulse glowing invulnerability forcefield around the ship
+                if (this.invulnShield) {
+                    this.invulnShield.setPosition(this.player.x, this.player.y).setVisible(true);
+                    const pulse = 1.0 + Math.sin(time * 0.015) * 0.12;
+                    this.invulnShield.setScale(pulse);
+                    this.invulnShield.setAlpha(0.75 + Math.sin(time * 0.02) * 0.25);
+                }
             }
 
             if (this.invulnerableTimer <= 0) {
