@@ -8179,11 +8179,20 @@ class ArcadeShooterScene extends Phaser.Scene {
         // 9. Touch Drag Steering on CRT screen (Mobile + Tablet)
         this.setupTouchDragControls();
 
-        // 10. Overlaps & Collisions
+        // 10. Overlaps & Collisions (Strict object discrimination: player is NEVER passed as target)
         this.physics.add.overlap(this.playerLasers, this.enemies, (laser, enemy) => this.hitEnemyWithLaser(laser, enemy));
-        this.physics.add.overlap(this.enemyBullets, this.player, (bullet, player) => this.hitPlayerWithBullet(bullet));
-        this.physics.add.overlap(this.enemies, this.player, (enemy, player) => this.hitPlayerWithEnemy(enemy));
-        this.physics.add.overlap(this.powerups, this.player, (powerup, player) => this.collectPowerup(powerup));
+        this.physics.add.overlap(this.player, this.enemyBullets, (objA, objB) => {
+            const bullet = (objA === this.player) ? objB : objA;
+            this.hitPlayerWithBullet(bullet);
+        });
+        this.physics.add.overlap(this.player, this.enemies, (objA, objB) => {
+            const enemy = (objA === this.player) ? objB : objA;
+            this.hitPlayerWithEnemy(enemy);
+        });
+        this.physics.add.overlap(this.player, this.powerups, (objA, objB) => {
+            const powerup = (objA === this.player) ? objB : objA;
+            this.collectPowerup(powerup);
+        });
 
         // 11. Wave 1 Mission Briefing Attract Banner
         this.showMissionBriefing();
@@ -8205,7 +8214,7 @@ class ArcadeShooterScene extends Phaser.Scene {
     renderArcadeCabinetChassis() {
         const cx = this.scale.width / 2;
 
-        // A. Cabinet Chassis & Side Panels (Depth 1)
+        // A. Cabinet Chassis Base (Depth 1) - behind the CRT monitor screen
         let cab = this.add.graphics().setDepth(1);
         cab.fillStyle(0x000000, 0.95);
         cab.fillRect(this.cabX - 4, this.cabY - 4, this.cabW + 8, this.cabH + 8);
@@ -8215,42 +8224,54 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         const wingW = Math.max(12, Math.round((this.cabW - this.playW) / 2));
 
+        // Side Wings, T-molding & Outer Frame (Depth 30) - in front of playfield entities so screen is recessed
+        let cabWings = this.add.graphics().setDepth(30);
+
         // Left Side Wing (Synthwave artwork & T-molding)
-        cab.fillStyle(0x16142B, 1);
-        cab.fillRect(this.cabX, this.cabY, wingW, this.cabH);
-        cab.lineStyle(3, 0xFF007F, 0.7);
-        cab.lineBetween(this.cabX + 4, this.cabY + 50, this.cabX + wingW - 4, this.cabY + 140);
-        cab.lineStyle(3, 0x00E5FF, 0.7);
-        cab.lineBetween(this.cabX + 4, this.cabY + 90, this.cabX + wingW - 4, this.cabY + 180);
-        cab.lineStyle(2, 0xFFD700, 0.7);
-        cab.lineBetween(this.cabX + 4, this.cabY + 130, this.cabX + wingW - 4, this.cabY + 220);
+        cabWings.fillStyle(0x16142B, 1);
+        cabWings.fillRect(this.cabX, this.cabY, wingW, this.cabH);
+        cabWings.lineStyle(3, 0xFF007F, 0.7);
+        cabWings.lineBetween(this.cabX + 4, this.cabY + 50, this.cabX + wingW - 4, this.cabY + 140);
+        cabWings.lineStyle(3, 0x00E5FF, 0.7);
+        cabWings.lineBetween(this.cabX + 4, this.cabY + 90, this.cabX + wingW - 4, this.cabY + 180);
+        cabWings.lineStyle(2, 0xFFD700, 0.7);
+        cabWings.lineBetween(this.cabX + 4, this.cabY + 130, this.cabX + wingW - 4, this.cabY + 220);
 
         // Right Side Wing
-        cab.fillStyle(0x16142B, 1);
-        cab.fillRect(this.cabX + this.cabW - wingW, this.cabY, wingW, this.cabH);
-        cab.lineStyle(3, 0xFF007F, 0.7);
-        cab.lineBetween(this.cabX + this.cabW - 4, this.cabY + 50, this.cabX + this.cabW - wingW + 4, this.cabY + 140);
-        cab.lineStyle(3, 0x00E5FF, 0.7);
-        cab.lineBetween(this.cabX + this.cabW - 4, this.cabY + 90, this.cabX + this.cabW - wingW + 4, this.cabY + 180);
-        cab.lineStyle(2, 0xFFD700, 0.7);
-        cab.lineBetween(this.cabX + this.cabW - 4, this.cabY + 130, this.cabX + this.cabW - wingW + 4, this.cabY + 220);
+        cabWings.fillStyle(0x16142B, 1);
+        cabWings.fillRect(this.cabX + this.cabW - wingW, this.cabY, wingW, this.cabH);
+        cabWings.lineStyle(3, 0xFF007F, 0.7);
+        cabWings.lineBetween(this.cabX + this.cabW - 4, this.cabY + 50, this.cabX + this.cabW - wingW + 4, this.cabY + 140);
+        cabWings.lineStyle(3, 0x00E5FF, 0.7);
+        cabWings.lineBetween(this.cabX + this.cabW - 4, this.cabY + 90, this.cabX + this.cabW - wingW + 4, this.cabY + 180);
+        cabWings.lineStyle(2, 0xFFD700, 0.7);
+        cabWings.lineBetween(this.cabX + this.cabW - 4, this.cabY + 130, this.cabX + this.cabW - wingW + 4, this.cabY + 220);
 
         // T-Molding Trim (Bright orange/gold rubber edge)
-        cab.fillStyle(0xFF5500, 1);
-        cab.fillRect(this.cabX, this.cabY, 4, this.cabH);
-        cab.fillRect(this.cabX + this.cabW - 4, this.cabY, 4, this.cabH);
-        cab.fillStyle(0xFFAA00, 1);
-        cab.fillRect(this.cabX + 1, this.cabY, 2, this.cabH);
-        cab.fillRect(this.cabX + this.cabW - 3, this.cabY, 2, this.cabH);
+        cabWings.fillStyle(0xFF5500, 1);
+        cabWings.fillRect(this.cabX, this.cabY, 4, this.cabH);
+        cabWings.fillRect(this.cabX + this.cabW - 4, this.cabY, 4, this.cabH);
+        cabWings.fillStyle(0xFFAA00, 1);
+        cabWings.fillRect(this.cabX + 1, this.cabY, 2, this.cabH);
+        cabWings.fillRect(this.cabX + this.cabW - 3, this.cabY, 2, this.cabH);
 
         // Chrome Rivet Bolts along cabinet sides
         for (let ry = this.cabY + 30; ry < this.cabY + this.cabH; ry += 65) {
-            cab.fillStyle(0x778899, 1);
-            cab.fillCircle(this.cabX + 8, ry, 2.5);
-            cab.fillCircle(this.cabX + this.cabW - 8, ry, 2.5);
-            cab.fillStyle(0xFFFFFF, 1);
-            cab.fillCircle(this.cabX + 7, ry - 1, 1);
-            cab.fillCircle(this.cabX + this.cabW - 9, ry - 1, 1);
+            cabWings.fillStyle(0x778899, 1);
+            cabWings.fillCircle(this.cabX + 8, ry, 2.5);
+            cabWings.fillCircle(this.cabX + this.cabW - 8, ry, 2.5);
+            cabWings.fillStyle(0xFFFFFF, 1);
+            cabWings.fillCircle(this.cabX + 7, ry - 1, 1);
+            cabWings.fillCircle(this.cabX + this.cabW - 9, ry - 1, 1);
+        }
+
+        // Outer Side Letterbox Guards (prevent any element from rendering outside cabinet chassis)
+        cabWings.fillStyle(0x030308, 1);
+        if (this.cabX > 0) {
+            cabWings.fillRect(0, 0, this.cabX, this.scale.height);
+        }
+        if (this.cabX + this.cabW < this.scale.width) {
+            cabWings.fillRect(this.cabX + this.cabW, 0, this.scale.width - (this.cabX + this.cabW), this.scale.height);
         }
 
         // B. Top Illuminated Marquee (Depth 35)
@@ -8853,7 +8874,7 @@ class ArcadeShooterScene extends Phaser.Scene {
     }
 
     destroyEnemy(enemy, isBomb) {
-        if (!enemy.active) return;
+        if (!enemy || enemy === this.player || !enemy.active) return;
         const ex = enemy.x;
         const ey = enemy.y;
         const pts = enemy.scoreVal || 100;
@@ -8881,7 +8902,9 @@ class ArcadeShooterScene extends Phaser.Scene {
             p.setVelocityY(65);
         }
 
-        enemy.destroy();
+        if (typeof enemy.destroy === 'function') {
+            enemy.destroy();
+        }
     }
 
     spawnExplosion(x, y) {
@@ -8896,12 +8919,16 @@ class ArcadeShooterScene extends Phaser.Scene {
     }
 
     hitPlayerWithBullet(bullet) {
-        bullet.destroy();
+        if (!bullet || bullet === this.player) return;
+        if (typeof bullet.destroy === 'function') {
+            bullet.destroy();
+        }
         this.damagePlayer();
     }
 
     hitPlayerWithEnemy(enemy) {
-        if (!enemy.isBoss) {
+        if (!enemy || enemy === this.player) return;
+        if (!enemy.isBoss && typeof this.destroyEnemy === 'function') {
             this.destroyEnemy(enemy, false);
         }
         this.damagePlayer();
@@ -8964,11 +8991,15 @@ class ArcadeShooterScene extends Phaser.Scene {
     }
 
     collectPowerup(powerup) {
+        if (!powerup || powerup === this.player) return;
         const type = powerup.pType;
-        powerup.destroy();
+        if (typeof powerup.destroy === 'function') {
+            powerup.destroy();
+        }
         retroArcadeAudio.playPowerup();
 
         this.player.setVisible(true);
+        this.player.setActive(true);
         this.player.setAlpha(1.0);
 
         let label = '';
@@ -9144,6 +9175,8 @@ class ArcadeShooterScene extends Phaser.Scene {
             this.player.y = Phaser.Math.Clamp(this.player.y, this.playY + 60, this.playY + this.playH - 30);
         }
         this.player.body.reset(this.player.x, this.player.y);
+        this.player.setVisible(true);
+        this.player.setActive(true);
 
         this.thruster.setPosition(this.player.x, this.player.y + 16);
         this.thruster.setScale(Phaser.Math.Between(8, 12) / 10);
@@ -9204,9 +9237,19 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.enemies.getChildren().forEach(e => {
             if (e.isBoss) return;
 
-            // Sine wave drone movement
+            // Confine enemy horizontal movement within CRT monitor playfield (bounce off side edges)
+            if (e.body && e.body.velocity) {
+                if (e.x <= this.playX + 18 && e.body.velocity.x < 0) {
+                    e.setVelocityX(Math.abs(e.body.velocity.x));
+                } else if (e.x >= this.playX + this.playW - 18 && e.body.velocity.x > 0) {
+                    e.setVelocityX(-Math.abs(e.body.velocity.x));
+                }
+            }
+
+            // Sine wave drone movement with horizontal clamp
             if (e.sineOffset !== undefined) {
                 e.x += Math.sin((time + e.sineOffset) * 0.005) * 1.5;
+                e.x = Phaser.Math.Clamp(e.x, this.playX + 16, this.playX + this.playW - 16);
             }
 
             // Enemy Shooting
@@ -9216,8 +9259,8 @@ class ArcadeShooterScene extends Phaser.Scene {
                 b.setVelocityY(160 + this.wave * 12);
             }
 
-            // Clean off-screen enemies
-            if (e.y > this.playY + this.playH + 20) {
+            // Clean off-screen enemies (bottom, or abnormal horizontal drift)
+            if (e.y > this.playY + this.playH + 20 || e.x < this.playX - 40 || e.x > this.playX + this.playW + 40) {
                 e.destroy();
             }
         });
@@ -9229,7 +9272,7 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         // Clean off-screen powerups
         this.powerups.getChildren().forEach(p => {
-            if (p.y > this.playY + this.playH + 10) {
+            if (p.y > this.playY + this.playH + 10 || p.x < this.playX - 20 || p.x > this.playX + this.playW + 20) {
                 p.destroy();
             }
         });
