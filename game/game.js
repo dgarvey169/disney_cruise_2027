@@ -7911,13 +7911,20 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.maxBossHP = 120;
         this.bossLaserTimer = 0;
 
-        // Mobile touch state
+        // Mobile touch & joystick state
         this.touchFireActive = false;
-        this.touchDragActive = false;
+        this.joystickActive = false;
+        this.joystickVx = 0;
+        this.joystickVy = 0;
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
+        this.mobileInput = { left: false, right: false, up: false, down: false };
     }
 
     create() {
         retroArcadeAudio.init();
+        // Enable multi-touch pointers for concurrent joystick + fire + bomb
+        this.input.addPointer(3);
         // Disable gravity in arcade space shooter scene
         this.physics.world.gravity.y = 0;
 
@@ -8176,8 +8183,8 @@ class ArcadeShooterScene extends Phaser.Scene {
             if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
-        // 9. Touch Drag Steering on CRT screen (Mobile + Tablet)
-        this.setupTouchDragControls();
+        // 9. Floating Joystick & Mobile Action Button Overlays (Fire & Bomb)
+        this.setupFloatingJoystickAndTouchControls();
 
         // 10. Overlaps & Collisions (Strict object discrimination: player is NEVER passed as target)
         this.physics.add.overlap(this.playerLasers, this.enemies, (laser, enemy) => this.hitEnemyWithLaser(laser, enemy));
@@ -8503,23 +8510,192 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.bombBtn.on('pointerout', releaseBombBtn);
     }
 
-    setupTouchDragControls() {
-        // Direct finger-drag to steer ship anywhere across the CRT monitor
-        this.input.on('pointerdown', (pointer) => {
-            if (pointer.x >= this.playX && pointer.x <= this.playX + this.playW &&
-                pointer.y >= this.playY && pointer.y <= this.playY + this.playH) {
-                this.touchDragActive = true;
+    setupFloatingJoystickAndTouchControls() {
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const JOY_RADIUS = 42;
+        const KNOB_RADIUS = 20;
+
+        // 1. Floating Joystick Graphics (Depth 520 - above playfield and cabinet)
+        this.joyBase = this.add.graphics().setDepth(520);
+        this.joyKnob = this.add.graphics().setDepth(521);
+
+        this.joyBase.fillStyle(0x060C1E, 0.6);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(2, 0x00E5FF, 0.85);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(1, 0xFFD700, 0.4);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS - 6);
+
+        this.joyKnob.fillStyle(0x00A8FF, 0.95);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
+        this.joyKnob.lineStyle(2, 0x00FFFF, 1);
+        this.joyKnob.strokeCircle(0, 0, KNOB_RADIUS);
+        this.joyKnob.fillStyle(0xFFFFFF, 0.85);
+        this.joyKnob.fillCircle(-4, -4, 4);
+
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
+
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
+
+        // 2. On-Screen Action Button Overlays (Depth 510) - Primary FIRE & Secondary BOMB
+        const btnFireX = Math.round(W - 60);
+        const btnFireY = Math.round(H - 68);
+        const btnBombX = Math.round(btnFireX - 68);
+        const btnBombY = Math.round(btnFireY + 4);
+
+        // FIRE Button Overlay Container
+        this.overlayFireContainer = this.add.container(btnFireX, btnFireY).setDepth(510);
+        let fireBase = this.add.circle(0, 0, 32, 0x0A0D18, 0.85).setStrokeStyle(2, 0x00E5FF, 0.85);
+        this.overlayFireBtn = this.add.circle(0, 0, 28, 0xFF2244, 0.92).setInteractive({ useHandCursor: true });
+        let fireHighlight = this.add.circle(-7, -8, 6, 0xFFAAAA, 0.65);
+        let fireLabel = this.add.text(0, -4, 'FIRE', {
+            fontSize: '9px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        let fireSub = this.add.text(0, 8, '[HOLD]', {
+            fontSize: '5px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+        this.overlayFireContainer.add([fireBase, this.overlayFireBtn, fireHighlight, fireLabel, fireSub]);
+
+        // BOMB Button Overlay Container
+        this.overlayBombContainer = this.add.container(btnBombX, btnBombY).setDepth(510);
+        let bombBase = this.add.circle(0, 0, 26, 0x0A0D18, 0.85).setStrokeStyle(2, 0xFFD700, 0.85);
+        this.overlayBombBtn = this.add.circle(0, 0, 22, 0xFF7700, 0.92).setInteractive({ useHandCursor: true });
+        let bombHighlight = this.add.circle(-5, -6, 5, 0xFFEEAA, 0.65);
+        let bombLabel = this.add.text(0, -3, 'BOMB', {
+            fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        let bombSub = this.add.text(0, 7, '[X]', {
+            fontSize: '5px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+        this.overlayBombContainer.add([bombBase, this.overlayBombBtn, bombHighlight, bombLabel, bombSub]);
+
+        // FIRE Button Handlers
+        this.firePointerId = null;
+        this.overlayFireBtn.on('pointerdown', (ptr) => {
+            this.firePointerId = ptr.id;
+            this.touchFireActive = true;
+            this.overlayFireContainer.setScale(0.92);
+            this.fireLaser();
+        });
+        const releaseOverlayFire = (ptr) => {
+            if (this.firePointerId === null || (ptr && ptr.id === this.firePointerId)) {
+                this.touchFireActive = false;
+                this.overlayFireContainer.setScale(1);
+                this.firePointerId = null;
+            }
+        };
+        this.overlayFireBtn.on('pointerup', releaseOverlayFire);
+        this.overlayFireBtn.on('pointerout', releaseOverlayFire);
+
+        // BOMB Button Handlers
+        this.overlayBombBtn.on('pointerdown', () => {
+            this.overlayBombContainer.setScale(0.92);
+            this.detonateSmartBomb();
+        });
+        const releaseOverlayBomb = () => {
+            this.overlayBombContainer.setScale(1);
+        };
+        this.overlayBombBtn.on('pointerup', releaseOverlayBomb);
+        this.overlayBombBtn.on('pointerout', releaseOverlayBomb);
+
+        // Resize handler for mobile orientation changes
+        this.scale.on('resize', (gameSize) => {
+            const newW = gameSize.width;
+            const newH = gameSize.height;
+            const nFireX = Math.round(newW - 60);
+            const nFireY = Math.round(newH - 68);
+            if (this.overlayFireContainer) {
+                this.overlayFireContainer.setPosition(nFireX, nFireY);
+            }
+            if (this.overlayBombContainer) {
+                this.overlayBombContainer.setPosition(Math.round(nFireX - 68), Math.round(nFireY + 4));
             }
         });
-        this.input.on('pointermove', (pointer) => {
-            if (this.touchDragActive && this.gameState === 'playing') {
-                this.player.x = Phaser.Math.Clamp(pointer.x, this.playX + 16, this.playX + this.playW - 16);
-                this.player.y = Phaser.Math.Clamp(pointer.y - 24, this.playY + 55, this.playY + this.playH - 30);
+
+        // 3. Floating Joystick Multi-touch Pointer Listeners
+        this.input.on('pointerdown', (ptr) => {
+            if (this.gameState !== 'playing') return;
+
+            // Ignore touches hitting the action buttons
+            const curFireX = this.overlayFireContainer.x;
+            const curFireY = this.overlayFireContainer.y;
+            const curBombX = this.overlayBombContainer.x;
+            const curBombY = this.overlayBombContainer.y;
+            const distFire = Phaser.Math.Distance.Between(ptr.x, ptr.y, curFireX, curFireY);
+            const distBomb = Phaser.Math.Distance.Between(ptr.x, ptr.y, curBombX, curBombY);
+            if (distFire < 38 || distBomb < 32) {
+                return;
+            }
+
+            // Ignore exit button in upper-right
+            if (this.exitBtn && ptr.y < this.cabY + 40 && ptr.x > this.cabX + this.cabW - 80) {
+                return;
+            }
+
+            // Spawn floating joystick at touch point (left 75% of screen)
+            if (this.joyPointer === null && ptr.x < this.scale.width * 0.75) {
+                this.joyPointer = ptr;
+                this.joyOrigin.x = ptr.x;
+                this.joyOrigin.y = ptr.y;
+                this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                this.joystickActive = true;
+                this.joystickVx = 0;
+                this.joystickVy = 0;
             }
         });
-        this.input.on('pointerup', () => {
-            this.touchDragActive = false;
+
+        this.input.on('pointermove', (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                let dx = ptr.x - this.joyOrigin.x;
+                let dy = ptr.y - this.joyOrigin.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let clamped = Math.min(dist, JOY_RADIUS);
+                let angle = Math.atan2(dy, dx);
+                let kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                let ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                // Deadzone check (8px)
+                if (dist > 8) {
+                    const norm = Math.min(1.0, (dist - 8) / (JOY_RADIUS - 8));
+                    this.joystickVx = Math.cos(angle) * norm * 240;
+                    this.joystickVy = Math.sin(angle) * norm * 240;
+                    this.mobileInput.left = dx < -12;
+                    this.mobileInput.right = dx > 12;
+                    this.mobileInput.up = dy < -12;
+                    this.mobileInput.down = dy > 12;
+                } else {
+                    this.joystickVx = 0;
+                    this.joystickVy = 0;
+                    this.mobileInput.left = false;
+                    this.mobileInput.right = false;
+                    this.mobileInput.up = false;
+                    this.mobileInput.down = false;
+                }
+            }
         });
+
+        const releaseJoystick = (ptr) => {
+            if (this.joyPointer && (!ptr || ptr.id === this.joyPointer.id)) {
+                this.joyPointer = null;
+                this.joyBase.setVisible(false);
+                this.joyKnob.setVisible(false);
+                this.joystickActive = false;
+                this.joystickVx = 0;
+                this.joystickVy = 0;
+                this.mobileInput.left = false;
+                this.mobileInput.right = false;
+                this.mobileInput.up = false;
+                this.mobileInput.down = false;
+            }
+        };
+
+        this.input.on('pointerup', releaseJoystick);
+        this.input.on('pointercancel', releaseJoystick);
     }
 
     showMissionBriefing() {
@@ -8538,7 +8714,7 @@ class ArcadeShooterScene extends Phaser.Scene {
             fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
         }).setOrigin(0.5);
 
-        let t3 = this.add.text(0, -2, '• MOVE: ARROWS / WASD / TOUCH DRAG\n• FIRE: HOLD [SPACE] OR [Z] (AUTO)\n• BOMB: [X] OR [B] BLAST SCREEN\n• DODGE RED BULLETS! CATCH [P][S][B][★]', {
+        let t3 = this.add.text(0, -2, '• MOVE: FLOATING JOYSTICK / WASD\n• FIRE: HOLD [FIRE] BUTTON OR [SPACE]\n• BOMB: TAP [BOMB] BUTTON OR [X]\n• DODGE RED BULLETS! CATCH [P][S][B][★]', {
             fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', align: 'left', lineSpacing: 4
         }).setOrigin(0.5);
 
@@ -9053,6 +9229,12 @@ class ArcadeShooterScene extends Phaser.Scene {
         this.thruster.setVisible(false);
         this.shieldSprite.setVisible(false);
         if (this.invulnShield) this.invulnShield.setVisible(false);
+        if (this.joyBase) this.joyBase.setVisible(false);
+        if (this.joyKnob) this.joyKnob.setVisible(false);
+        if (this.overlayFireContainer) this.overlayFireContainer.setVisible(false);
+        if (this.overlayBombContainer) this.overlayBombContainer.setVisible(false);
+        this.touchFireActive = false;
+        this.joystickActive = false;
 
         // Save High Score
         const updatedScores = saveEdgeHighScore(this.score, 'RILEY');
@@ -9119,6 +9301,12 @@ class ArcadeShooterScene extends Phaser.Scene {
         }
         if (this.invulnShield) this.invulnShield.setVisible(false);
         if (this.player) this.player.clearTint();
+        if (this.joyBase) this.joyBase.setVisible(false);
+        if (this.joyKnob) this.joyKnob.setVisible(false);
+        if (this.overlayFireContainer) this.overlayFireContainer.setVisible(false);
+        if (this.overlayBombContainer) this.overlayBombContainer.setVisible(false);
+        this.touchFireActive = false;
+        this.joystickActive = false;
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
         }
@@ -9147,33 +9335,36 @@ class ArcadeShooterScene extends Phaser.Scene {
 
         if (this.gameState !== 'playing') return;
 
-        // Player Movement (Mutually exclusive & DOM keyup protected)
-        let isLeft = (this.cursors.left && this.cursors.left.isDown) || (this.keys.a && this.keys.a.isDown);
-        let isRight = (this.cursors.right && this.cursors.right.isDown) || (this.keys.d && this.keys.d.isDown);
-        let isUp = (this.cursors.up && this.cursors.up.isDown) || (this.keys.w && this.keys.w.isDown);
-        let isDown = (this.cursors.down && this.cursors.down.isDown) || (this.keys.s && this.keys.s.isDown);
+        // Player Movement (Keyboard WASD/Arrows + Floating Joystick)
+        let isLeft = (this.cursors.left && this.cursors.left.isDown) || (this.keys.a && this.keys.a.isDown) || (this.mobileInput && this.mobileInput.left);
+        let isRight = (this.cursors.right && this.cursors.right.isDown) || (this.keys.d && this.keys.d.isDown) || (this.mobileInput && this.mobileInput.right);
+        let isUp = (this.cursors.up && this.cursors.up.isDown) || (this.keys.w && this.keys.w.isDown) || (this.mobileInput && this.mobileInput.up);
+        let isDown = (this.cursors.down && this.cursors.down.isDown) || (this.keys.s && this.keys.s.isDown) || (this.mobileInput && this.mobileInput.down);
 
         let vx = 0;
         let vy = 0;
         const pSpeed = 240;
 
-        if (isLeft && !isRight) vx = -pSpeed;
-        else if (isRight && !isLeft) vx = pSpeed;
+        if (this.joystickActive && (this.joystickVx !== 0 || this.joystickVy !== 0)) {
+            vx = this.joystickVx;
+            vy = this.joystickVy;
+        } else {
+            if (isLeft && !isRight) vx = -pSpeed;
+            else if (isRight && !isLeft) vx = pSpeed;
 
-        if (isUp && !isDown) vy = -pSpeed;
-        else if (isDown && !isUp) vy = pSpeed;
+            if (isUp && !isDown) vy = -pSpeed;
+            else if (isDown && !isUp) vy = pSpeed;
 
-        if (vx !== 0 && vy !== 0) {
-            vx *= 0.7071;
-            vy *= 0.7071;
+            if (vx !== 0 && vy !== 0) {
+                vx *= 0.7071;
+                vy *= 0.7071;
+            }
         }
 
-        if (!this.touchDragActive) {
-            this.player.x += vx * dt;
-            this.player.y += vy * dt;
-            this.player.x = Phaser.Math.Clamp(this.player.x, this.playX + 16, this.playX + this.playW - 16);
-            this.player.y = Phaser.Math.Clamp(this.player.y, this.playY + 60, this.playY + this.playH - 30);
-        }
+        this.player.x += vx * dt;
+        this.player.y += vy * dt;
+        this.player.x = Phaser.Math.Clamp(this.player.x, this.playX + 16, this.playX + this.playW - 16);
+        this.player.y = Phaser.Math.Clamp(this.player.y, this.playY + 60, this.playY + this.playH - 30);
         this.player.body.reset(this.player.x, this.player.y);
         this.player.setVisible(true);
         this.player.setActive(true);
