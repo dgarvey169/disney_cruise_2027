@@ -2263,11 +2263,540 @@ class BootScene extends Phaser.Scene {
         g.generateTexture('title_ship', 330, 115);
         g.clear();
 
+        generateEdgeAndArcadeTextures(this);
+
         g.destroy();
     }
     create() {
         this.scene.start('TitleScene');
     }
+}
+
+// =========================================================================
+// EDGE TWEEN CLUB & ARCADE 8-BIT TEXTURE GENERATOR
+// =========================================================================
+
+function generateEdgeAndArcadeTextures(scene) {
+    let g = scene.add.graphics();
+
+    // 1. Edge Interior Wall (60x60)
+    g.fillStyle(0x0a0e28, 1);
+    g.fillRect(0, 0, 60, 60);
+    g.fillStyle(0x060818, 1);
+    g.fillRect(0, 0, 2, 60);
+    g.fillRect(58, 0, 2, 60);
+    g.fillStyle(0x004466, 0.4);
+    g.fillRect(0, 18, 60, 8);
+    g.fillStyle(0x0088aa, 0.7);
+    g.fillRect(0, 20, 60, 4);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(0, 21, 60, 2);
+    g.fillStyle(0x1a2244, 1);
+    g.fillRect(6, 6, 2, 2);
+    g.fillRect(52, 6, 2, 2);
+    g.fillRect(6, 52, 2, 2);
+    g.fillRect(52, 52, 2, 2);
+    g.generateTexture('edge_wall', 60, 60);
+    g.clear();
+
+    // 2. Edge Carpet / Floor Tile (40x40)
+    g.fillStyle(0x111322, 1);
+    g.fillRect(0, 0, 40, 40);
+    g.fillStyle(0x1c1a38, 1);
+    g.fillRect(4, 4, 32, 32);
+    g.fillStyle(0x311b58, 1);
+    g.fillTriangle(20, 8, 8, 20, 32, 20);
+    g.fillTriangle(20, 32, 8, 20, 32, 20);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(19, 7, 2, 2);
+    g.fillRect(7, 19, 2, 2);
+    g.fillRect(31, 19, 2, 2);
+    g.fillRect(19, 31, 2, 2);
+    g.fillStyle(0x070810, 1);
+    g.strokeRect(0, 0, 40, 40);
+    g.generateTexture('edge_floor', 40, 40);
+    g.clear();
+
+    // 3. Edge Modern Curved Lounge Couch (76x38)
+    g.fillStyle(0x050714, 0.8);
+    g.fillRect(4, 30, 68, 8);
+    g.fillStyle(0x1a1630, 1);
+    g.fillRect(4, 14, 68, 18);
+    g.fillStyle(0x281e50, 1);
+    g.fillRect(6, 4, 64, 14);
+    g.fillStyle(0x0099b8, 1);
+    g.fillRect(8, 16, 30, 14);
+    g.fillStyle(0x00b4d8, 1);
+    g.fillRect(10, 18, 26, 10);
+    g.fillStyle(0x9d0208, 1);
+    g.fillRect(38, 16, 30, 14);
+    g.fillStyle(0xd90429, 1);
+    g.fillRect(40, 18, 26, 10);
+    g.fillStyle(0xffd166, 1);
+    g.fillRect(12, 10, 8, 8);
+    g.fillStyle(0x06d6a0, 1);
+    g.fillRect(56, 10, 8, 8);
+    g.generateTexture('edge_couch', 76, 38);
+    g.clear();
+
+    // 4. Edge Chill Smoothie Bar (84x52)
+    g.fillStyle(0x050714, 0.8);
+    g.fillRect(4, 44, 76, 8);
+    g.fillStyle(0x15162b, 1);
+    g.fillRect(4, 12, 76, 34);
+    for (let i = 0; i < 5; i++) {
+        const col = (i % 2 === 0) ? 0x00e5ff : 0xff2a85;
+        g.fillStyle(col, 1);
+        g.fillRect(14 + i * 14, 16, 4, 26);
+    }
+    g.fillStyle(0x05050c, 1);
+    g.fillRect(2, 6, 80, 8);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(2, 12, 80, 2);
+    g.fillStyle(0x06d6a0, 0.9);
+    g.fillRect(14, 0, 4, 8);
+    g.fillStyle(0xff2a85, 0.9);
+    g.fillRect(22, 1, 4, 7);
+    g.fillStyle(0xffd166, 0.9);
+    g.fillRect(30, 0, 4, 8);
+    g.generateTexture('edge_bar', 84, 52);
+    g.clear();
+
+    // 5. Edge Retro Upright Arcade Cabinet (52x80)
+    g.fillStyle(0x050714, 0.8);
+    g.fillRect(4, 72, 44, 8);
+    g.fillStyle(0x080816, 1);
+    g.fillRect(4, 4, 44, 70);
+    g.fillStyle(0x1c1038, 1);
+    g.fillRect(6, 38, 40, 34);
+    g.fillStyle(0xff2a85, 1);
+    g.fillTriangle(26, 42, 12, 68, 40, 68);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillTriangle(26, 46, 16, 66, 36, 66);
+    g.fillStyle(0x111118, 1);
+    g.fillRect(16, 54, 20, 16);
+    g.fillStyle(0x333340, 1);
+    g.strokeRect(16, 54, 20, 16);
+    g.fillStyle(0xff9900, 1);
+    g.fillRect(20, 58, 3, 5);
+    g.fillRect(29, 58, 3, 5);
+    g.fillStyle(0x222233, 1);
+    g.fillRect(6, 32, 40, 8);
+    g.fillStyle(0xff2244, 1);
+    g.fillCircle(16, 34, 3);
+    g.fillStyle(0x888888, 1);
+    g.fillRect(15, 36, 2, 4);
+    g.fillStyle(0xffd700, 1);
+    g.fillCircle(28, 36, 2);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillCircle(36, 36, 2);
+    g.fillStyle(0x021108, 1);
+    g.fillRect(8, 14, 36, 18);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(24, 25, 4, 4);
+    g.fillRect(22, 27, 8, 2);
+    g.fillStyle(0xff4444, 1);
+    g.fillRect(14, 16, 4, 3);
+    g.fillRect(34, 16, 4, 3);
+    g.fillStyle(0xffffff, 0.25);
+    g.fillRect(9, 15, 34, 2);
+    g.fillStyle(0x000000, 1);
+    g.fillRect(6, 2, 40, 12);
+    g.fillStyle(0xffd700, 1);
+    g.strokeRect(6, 2, 40, 12);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(8, 4, 36, 8);
+    g.generateTexture('edge_arcade_cabinet', 52, 80);
+    g.clear();
+
+    // 6. Wall-Mounted CRT Leaderboard (88x64)
+    g.fillStyle(0x000000, 1);
+    g.fillRect(0, 0, 88, 64);
+    g.fillStyle(0xffd700, 1);
+    g.strokeRect(1, 1, 86, 62);
+    g.fillStyle(0xb8860b, 1);
+    g.strokeRect(3, 3, 82, 58);
+    g.fillStyle(0x021408, 1);
+    g.fillRect(5, 5, 78, 54);
+    g.fillStyle(0x003311, 1);
+    g.fillRect(7, 7, 74, 10);
+    g.generateTexture('edge_leaderboard', 88, 64);
+    g.clear();
+
+    // 7. Tropical Smoothie (20x24)
+    g.fillStyle(0xffffff, 0.4);
+    g.fillRect(4, 6, 12, 14);
+    g.fillStyle(0x00e5ff, 0.9);
+    g.fillRect(5, 15, 10, 4);
+    g.fillStyle(0xffd700, 0.9);
+    g.fillRect(5, 11, 10, 4);
+    g.fillStyle(0xff2a85, 0.9);
+    g.fillRect(5, 7, 10, 4);
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(4, 4, 12, 3);
+    g.fillRect(6, 2, 8, 3);
+    g.fillStyle(0xff5555, 1);
+    g.fillRect(11, 0, 2, 6);
+    g.fillStyle(0x00ff88, 1);
+    g.fillTriangle(6, 1, 14, 1, 10, 0);
+    g.generateTexture('edge_smoothie', 20, 24);
+    g.clear();
+
+    // 8. Illuminated Neon Sign (160x44)
+    g.fillStyle(0x0a0c20, 0.95);
+    g.fillRect(0, 0, 160, 44);
+    g.fillStyle(0x00e5ff, 1);
+    g.strokeRect(2, 2, 156, 40);
+    g.fillStyle(0xff2a85, 1);
+    g.strokeRect(4, 4, 152, 36);
+    g.fillStyle(0xffd700, 1);
+    g.fillRect(12, 18, 6, 6);
+    g.fillRect(142, 18, 6, 6);
+    g.generateTexture('edge_neon_logo', 160, 44);
+    g.clear();
+
+    // 9. Edge Midship Elevator Door (60x60)
+    g.fillStyle(0x1a1e38, 1);
+    g.fillRect(0, 0, 60, 60);
+    g.fillStyle(0x00e5ff, 1);
+    g.strokeRect(1, 1, 58, 58);
+    g.fillStyle(0x2a3058, 1);
+    g.fillRect(4, 4, 25, 52);
+    g.fillRect(31, 4, 25, 52);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(29, 4, 2, 52);
+    g.fillStyle(0x000000, 1);
+    g.fillRect(22, 6, 16, 12);
+    g.fillStyle(0xffd700, 1);
+    g.strokeRect(22, 6, 16, 12);
+    g.fillStyle(0x00ff66, 1);
+    g.fillRect(28, 9, 4, 6);
+    g.generateTexture('edge_elevator_door', 60, 60);
+    g.clear();
+
+    // 10. NPC Leo (32x48) - Chill tween boy lounging with hoodie & headphones
+    g.fillStyle(0x000000, 1);
+    g.fillRect(6, 4, 20, 40);
+    g.fillStyle(0x4a2c14, 1);
+    g.fillRect(10, 6, 12, 8);
+    g.fillStyle(0xfcd8a8, 1);
+    g.fillRect(11, 10, 10, 8);
+    g.fillStyle(0x000000, 1);
+    g.fillRect(13, 12, 2, 2);
+    g.fillRect(17, 12, 2, 2);
+    g.fillStyle(0xff6600, 1);
+    g.fillRect(8, 8, 3, 10);
+    g.fillRect(21, 8, 3, 10);
+    g.fillRect(9, 6, 14, 3);
+    g.fillStyle(0x00b4d8, 1);
+    g.fillRect(8, 18, 16, 16);
+    g.fillStyle(0x007799, 1);
+    g.fillRect(10, 22, 12, 10);
+    g.fillStyle(0x555566, 1);
+    g.fillRect(10, 34, 12, 6);
+    g.fillStyle(0xfcd8a8, 1);
+    g.fillRect(11, 40, 3, 4);
+    g.fillRect(18, 40, 3, 4);
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(10, 43, 5, 3);
+    g.fillRect(17, 43, 5, 3);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(11, 43, 3, 2);
+    g.fillRect(18, 43, 3, 2);
+    g.generateTexture('edge_npc_leo', 32, 48);
+    g.clear();
+
+    // 11. NPC Maya (32x48) - Cheering tween girl in graphic tee & ponytail
+    g.fillStyle(0x000000, 1);
+    g.fillRect(6, 4, 20, 40);
+    g.fillStyle(0x7b1fa2, 1);
+    g.fillRect(10, 6, 12, 8);
+    g.fillRect(20, 4, 6, 10);
+    g.fillStyle(0xff2a85, 1);
+    g.fillRect(19, 6, 2, 3);
+    g.fillStyle(0xfcd8a8, 1);
+    g.fillRect(11, 10, 10, 8);
+    g.fillStyle(0x000000, 1);
+    g.fillRect(13, 12, 2, 2);
+    g.fillRect(17, 12, 2, 2);
+    g.fillStyle(0x111122, 1);
+    g.fillRect(8, 18, 16, 14);
+    g.fillStyle(0xffd700, 1);
+    g.fillRect(15, 23, 2, 2);
+    g.fillRect(14, 24, 4, 1);
+    g.fillStyle(0x1976d2, 1);
+    g.fillRect(10, 32, 12, 6);
+    g.fillStyle(0xfcd8a8, 1);
+    g.fillRect(11, 38, 3, 5);
+    g.fillRect(18, 38, 3, 5);
+    g.fillStyle(0xff2a85, 1);
+    g.fillRect(10, 43, 5, 3);
+    g.fillRect(17, 43, 5, 3);
+    g.generateTexture('edge_npc_maya', 32, 48);
+    g.clear();
+
+    // 12. Starfighter Player Ship (32x32)
+    g.fillStyle(0x000000, 1);
+    g.fillTriangle(16, 2, 4, 28, 28, 28);
+    g.fillStyle(0xffffff, 1);
+    g.fillTriangle(16, 4, 6, 26, 26, 26);
+    g.fillStyle(0x0058f8, 1);
+    g.fillRect(14, 10, 4, 16);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(15, 8, 2, 6);
+    g.fillStyle(0xff2244, 1);
+    g.fillRect(5, 22, 4, 4);
+    g.fillRect(23, 22, 4, 4);
+    g.fillStyle(0x333333, 1);
+    g.fillRect(10, 26, 4, 4);
+    g.fillRect(18, 26, 4, 4);
+    g.generateTexture('shooter_player', 32, 32);
+    g.clear();
+
+    // 13. Player Thruster Flame (14x12)
+    g.fillStyle(0xffd700, 1);
+    g.fillTriangle(7, 12, 1, 0, 13, 0);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillTriangle(7, 8, 3, 0, 11, 0);
+    g.fillStyle(0xffffff, 1);
+    g.fillTriangle(7, 4, 5, 0, 9, 0);
+    g.generateTexture('shooter_player_thruster', 14, 12);
+    g.clear();
+
+    // 14. Player Dual Laser Bolt (6x16)
+    g.fillStyle(0x0055ff, 0.6);
+    g.fillRect(0, 0, 6, 16);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(1, 1, 4, 14);
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(2, 2, 2, 12);
+    g.generateTexture('shooter_laser_player', 6, 16);
+    g.clear();
+
+    // 15. Player Spread Laser Blast (8x8)
+    g.fillStyle(0x0055ff, 0.6);
+    g.fillCircle(4, 4, 4);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillCircle(4, 4, 3);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(4, 4, 1.5);
+    g.generateTexture('shooter_laser_spread', 8, 8);
+    g.clear();
+
+    // 16. Alien Insectoid Drone (24x20)
+    g.fillStyle(0x000000, 1);
+    g.fillRect(4, 2, 16, 14);
+    g.fillStyle(0xff2244, 1);
+    g.fillRect(6, 4, 12, 10);
+    g.fillStyle(0xff8800, 1);
+    g.fillRect(2, 6, 4, 8);
+    g.fillRect(18, 6, 4, 8);
+    g.fillStyle(0xffff00, 1);
+    g.fillRect(8, 6, 2, 3);
+    g.fillRect(14, 6, 2, 3);
+    g.fillStyle(0xff0044, 1);
+    g.fillRect(11, 14, 2, 4);
+    g.generateTexture('shooter_drone', 24, 20);
+    g.clear();
+
+    // 17. Armored Cosmic Cruiser (36x28)
+    g.fillStyle(0x000000, 1);
+    g.fillRect(4, 4, 28, 18);
+    g.fillStyle(0x4a0e4e, 1);
+    g.fillRect(6, 6, 24, 14);
+    g.fillStyle(0x7b1fa2, 1);
+    g.fillRect(8, 8, 20, 10);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillRect(2, 10, 4, 12);
+    g.fillRect(30, 10, 4, 12);
+    g.fillStyle(0xff3d00, 1);
+    g.fillRect(12, 20, 3, 5);
+    g.fillRect(21, 20, 3, 5);
+    g.generateTexture('shooter_cruiser', 36, 28);
+    g.clear();
+
+    // 18. Asteroids (Large 28x28 & Small 14x14)
+    g.fillStyle(0x444455, 1);
+    g.fillRect(4, 2, 20, 24);
+    g.fillRect(2, 4, 24, 20);
+    g.fillStyle(0x666677, 1);
+    g.fillRect(6, 4, 16, 18);
+    g.fillStyle(0x222233, 1);
+    g.fillCircle(10, 10, 3);
+    g.fillCircle(18, 16, 4);
+    g.fillCircle(9, 20, 2);
+    g.generateTexture('shooter_asteroid_large', 28, 28);
+    g.clear();
+
+    g.fillStyle(0x444455, 1);
+    g.fillRect(2, 1, 10, 12);
+    g.fillRect(1, 2, 12, 10);
+    g.fillStyle(0x666677, 1);
+    g.fillRect(3, 3, 8, 8);
+    g.fillStyle(0x222233, 1);
+    g.fillRect(5, 5, 2, 2);
+    g.fillRect(8, 8, 2, 2);
+    g.generateTexture('shooter_asteroid_small', 14, 14);
+    g.clear();
+
+    // 19. Destiny Dreadnought Boss (76x54)
+    g.fillStyle(0x000000, 1);
+    g.fillRect(6, 4, 64, 38);
+    g.fillStyle(0x212121, 1);
+    g.fillRect(8, 6, 60, 34);
+    g.fillStyle(0x880e4f, 1);
+    g.fillRect(4, 12, 12, 28);
+    g.fillRect(60, 12, 12, 28);
+    g.fillStyle(0xff1744, 1);
+    g.fillRect(8, 40, 4, 8);
+    g.fillRect(64, 40, 4, 8);
+    g.fillStyle(0xd50000, 1);
+    g.fillRect(26, 12, 24, 8);
+    g.fillStyle(0xff8a80, 1);
+    g.fillRect(30, 14, 16, 3);
+    g.fillStyle(0x000000, 1);
+    g.fillRect(28, 24, 20, 14);
+    g.fillStyle(0x00e5ff, 1);
+    g.fillCircle(38, 31, 6);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(38, 31, 3);
+    g.generateTexture('shooter_boss', 76, 54);
+    g.clear();
+
+    // 20. Power-Ups (P, S, B, STAR) (18x18)
+    const pCapsules = [
+        { key: 'shooter_powerup_P', border: 0x00e5ff, bg: 0x003355, txt: 'P', col: 0x00e5ff },
+        { key: 'shooter_powerup_S', border: 0x00ff66, bg: 0x004422, txt: 'S', col: 0x00ff66 },
+        { key: 'shooter_powerup_B', border: 0xff7700, bg: 0x552200, txt: 'B', col: 0xff7700 },
+        { key: 'shooter_powerup_STAR', border: 0xffd700, bg: 0x554400, txt: '★', col: 0xffd700 }
+    ];
+    pCapsules.forEach(p => {
+        g.fillStyle(0x000000, 1);
+        g.fillRect(1, 1, 16, 16);
+        g.fillStyle(p.bg, 1);
+        g.fillRect(2, 2, 14, 14);
+        g.fillStyle(p.border, 1);
+        g.strokeRect(1, 1, 16, 16);
+        g.fillStyle(p.col, 1);
+        if (p.txt === 'P') {
+            g.fillRect(5, 5, 2, 8);
+            g.fillRect(5, 5, 7, 2);
+            g.fillRect(10, 5, 2, 5);
+            g.fillRect(5, 8, 6, 2);
+        } else if (p.txt === 'S') {
+            g.fillRect(5, 5, 7, 2);
+            g.fillRect(5, 5, 2, 4);
+            g.fillRect(5, 8, 7, 2);
+            g.fillRect(10, 8, 2, 5);
+            g.fillRect(5, 12, 7, 2);
+        } else if (p.txt === 'B') {
+            g.fillRect(5, 5, 2, 8);
+            g.fillRect(5, 5, 6, 2);
+            g.fillRect(9, 5, 2, 4);
+            g.fillRect(5, 8, 6, 2);
+            g.fillRect(9, 8, 2, 5);
+            g.fillRect(5, 12, 6, 2);
+        } else {
+            // Star [★] Points Badge
+            g.fillRect(8, 4, 2, 10);
+            g.fillRect(4, 8, 10, 2);
+            g.fillRect(6, 6, 6, 6);
+        }
+        g.generateTexture(p.key, 18, 18);
+        g.clear();
+    });
+
+    // 21. Energy Shield (46x46) - 100% HOLLOW neon cyan energy barrier ring with perimeter nodes (ZERO center fill)
+    g.lineStyle(2, 0x00e5ff, 1);
+    g.strokeCircle(23, 23, 21);
+    g.lineStyle(1, 0xffffff, 0.9);
+    g.strokeCircle(23, 23, 19);
+    // 4 decorative shield emitter nodes on perimeter (center remains 100% transparent so ship is never obscured)
+    g.fillStyle(0x00ffff, 1);
+    g.fillRect(21, 0, 4, 3);
+    g.fillRect(21, 43, 4, 3);
+    g.fillRect(0, 21, 3, 4);
+    g.fillRect(43, 21, 3, 4);
+    g.generateTexture('shooter_shield', 46, 46);
+    g.clear();
+
+    // 21b. Invulnerability Forcefield Aura (46x46) - 100% HOLLOW golden halo ring (ZERO center fill)
+    g.lineStyle(2, 0xffd700, 1);
+    g.strokeCircle(23, 23, 21);
+    g.lineStyle(1, 0xffffff, 0.9);
+    g.strokeCircle(23, 23, 18);
+    // 4 gold power crystals on perimeter
+    g.fillStyle(0xffd700, 1);
+    g.fillRect(21, 0, 4, 3);
+    g.fillRect(21, 43, 4, 3);
+    g.fillRect(0, 21, 3, 4);
+    g.fillRect(43, 21, 3, 4);
+    g.generateTexture('shooter_invuln_shield', 46, 46);
+    g.clear();
+
+    // 22. Bullets
+    // Downward pointed red-and-white laser missile dart (8x14) - distinctly hostile, cannot be mistaken for a powerup!
+    g.fillStyle(0xff0022, 1);
+    g.fillTriangle(4, 14, 0, 0, 8, 0);
+    g.fillStyle(0xff7700, 1);
+    g.fillTriangle(4, 12, 1, 1, 7, 1);
+    g.fillStyle(0xffffff, 1);
+    g.fillTriangle(4, 8, 2, 2, 6, 2);
+    g.generateTexture('shooter_bullet_enemy', 8, 14);
+    g.clear();
+
+    g.fillStyle(0xaa00ff, 1);
+    g.fillCircle(5, 5, 5);
+    g.fillStyle(0xff4081, 1);
+    g.fillCircle(5, 5, 3);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(5, 5, 1.5);
+    g.generateTexture('shooter_bullet_boss', 10, 10);
+    g.clear();
+
+    // 23. Explosions (4 frames)
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(16, 16, 6);
+    g.fillStyle(0xffff00, 1);
+    g.fillCircle(16, 16, 4);
+    g.generateTexture('shooter_explosion_0', 32, 32);
+    g.clear();
+
+    g.fillStyle(0xff3d00, 1);
+    g.fillCircle(16, 16, 12);
+    g.fillStyle(0xffd700, 1);
+    g.fillCircle(16, 16, 8);
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(16, 16, 4);
+    g.generateTexture('shooter_explosion_1', 32, 32);
+    g.clear();
+
+    g.fillStyle(0xd50000, 1);
+    g.fillCircle(16, 16, 14);
+    g.fillStyle(0xff9100, 1);
+    g.fillCircle(16, 16, 10);
+    g.fillStyle(0xffff00, 1);
+    g.fillCircle(16, 16, 5);
+    g.generateTexture('shooter_explosion_2', 32, 32);
+    g.clear();
+
+    g.fillStyle(0x424242, 0.8);
+    g.fillCircle(16, 16, 10);
+    g.fillStyle(0xff3d00, 0.6);
+    g.fillCircle(12, 14, 4);
+    g.fillCircle(20, 18, 4);
+    g.generateTexture('shooter_explosion_3', 32, 32);
+    g.clear();
+
+    // 24. CRT Monitor Scanlines (4x4 tile)
+    g.fillStyle(0x000000, 0);
+    g.fillRect(0, 0, 4, 2);
+    g.fillStyle(0x000000, 0.45);
+    g.fillRect(0, 2, 4, 2);
+    g.generateTexture('shooter_scanlines', 4, 4);
+    g.clear();
+
+    g.destroy();
 }
 
 class TitleScene extends Phaser.Scene {
@@ -5314,29 +5843,30 @@ class ElevatorMenuScene extends Phaser.Scene {
         const cy = this.scale.height / 2;
 
         this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x000000, 0.7);
-        this.add.rectangle(cx, cy, 380, 310, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
+        this.add.rectangle(cx, cy, 380, 340, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
         
-        this.add.text(cx, cy - 120, 'MIDSHIP ELEVATOR', {
+        this.add.text(cx, cy - 135, 'MIDSHIP ELEVATOR', {
             fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.add.text(cx, cy - 95, 'SELECT DESTINATION', {
+        this.add.text(cx, cy - 110, 'SELECT DESTINATION', {
             fontSize: '9px', fill: '#A0D0FF', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
         const floors = [
             { label: 'Deck 12 (Hero Zone)', type: 'deck', y: 975 },
             { label: 'Deck 11 (Pools)', type: 'deck', y: 1255 },
+            { label: 'Deck 5  (Edge Tween Club)', type: 'edge' },
             { label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' }
         ];
 
         this.menuItems = [];
-        let startY = cy - 55;
+        let startY = cy - 70;
 
         floors.forEach((floor, index) => {
-            let btn = this.add.text(cx, startY + (index * 38), floor.label, {
-                fontSize: '9px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 14, y: 8 },
+            let btn = this.add.text(cx, startY + (index * 36), floor.label, {
+                fontSize: '9px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 14, y: 7 },
                 fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
@@ -5346,6 +5876,8 @@ class ElevatorMenuScene extends Phaser.Scene {
                 action: () => {
                     if (floor.type === 'boutique') {
                         this.travelToBoutique();
+                    } else if (floor.type === 'edge') {
+                        this.travelToEdge();
                     } else {
                         this.travelToFloor(floor.y);
                     }
@@ -5358,8 +5890,8 @@ class ElevatorMenuScene extends Phaser.Scene {
         });
 
         // Cancel option
-        let cancelBtn = this.add.text(cx, startY + (floors.length * 38) + 6, '[ CANCEL ]', {
-            fontSize: '9px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 14, y: 7 },
+        let cancelBtn = this.add.text(cx, startY + (floors.length * 36) + 6, '[ CANCEL ]', {
+            fontSize: '9px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 14, y: 6 },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
@@ -5374,7 +5906,7 @@ class ElevatorMenuScene extends Phaser.Scene {
         cancelBtn.on('pointerdown', () => cancelItem.action());
 
         // Navigation hint
-        this.add.text(cx, cy + 124, '▲/▼: SELECT   ENTER: TRAVEL', {
+        this.add.text(cx, cy + 142, '▲/▼: SELECT   ENTER: TRAVEL', {
             fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
@@ -5501,6 +6033,34 @@ class ElevatorMenuScene extends Phaser.Scene {
         }
         this.scene.stop();
         this.scene.launch('BoutiqueScene', { gameScene: this.gameScene });
+    }
+
+    travelToEdge() {
+        this.gameScene.selectedCharacter = 'riley';
+        this.gameScene.characterName = 'Riley';
+        if (this.gameScene.hudPlayerIcon) {
+            this.gameScene.hudPlayerIcon.setTexture('riley_idle');
+        }
+        if (this.gameScene.hudPlayerName) {
+            this.gameScene.hudPlayerName.setText('RILEY');
+        }
+        if (this.gameScene.layoutHUD) {
+            this.gameScene.layoutHUD(this.gameScene.scale.width, this.gameScene.scale.height);
+        }
+        if (this.gameScene.player) {
+            this.gameScene.player.setTexture('riley_idle');
+            this.gameScene.player.body.setSize(22, 16);
+            this.gameScene.player.body.setOffset(5, 32);
+            if (this.gameScene.player.anims) {
+                this.gameScene.player.anims.play('riley_idle', true);
+            }
+        }
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(false);
+            this.gameScene.scene.sleep();
+        }
+        this.scene.stop();
+        this.scene.launch('EdgeClubScene', { gameScene: this.gameScene });
     }
 }
 
@@ -6340,6 +6900,2590 @@ class BoutiqueScene extends Phaser.Scene {
     }
 }
 
-config.scene = [BootScene, TitleScene, CharacterSelectScene, GameScene, ElevatorMenuScene, BoutiqueScene];
+// =========================================================================
+// RETRO ARCADE AUDIO & HIGH SCORE SYSTEM
+// =========================================================================
+
+class RetroArcadeAudio {
+    constructor() {
+        this.ctx = null;
+    }
+    init() {
+        if (!this.ctx) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    this.ctx = new AudioCtx();
+                }
+            } catch (e) {}
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+    playLaser() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.1);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } catch(e) {}
+    }
+    playExplosion() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const bufferSize = Math.floor(this.ctx.sampleRate * 0.25);
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, now);
+            filter.frequency.linearRampToValueAtTime(80, now + 0.25);
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            noise.start(now);
+            noise.stop(now + 0.25);
+        } catch(e) {}
+    }
+    playPowerup() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const freqs = [350, 440, 523, 659, 880];
+            freqs.forEach((f, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + idx * 0.04);
+                gain.gain.setValueAtTime(0.12, now + idx * 0.04);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + (idx + 1) * 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.04);
+                osc.stop(now + (idx + 1) * 0.04);
+            });
+        } catch(e) {}
+    }
+    playBomb() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } catch(e) {}
+    }
+    playDamage() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(140, now);
+            osc.frequency.linearRampToValueAtTime(50, now + 0.16);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.16);
+        } catch(e) {}
+    }
+    playBossHit() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.linearRampToValueAtTime(90, now + 0.08);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.08);
+        } catch(e) {}
+    }
+    playGameOver() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const freqs = [392, 370, 349, 311];
+            freqs.forEach((f, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(f, now + idx * 0.15);
+                gain.gain.setValueAtTime(0.15, now + idx * 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + (idx + 1) * 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.15);
+                osc.stop(now + (idx + 1) * 0.15);
+            });
+        } catch(e) {}
+    }
+}
+const retroArcadeAudio = new RetroArcadeAudio();
+
+const DEFAULT_EDGE_HIGH_SCORES = [
+    { name: 'JAX', score: 12500 },
+    { name: 'MAYA', score: 9800 },
+    { name: 'LEO', score: 7500 },
+    { name: 'SAM', score: 5200 },
+    { name: 'ZOE', score: 3400 }
+];
+
+function getEdgeHighScores() {
+    try {
+        const stored = localStorage.getItem('disney_destiny_edge_high_scores');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch(e) {}
+    return DEFAULT_EDGE_HIGH_SCORES.slice();
+}
+
+function saveEdgeHighScore(playerScore, playerName = 'RILEY') {
+    let scores = getEdgeHighScores();
+    scores.push({ name: playerName, score: playerScore });
+    scores.sort((a, b) => b.score - a.score);
+    scores = scores.slice(0, 5);
+    try {
+        localStorage.setItem('disney_destiny_edge_high_scores', JSON.stringify(scores));
+    } catch(e) {}
+    return scores;
+}
+
+// =========================================================================
+// RILEY'S EDGE TWEEN CLUB SOCIAL ARCADE LOUNGE SCENE
+// =========================================================================
+
+class EdgeClubScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'EdgeClubScene' });
+    }
+
+    init(data) {
+        this.gameScene = data.gameScene;
+        this.groundY = 445;
+        this.jumpZ = 0;
+        this.jumpV = 0;
+        this.isJumping = false;
+        this.isExiting = false;
+        this.playerSpeed = 160;
+        this.smoothieBoostTimer = 0;
+        this.heldSmoothie = null;
+        this.sparkleTimer = 0;
+        this.speechEndTime = 0;
+        this.currentSpeaker = null;
+        this.nearElevator = false;
+        this.nearSmoothie = false;
+        this.nearArcade = false;
+
+        // Mobile touch controls state
+        this.touchMoveActive = false;
+        this.touchMoveDir = 0;
+        this.touchMoveDepth = 0;
+    }
+
+    create() {
+        retroArcadeAudio.init();
+
+        // Ensure underlying GameScene is completely hidden and slept
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(false);
+            this.gameScene.scene.sleep();
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        const roomH = Math.max(540, H);
+        const roomW = Math.max(1600, W);
+        this.roomW = roomW;
+        this.roomH = roomH;
+
+        const floorH = Math.max(130, Math.round(roomH * 0.22));
+        const floorY = roomH - floorH;
+        this.floorY = floorY;
+        this.floorH = floorH;
+        this.groundY = floorY + 25;
+
+        this.physics.world.setBounds(0, 0, roomW, roomH);
+
+        // 0. Solid background guaranteeing no underlying scene leakage
+        this.add.rectangle(0, 0, 10000, 10000, 0x07091B).setOrigin(0.5).setDepth(0);
+
+        // 1. Room Background & Framing
+        this.add.tileSprite(roomW / 2, floorY / 2, roomW, floorY, 'edge_wall').setDepth(1);
+        this.add.tileSprite(roomW / 2, floorY + (floorH / 2), roomW, floorH, 'edge_floor').setDepth(2);
+
+        // Floor curb divider line (gold & cyan trim)
+        let curb = this.add.graphics().setDepth(3);
+        curb.fillStyle(0x00E5FF, 1);
+        curb.fillRect(0, floorY - 2, roomW, 2);
+        curb.fillStyle(0xFFD700, 0.7);
+        curb.fillRect(0, floorY, roomW, 2);
+
+        // Starry Night Ocean Portholes
+        const portholeY = Math.max(140, Math.round(floorY * 0.38));
+        [Math.round(roomW * 0.16), Math.round(roomW * 0.5), Math.round(roomW * 0.84)].forEach(px => {
+            let port = this.add.graphics().setDepth(4);
+            port.fillStyle(0x1B263B, 1);
+            port.fillCircle(px, portholeY, 42);
+            port.fillStyle(0x0D1B2A, 1);
+            port.fillCircle(px, portholeY, 38);
+            port.fillStyle(0xFFD700, 1);
+            port.lineStyle(3, 0xFFD700, 1);
+            port.strokeCircle(px, portholeY, 40);
+
+            // Twinkling stars inside porthole
+            for (let s = 0; s < 8; s++) {
+                let sx = px + Phaser.Math.Between(-30, 30);
+                let sy = portholeY + Phaser.Math.Between(-30, 20);
+                let star = this.add.text(sx, sy, '✦', { fontSize: '7px', fill: '#A0D0FF' }).setOrigin(0.5).setDepth(5);
+                this.tweens.add({
+                    targets: star,
+                    alpha: 0.2,
+                    duration: Phaser.Math.Between(600, 1400),
+                    yoyo: true,
+                    repeat: -1
+                });
+            }
+            // Ocean wave line inside porthole
+            port.fillStyle(0x003366, 1);
+            port.fillRect(px - 36, portholeY + 15, 72, 22);
+            port.fillStyle(0x005588, 1);
+            port.fillRect(px - 36, portholeY + 15, 72, 3);
+        });
+
+        // Giant Illuminated Neon Club Sign
+        const neonY = Math.max(50, Math.round(floorY * 0.14));
+        this.neonSign = this.add.image(roomW / 2, neonY, 'edge_neon_logo').setDepth(6);
+        this.neonTitleText = this.add.text(roomW / 2, neonY, '★ EDGE TWEEN CLUB ★', {
+            fontSize: '12px',
+            fill: '#00FFFF',
+            fontFamily: '"Press Start 2P", monospace',
+            stroke: '#FF2A85',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(7);
+
+        this.tweens.add({
+            targets: [this.neonSign, this.neonTitleText],
+            alpha: 0.85,
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // 2. Interactive Furniture & Stations
+        const elevX = 120;
+        const elevY = floorY - 32;
+        this.elevX = elevX;
+        this.elevY = elevY;
+
+        const barX = Math.round(roomW * 0.26);
+        const barY = floorY - 15;
+        this.barX = barX;
+        this.barY = barY;
+
+        const couchX = Math.round(roomW * 0.45);
+        const couchY = floorY - 5;
+        this.couchX = couchX;
+        this.couchY = couchY;
+
+        const ldrX = Math.round(roomW * 0.64);
+        const ldrY = floorY - 130;
+        this.ldrX = ldrX;
+        this.ldrY = ldrY;
+
+        const arcX = Math.round(roomW * 0.82);
+        const arcY = floorY - 30;
+        this.arcX = arcX;
+        this.arcY = arcY;
+
+        const djX = Math.min(roomW - 90, Math.round(roomW * 0.94));
+        const djY = floorY - 40;
+        this.djX = djX;
+        this.djY = djY;
+
+        // Equalizer / DJ Booth
+        this.djG = this.add.graphics().setDepth(5);
+        this.eqBars = [0.4, 0.7, 0.9, 0.5, 0.8, 0.3, 0.6];
+        this.time.addEvent({
+            delay: 150,
+            loop: true,
+            callback: () => {
+                for (let i = 0; i < this.eqBars.length; i++) {
+                    this.eqBars[i] = Phaser.Math.Between(2, 10) / 10;
+                }
+            }
+        });
+
+        // Elevator Doors
+        this.elevatorDoor = this.add.image(elevX, elevY, 'edge_elevator_door').setDepth(10);
+        this.add.text(elevX, elevY - 44, '[ DECK 5: EDGE ]', {
+            fontSize: '8px', fill: '#00FF66', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(11);
+
+        this.elevatorPrompt = this.add.text(elevX, elevY - 68, '[ ENTER: UPPER DECKS ]', {
+            fontSize: '8px', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setVisible(false).setDepth(2000);
+
+        // Smoothie Bar
+        this.add.image(barX, barY, 'edge_bar').setDepth(10);
+        this.add.text(barX, barY - 35, 'CHILL BAR', {
+            fontSize: '8px', fill: '#FF2A85', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(11);
+
+        this.smoothiePrompt = this.add.text(barX, barY - 60, '[ ENTER: GRAB SMOOTHIE ]', {
+            fontSize: '8px', fill: '#00E5FF', backgroundColor: '#000000', padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setVisible(false).setDepth(2000);
+
+        // Lounge Sectional Couch & Leo
+        this.add.image(couchX, couchY, 'edge_couch').setDepth(10);
+        this.leoSprite = this.add.image(couchX - 20, couchY - 18, 'edge_npc_leo').setDepth(12);
+
+        // Wall Leaderboard Display
+        this.add.image(ldrX, ldrY, 'edge_leaderboard').setDepth(10);
+        this.add.text(ldrX, ldrY - 20, 'HIGH SCORES', {
+            fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(11);
+
+        this.leaderboardTexts = [];
+        for (let i = 0; i < 5; i++) {
+            let row = this.add.text(ldrX, ldrY - 4 + (i * 12), '', {
+                fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P", monospace'
+            }).setOrigin(0.5).setDepth(11);
+            this.leaderboardTexts.push(row);
+        }
+        this.updateLeaderboardDisplay();
+
+        // Retro Arcade Cabinet & Maya
+        this.arcadeCabinet = this.add.image(arcX, arcY, 'edge_arcade_cabinet').setDepth(10);
+        this.mayaSprite = this.add.image(arcX + 44, arcY + 22, 'edge_npc_maya').setDepth(12);
+
+        // Cabinet Marquee Blink
+        this.marqueeText = this.add.text(arcX, arcY - 46, 'GALAXY DESTINY', {
+            fontSize: '7px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(11);
+
+        this.tweens.add({
+            targets: this.marqueeText,
+            alpha: 0.3,
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
+
+        this.arcadePrompt = this.add.text(arcX, arcY - 68, '[ ENTER: PLAY ARCADE ]', {
+            fontSize: '8px', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setVisible(false).setDepth(2000);
+
+        // 3. Player Riley
+        const spawnX = 180;
+        this.playerShadow = this.add.ellipse(spawnX, this.groundY + 16, 24, 8, 0x000000, 0.4).setDepth(Math.round(this.groundY) - 1);
+        this.player = this.physics.add.sprite(spawnX, this.groundY, 'riley_idle').setDepth(Math.round(this.groundY));
+        this.player.body.allowGravity = false;
+        this.player.body.setSize(22, 16);
+        this.player.body.setOffset(5, 32);
+
+        // Ensure Riley walk animation exists
+        if (!this.anims.exists('riley_walk')) {
+            this.anims.create({
+                key: 'riley_walk',
+                frames: [
+                    { key: 'riley_walk_0' },
+                    { key: 'riley_walk_1' },
+                    { key: 'riley_walk_2' },
+                    { key: 'riley_walk_1' }
+                ],
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('riley_idle')) {
+            this.anims.create({
+                key: 'riley_idle',
+                frames: [{ key: 'riley_idle' }],
+                frameRate: 1
+            });
+        }
+        if (!this.anims.exists('riley_jump')) {
+            this.anims.create({
+                key: 'riley_jump',
+                frames: [{ key: 'riley_jump' }],
+                frameRate: 1
+            });
+        }
+
+        // Camera Follow
+        this.cameras.main.setBounds(0, 0, roomW, roomH);
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+
+        // 4. Capcom Speech Bubble System
+        this.speechBox = this.add.graphics().setDepth(2500).setVisible(false);
+        this.speechText = this.add.text(0, 0, '', {
+            fontSize: '7px',
+            fill: '#F8B800',
+            fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000',
+            strokeThickness: 1,
+            align: 'center',
+            wordWrap: { width: 150 }
+        }).setOrigin(0, 0).setDepth(2501).setVisible(false);
+
+        // Dialogue Quotes
+        this.leoQuotes = [
+            'YO RILEY! GALAXY DESTINY IS IN THE HOUSE!',
+            'THE MOTHERSHIP ON WAVE 3 IS SERIOUS BUSINESS!',
+            'GRAB THE "P" CAPSULES FOR SPREAD LASERS!',
+            'DETONATE A SMART BOMB WHEN SURROUNDED!'
+        ];
+        this.mayaQuotes = [
+            'RILEY! YOU\'VE GOTTA BEAT JAX\'S HIGH SCORE!',
+            'HOLD DOWN FIRE FOR CONTINUOUS RAPID BLASTS!',
+            'DON\'T MISS THE BLUE SHIELD CAPSULES!',
+            'CLAIM THE #1 SPOT ON THE EDGE BOARD!'
+        ];
+
+        // 5. Controls
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keysWASD = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        this.input.keyboard.on('keydown-ESC', () => this.returnToGameScene());
+
+        // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+        const resetKeyInputs = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keysWASD) {
+                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+        };
+
+        const onNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeyInputs();
+            }
+        };
+
+        window.addEventListener('blur', resetKeyInputs);
+        window.addEventListener('focus', resetKeyInputs);
+        window.addEventListener('keyup', onNativeKeyUp);
+        const onVisChange = () => { if (document.hidden) resetKeyInputs(); };
+        document.addEventListener('visibilitychange', onVisChange);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetKeyInputs);
+            window.removeEventListener('focus', resetKeyInputs);
+            window.removeEventListener('keyup', onNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisChange);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) {
+                this._cleanWindowListeners();
+            }
+        });
+
+        // Mobile On-Screen Controls
+        this.setupMobileControls();
+
+        // Direct Touch on interactive stations
+        this.elevatorDoor.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.returnToGameScene());
+        this.arcadeCabinet.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.launchArcadeCabinet());
+        this.neonSign.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.returnToGameScene());
+    }
+
+    setupMobileControls() {
+        // Top Left Exit Button (fixed on screen) - available on all devices
+        this.exitBtn = this.add.text(16, 16, '[ ◄ DECKS ]', {
+            fontSize: '9px', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 8, y: 6 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setScrollFactor(0).setDepth(3000).setInteractive({ useHandCursor: true });
+        this.exitBtn.on('pointerdown', () => this.returnToGameScene());
+
+        // Mobile touch controls only enabled on non-desktop devices
+        if (!this.sys.game.device.os.desktop) {
+            const rx = this.scale.width - 70;
+            const ry = this.scale.height - 70;
+
+            this.jumpBtn = this.add.circle(rx - 70, ry, 30, 0x005588, 0.7)
+                .setScrollFactor(0).setDepth(3000).setInteractive();
+            this.add.text(rx - 70, ry, 'JUMP', { fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' })
+                .setOrigin(0.5).setScrollFactor(0).setDepth(3001);
+
+            this.actionBtn = this.add.circle(rx, ry - 30, 30, 0xFF8800, 0.7)
+                .setScrollFactor(0).setDepth(3000).setInteractive();
+            this.add.text(rx, ry - 30, 'ACT', { fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' })
+                .setOrigin(0.5).setScrollFactor(0).setDepth(3001);
+
+            this.jumpBtn.on('pointerdown', () => this.tryJump());
+            this.actionBtn.on('pointerdown', () => this.handleActionTrigger());
+
+            // Floating touch movement (drag on left half of screen)
+            this.input.on('pointerdown', (pointer) => {
+                if (pointer.x < this.scale.width / 2 && pointer.y > 60) {
+                    this.touchMoveActive = true;
+                    this.touchOriginX = pointer.x;
+                    this.touchOriginY = pointer.y;
+                }
+            });
+            this.input.on('pointermove', (pointer) => {
+                if (this.touchMoveActive) {
+                    const dx = pointer.x - this.touchOriginX;
+                    const dy = pointer.y - this.touchOriginY;
+                    this.touchMoveDir = Math.abs(dx) > 15 ? (dx > 0 ? 1 : -1) : 0;
+                    this.touchMoveDepth = Math.abs(dy) > 15 ? (dy > 0 ? 1 : -1) : 0;
+                }
+            });
+            this.input.on('pointerup', () => {
+                this.touchMoveActive = false;
+                this.touchMoveDir = 0;
+                this.touchMoveDepth = 0;
+            });
+        }
+    }
+
+    tryJump() {
+        if (!this.isJumping) {
+            this.isJumping = true;
+            this.jumpV = 280;
+            this.player.anims.play('riley_jump', true);
+        }
+    }
+
+    handleActionTrigger() {
+        if (this.nearElevator) {
+            this.returnToGameScene();
+        } else if (this.nearArcade) {
+            this.launchArcadeCabinet();
+        } else if (this.nearSmoothie) {
+            this.grabSmoothie();
+        }
+    }
+
+    grabSmoothie() {
+        if (this.heldSmoothie) return;
+        retroArcadeAudio.playPowerup();
+        this.smoothieBoostTimer = 10000;
+        const handOffsetX = this.player.flipX ? -11 : 11;
+        const handOffsetY = 3;
+        this.heldSmoothie = this.add.image(this.player.x + handOffsetX, this.player.y + handOffsetY, 'edge_smoothie')
+            .setScale(0.75)
+            .setFlipX(this.player.flipX)
+            .setDepth(this.player.depth + 1);
+
+        // Flash screen with pastel aura
+        this.cameras.main.flash(200, 0, 229, 255);
+
+        // Floating message
+        let msg = this.add.text(this.player.x, this.player.y - 50, '+SPEED BOOST!', {
+            fontSize: '9px', fill: '#00E5FF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(2500);
+
+        this.tweens.add({
+            targets: msg,
+            y: msg.y - 25,
+            alpha: 0,
+            duration: 1200,
+            onComplete: () => msg.destroy()
+        });
+    }
+
+    updateLeaderboardDisplay() {
+        const scores = getEdgeHighScores();
+        for (let i = 0; i < 5; i++) {
+            if (scores[i]) {
+                const s = scores[i];
+                const zeroPad = String(s.score).padStart(6, '0');
+                const rank = `${i + 1}.`;
+                this.leaderboardTexts[i].setText(`${rank} ${s.name.padEnd(5, ' ')} ${zeroPad}`);
+                if (s.name === 'RILEY') {
+                    this.leaderboardTexts[i].setStyle({ fill: '#FFD700' });
+                } else {
+                    this.leaderboardTexts[i].setStyle({ fill: '#00FF66' });
+                }
+            } else {
+                this.leaderboardTexts[i].setText('');
+            }
+        }
+    }
+
+    launchArcadeCabinet() {
+        retroArcadeAudio.init();
+        this.scene.setVisible(false);
+        this.scene.pause('EdgeClubScene');
+        this.scene.launch('ArcadeShooterScene', { edgeScene: this });
+    }
+
+    onReturnFromArcade(score) {
+        this.updateLeaderboardDisplay();
+        retroArcadeAudio.init();
+
+        // Maya and Leo congratulate Riley
+        let quote = (score > 12500)
+            ? 'LEGENDARY RILEY! YOU CLAIMED #1 ON THE EDGE BOARD!'
+            : (score > 6000)
+            ? 'EPIC RUN RILEY! You\'re climbing the high score board!'
+            : 'Nice run Riley! Jump back on and blast that Mothership!';
+
+        this.showSpeechBubble(this.mayaSprite, quote, this.time.now);
+    }
+
+    showSpeechBubble(speaker, quote, time) {
+        if (this.currentSpeaker && time < this.speechEndTime) return;
+        this.currentSpeaker = speaker;
+        this.speechEndTime = time + 3000;
+
+        this.speechText.setText(quote);
+        let padX = 8;
+        let padY = 5;
+        let w = this.speechText.width + padX * 2;
+        let h = this.speechText.height + padY * 2;
+
+        let bx = speaker.x - w / 2;
+        let by = speaker.y - 42 - h;
+        bx = Phaser.Math.Clamp(bx, 20, this.roomW - w - 20);
+
+        this.speechBox.clear();
+        this.speechBox.fillStyle(0x000000, 1);
+        this.speechBox.fillRect(bx - 2, by - 2, w + 4, h + 4);
+        this.speechBox.fillStyle(0x001024, 0.95);
+        this.speechBox.fillRect(bx, by, w, h);
+        this.speechBox.lineStyle(1, 0xF8B800, 1);
+        this.speechBox.strokeRect(bx, by, w, h);
+
+        let arrowX = Phaser.Math.Clamp(speaker.x, bx + 8, bx + w - 8);
+        let arrowY = by + h;
+        this.speechBox.fillStyle(0x001024, 0.95);
+        this.speechBox.fillTriangle(arrowX - 4, arrowY, arrowX + 4, arrowY, arrowX, arrowY + 6);
+        this.speechBox.lineStyle(1, 0xF8B800, 1);
+        this.speechBox.lineBetween(arrowX - 4, arrowY, arrowX, arrowY + 6);
+        this.speechBox.lineBetween(arrowX, arrowY + 6, arrowX + 4, arrowY);
+
+        this.speechText.setPosition(bx + padX, by + padY);
+        this.speechBox.setVisible(true);
+        this.speechText.setVisible(true);
+    }
+
+    update(time, delta) {
+        const dt = delta / 1000;
+
+        // Equalizer Bar Animation
+        this.djG.clear();
+        this.djG.fillStyle(0x111122, 1);
+        this.djG.fillRect(this.djX - 35, this.djY - 18, 70, 36);
+        for (let i = 0; i < this.eqBars.length; i++) {
+            const h = Math.round(this.eqBars[i] * 28);
+            const col = (h > 20) ? 0xFF0055 : (h > 12) ? 0xFFD700 : 0x00E5FF;
+            this.djG.fillStyle(col, 1);
+            this.djG.fillRect((this.djX - 30) + (i * 9), (this.djY + 14) - h, 6, h);
+        }
+
+        // Hide speech bubble if expired
+        if (this.currentSpeaker && time >= this.speechEndTime) {
+            this.speechBox.setVisible(false);
+            this.speechText.setVisible(false);
+            this.currentSpeaker = null;
+        }
+
+        // Smoothie Speed Boost Timer
+        if (this.smoothieBoostTimer > 0) {
+            this.smoothieBoostTimer -= delta;
+            this.playerSpeed = 240;
+
+            // Rainbow trail sparkles
+            this.sparkleTimer += delta;
+            if (this.sparkleTimer > 120) {
+                this.sparkleTimer = 0;
+                let colors = ['#00E5FF', '#FF2A85', '#FFD700', '#00FF66'];
+                let c = Phaser.Utils.Array.GetRandom(colors);
+                let sp = this.add.text(this.player.x + Phaser.Math.Between(-8, 8), this.player.y + Phaser.Math.Between(-10, 10), '✦', {
+                    fontSize: '8px', fill: c
+                }).setOrigin(0.5).setDepth(this.player.depth - 1);
+                this.tweens.add({
+                    targets: sp,
+                    alpha: 0,
+                    scale: 0.5,
+                    duration: 400,
+                    onComplete: () => sp.destroy()
+                });
+            }
+
+            if (this.smoothieBoostTimer <= 0) {
+                this.playerSpeed = 160;
+                if (this.heldSmoothie) {
+                    this.heldSmoothie.destroy();
+                    this.heldSmoothie = null;
+                }
+            }
+        }
+
+        // Player Controls (Mutually exclusive & DOM keyup protected)
+        let isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                     (this.keysWASD.left && this.keysWASD.left.isDown) || 
+                     this.touchMoveDir === -1;
+
+        let isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                      (this.keysWASD.right && this.keysWASD.right.isDown) || 
+                      this.touchMoveDir === 1;
+
+        let isUp = (this.cursors.up && this.cursors.up.isDown) || 
+                   (this.keysWASD.up && this.keysWASD.up.isDown) || 
+                   this.touchMoveDepth === -1;
+
+        let isDown = (this.cursors.down && this.cursors.down.isDown) || 
+                     (this.keysWASD.down && this.keysWASD.down.isDown) || 
+                     this.touchMoveDepth === 1;
+
+        let moveX = 0;
+        let moveY = 0;
+
+        if (isLeft && !isRight) {
+            moveX = -1;
+            this.player.setFlipX(true);
+        } else if (isRight && !isLeft) {
+            moveX = 1;
+            this.player.setFlipX(false);
+        }
+
+        if (isUp && !isDown) {
+            moveY = -1;
+        } else if (isDown && !isUp) {
+            moveY = 1;
+        }
+
+        // Diagonal normalization
+        let vx = moveX * this.playerSpeed;
+        let vy = moveY * (this.playerSpeed * 0.6);
+        if (moveX !== 0 && moveY !== 0) {
+            vx *= 0.7071;
+            vy *= 0.7071;
+        }
+
+        // Jump Handling
+        if ((Phaser.Input.Keyboard.JustDown(this.keysWASD.space) || Phaser.Input.Keyboard.JustDown(this.cursors.space)) && !this.isJumping) {
+            this.tryJump();
+        }
+
+        if (this.isJumping) {
+            this.jumpZ += this.jumpV * dt;
+            this.jumpV -= 750 * dt;
+            if (this.jumpZ <= 0) {
+                this.jumpZ = 0;
+                this.jumpV = 0;
+                this.isJumping = false;
+            }
+        }
+
+        // 2.5D Movement Execution
+        this.player.x += vx * dt;
+        this.player.x = Phaser.Math.Clamp(this.player.x, 70, this.roomW - 70);
+
+        this.groundY += vy * dt;
+        this.groundY = Phaser.Math.Clamp(this.groundY, this.floorY - 5, this.roomH - 25);
+
+        this.player.y = this.groundY - this.jumpZ;
+        this.player.setDepth(Math.round(this.groundY));
+        this.player.body.reset(this.player.x, this.player.y);
+
+        this.playerShadow.setPosition(this.player.x, this.groundY + 16);
+        this.playerShadow.setDepth(Math.round(this.groundY) - 1);
+
+        // Update held smoothie position in Riley's hand
+        if (this.heldSmoothie) {
+            const handOffsetX = this.player.flipX ? -11 : 11;
+            const handOffsetY = 3;
+            this.heldSmoothie.setPosition(this.player.x + handOffsetX, this.player.y + handOffsetY);
+            this.heldSmoothie.setFlipX(this.player.flipX);
+            this.heldSmoothie.setDepth(this.player.depth + 1);
+        }
+
+        // Player Animations
+        if (this.isJumping) {
+            this.player.anims.play('riley_jump', true);
+        } else if (moveX !== 0 || moveY !== 0) {
+            this.player.anims.play('riley_walk', true);
+        } else {
+            this.player.anims.play('riley_idle', true);
+        }
+
+        // Proximity Checks
+        // 1. Elevator Door
+        this.nearElevator = Math.abs(this.player.x - this.elevX) < 55;
+        this.elevatorPrompt.setVisible(this.nearElevator);
+
+        // 2. Smoothie Bar
+        this.nearSmoothie = Math.abs(this.player.x - this.barX) < 50;
+        this.smoothiePrompt.setVisible(this.nearSmoothie);
+
+        // 3. Arcade Cabinet
+        this.nearArcade = Math.abs(this.player.x - this.arcX) < 55;
+        this.arcadePrompt.setVisible(this.nearArcade);
+
+        // 4. Leo Dialogue Proximity
+        if (Math.abs(this.player.x - (this.couchX - 20)) < 65 && !this.currentSpeaker) {
+            this.showSpeechBubble(this.leoSprite, Phaser.Utils.Array.GetRandom(this.leoQuotes), time);
+        }
+
+        // 5. Maya Dialogue Proximity
+        if (Math.abs(this.player.x - (this.arcX + 44)) < 60 && !this.currentSpeaker && !this.nearArcade) {
+            this.showSpeechBubble(this.mayaSprite, Phaser.Utils.Array.GetRandom(this.mayaQuotes), time);
+        }
+
+        // Key Triggers (Enter)
+        if (Phaser.Input.Keyboard.JustDown(this.keysWASD.enter)) {
+            this.handleActionTrigger();
+        }
+    }
+
+    returnToGameScene() {
+        if (this.isExiting) return;
+        this.isExiting = true;
+
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(true);
+            this.gameScene.scene.wake();
+            this.gameScene.scene.resume();
+        }
+        this.scene.stop('EdgeClubScene');
+
+        if (this.gameScene && this.gameScene.player && this.gameScene.player.body) {
+            const returnGroundY = this.gameScene.groundY || 1255;
+            this.gameScene.jumpZ = 0;
+            this.gameScene.jumpV = 0;
+            this.gameScene.isJumping = false;
+            this.gameScene.currentStair = null;
+
+            this.gameScene.player.x = 1250;
+            this.gameScene.groundY = returnGroundY;
+            this.gameScene.player.y = returnGroundY;
+            this.gameScene.player.setVisible(true);
+            this.gameScene.player.setAlpha(1);
+            this.gameScene.player.setActive(true);
+            this.gameScene.player.setDepth(Math.round(returnGroundY));
+            this.gameScene.player.body.reset(1250, returnGroundY);
+
+            this.gameScene.player.body.setSize(22, 16);
+            this.gameScene.player.body.setOffset(5, 32);
+
+            if (this.gameScene.playerShadow) {
+                this.gameScene.playerShadow.setPosition(1250, returnGroundY + 18);
+                this.gameScene.playerShadow.setDepth(returnGroundY - 1);
+                this.gameScene.playerShadow.setVisible(true);
+            }
+
+            this.gameScene.selectedCharacter = 'riley';
+            this.gameScene.characterName = 'Riley';
+            if (this.gameScene.hudPlayerName) {
+                this.gameScene.hudPlayerName.setText('RILEY');
+            }
+            if (this.gameScene.hudPlayerIcon) {
+                this.gameScene.hudPlayerIcon.setTexture('riley_idle');
+            }
+            if (this.gameScene.layoutHUD) {
+                this.gameScene.layoutHUD(this.gameScene.scale.width, this.gameScene.scale.height);
+            }
+
+            this.gameScene.cameras.main.startFollow(this.gameScene.player, true, 0.08, 0.08);
+            this.gameScene.nearElevator = true;
+            if (this.gameScene.elevatorPromptText) {
+                this.gameScene.elevatorPromptText.setVisible(true);
+                this.gameScene.elevatorPromptText.x = 1250;
+                this.gameScene.elevatorPromptText.y = returnGroundY - 60;
+            }
+        }
+    }
+}
+
+// =========================================================================
+// RETRO ARCADE SPACE SHOOTER SCENE ("GALAXY DESTINY")
+// =========================================================================
+
+class ArcadeShooterScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'ArcadeShooterScene' });
+    }
+
+    init(data) {
+        this.edgeScene = data.edgeScene;
+        this.lives = 3;
+        this.bombs = 2;
+        this.weaponLevel = 1; // 1: dual laser, 2: triple spread, 3: quad heavy
+        this.shieldHits = 0;  // 0: inactive, >0 absorbs hit
+        this.score = 0;
+        this.wave = 1;
+        this.gameState = 'playing'; // 'playing' -> 'gameover'
+        this.lastShotTime = 0;
+        this.shotCooldown = 160;
+        this.invulnerableTimer = 0;
+        this.enemiesDefeatedInWave = 0;
+        this.waveTargetEnemies = 16;
+        this.boss = null;
+        this.bossActive = false;
+        this.bossHP = 120;
+        this.maxBossHP = 120;
+        this.bossLaserTimer = 0;
+
+        // Mobile touch & joystick state
+        this.touchFireActive = false;
+        this.joystickActive = false;
+        this.joystickVx = 0;
+        this.joystickVy = 0;
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
+        this.mobileInput = { left: false, right: false, up: false, down: false };
+    }
+
+    create() {
+        retroArcadeAudio.init();
+        // Enable multi-touch pointers for concurrent joystick + fire + bomb
+        this.input.addPointer(3);
+        // Disable gravity in arcade space shooter scene
+        this.physics.world.gravity.y = 0;
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
+
+        // 1. Responsive Arcade Cabinet Dimensions & Framing
+        if (W >= 768 && H >= 600) {
+            this.cabW = Math.min(680, W - 20);
+            this.cabH = Math.min(H - 16, 860);
+            this.marqueeH = Math.min(62, Math.max(48, Math.round(this.cabH * 0.08)));
+            this.cpoH = Math.min(126, Math.max(96, Math.round(this.cabH * 0.17)));
+        } else {
+            this.cabW = W - 10;
+            this.cabH = H - 10;
+            this.marqueeH = Math.max(36, Math.min(48, Math.round(this.cabH * 0.08)));
+            this.cpoH = Math.max(76, Math.min(105, Math.round(this.cabH * 0.17)));
+        }
+
+        this.cabX = cx - this.cabW / 2;
+        this.cabY = cy - this.cabH / 2;
+
+        // Recessed CRT Playfield inside the Cabinet
+        const monitorY = this.cabY + this.marqueeH + 10;
+        const monitorH = (this.cabY + this.cabH - this.cpoH - 10) - monitorY;
+        const maxMonitorW = this.cabW - ((W >= 768) ? 60 : 20);
+        const monitorW = Math.min(maxMonitorW, Math.round(monitorH * 1.05));
+
+        this.playW = monitorW;
+        this.playH = monitorH;
+        this.playX = cx - this.playW / 2;
+        this.playY = monitorY;
+        this.cpoY = this.cabY + this.cabH - this.cpoH - 6;
+
+        // Outer ambient letterbox
+        this.add.rectangle(cx, cy, W, H, 0x030308).setDepth(0);
+
+        // 2. Render Authentic Upright Arcade Cabinet Kit (Chassis, Wings, Marquee, Bezel)
+        this.renderArcadeCabinetChassis();
+
+        // 3. CRT Monitor Screen Background
+        this.add.rectangle(cx, this.playY + this.playH / 2, this.playW, this.playH, 0x02040D).setDepth(2);
+
+        // Parallax Stars
+        this.stars = [];
+        for (let i = 0; i < 50; i++) {
+            let sx = this.playX + Phaser.Math.Between(4, this.playW - 4);
+            let sy = this.playY + Phaser.Math.Between(4, this.playH - 4);
+            let speed = (i % 2 === 0) ? 45 : 115;
+            let col = (i % 2 === 0) ? '#406080' : '#A0D0FF';
+            let char = (i % 3 === 0) ? '✦' : '•';
+            let size = (i % 2 === 0) ? '6px' : '9px';
+            let star = this.add.text(sx, sy, char, { fontSize: size, fill: col }).setOrigin(0.5).setDepth(3);
+            this.stars.push({ obj: star, speed: speed });
+        }
+
+        // CRT Phosphor Scanlines Overlay
+        this.scanlineOverlay = this.add.tileSprite(cx, this.playY + this.playH / 2, this.playW, this.playH, 'shooter_scanlines')
+            .setDepth(25).setAlpha(0.2);
+
+        // 4. Physics Groups (Zero gravity & explicit depth hierarchy)
+        this.playerLasers = this.physics.add.group({
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(15);
+                if (item.body) item.body.allowGravity = false;
+            }
+        });
+        this.enemies = this.physics.add.group({
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(10);
+                if (item.body) item.body.allowGravity = false;
+            }
+        });
+        this.enemyBullets = this.physics.add.group({
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(12);
+                if (item.body) item.body.allowGravity = false;
+            }
+        });
+        this.powerups = this.physics.add.group({
+            allowGravity: false,
+            createCallback: (item) => {
+                item.setDepth(14);
+                if (item.body) item.body.allowGravity = false;
+            }
+        });
+
+        // 5. Player Starfighter (Depth 22 - always in front of shield rings and aura effects)
+        this.player = this.physics.add.sprite(cx, this.playY + this.playH - 50, 'shooter_player').setDepth(22);
+        this.player.body.allowGravity = false;
+        this.player.body.setSize(24, 24);
+
+        this.thruster = this.add.image(this.player.x, this.player.y + 16, 'shooter_player_thruster').setDepth(21);
+        this.shieldSprite = this.add.image(this.player.x, this.player.y, 'shooter_shield').setDepth(20).setVisible(false);
+        this.invulnShield = this.add.image(this.player.x, this.player.y, 'shooter_invuln_shield').setDepth(19).setVisible(false);
+
+        // 6. Arcade Top HUD
+        this.highScore = getEdgeHighScores()[0].score || 12500;
+
+        this.scoreText = this.add.text(this.playX + 10, this.playY + 10, '1UP 000000', {
+            fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace'
+        }).setDepth(50);
+
+        this.highText = this.add.text(cx, this.playY + 10, `HIGH ${String(this.highScore).padStart(6, '0')}`, {
+            fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5, 0).setDepth(50);
+
+        this.waveText = this.add.text(this.playX + this.playW - 10, this.playY + 10, 'WAVE 01', {
+            fontSize: '8px', fill: '#00E5FF', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(1, 0).setDepth(50);
+
+        // Bottom Status HUD
+        this.bottomHud = this.add.text(this.playX + 10, this.playY + this.playH - 16, '', {
+            fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P", monospace'
+        }).setDepth(50);
+        this.updateBottomHUD();
+
+        // Boss Health Bar UI
+        this.bossBarContainer = this.add.graphics().setDepth(55).setVisible(false);
+        this.bossText = this.add.text(cx, this.playY + 26, '⚠ DREADNOUGHT ⚠', {
+            fontSize: '8px', fill: '#FF2A85', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(56).setVisible(false);
+
+        // 7. Cabinet Control Panel Overlay (CPO) with illustrated joystick, instructions badge & arcade buttons
+        this.setupCabinetControlPanel();
+
+        // 8. Keyboard Controls & DOM listeners
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keys = this.input.keyboard.addKeys({
+            w: Phaser.Input.Keyboard.KeyCodes.W,
+            a: Phaser.Input.Keyboard.KeyCodes.A,
+            s: Phaser.Input.Keyboard.KeyCodes.S,
+            d: Phaser.Input.Keyboard.KeyCodes.D,
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            z: Phaser.Input.Keyboard.KeyCodes.Z,
+            x: Phaser.Input.Keyboard.KeyCodes.X,
+            b: Phaser.Input.Keyboard.KeyCodes.B,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        this.input.keyboard.on('keydown-ESC', () => this.exitCabinet());
+        this.input.keyboard.on('keydown-X', () => {
+            if (this.bombBtn) this.bombBtn.setScale(0.92);
+            this.detonateSmartBomb();
+        });
+        this.input.keyboard.on('keyup-X', () => {
+            if (this.bombBtn) this.bombBtn.setScale(1);
+        });
+        this.input.keyboard.on('keydown-B', () => {
+            if (this.bombBtn) this.bombBtn.setScale(0.92);
+            this.detonateSmartBomb();
+        });
+        this.input.keyboard.on('keyup-B', () => {
+            if (this.bombBtn) this.bombBtn.setScale(1);
+        });
+
+        this.input.keyboard.on('keydown-SPACE', () => {
+            if (this.fireBtn) this.fireBtn.setScale(0.92);
+        });
+        this.input.keyboard.on('keyup-SPACE', () => {
+            if (this.fireBtn) this.fireBtn.setScale(1);
+        });
+        this.input.keyboard.on('keydown-Z', () => {
+            if (this.fireBtn) this.fireBtn.setScale(0.92);
+        });
+        this.input.keyboard.on('keyup-Z', () => {
+            if (this.fireBtn) this.fireBtn.setScale(1);
+        });
+
+        // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+        const resetArcadeKeys = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keys) {
+                if (this.keys.w) this.keys.w.isDown = false;
+                if (this.keys.a) this.keys.a.isDown = false;
+                if (this.keys.s) this.keys.s.isDown = false;
+                if (this.keys.d) this.keys.d.isDown = false;
+                if (this.keys.space) this.keys.space.isDown = false;
+                if (this.keys.z) this.keys.z.isDown = false;
+                if (this.keys.x) this.keys.x.isDown = false;
+                if (this.keys.b) this.keys.b.isDown = false;
+                if (this.keys.enter) this.keys.enter.isDown = false;
+            }
+            if (this.fireBtn) this.fireBtn.setScale(1);
+            if (this.bombBtn) this.bombBtn.setScale(1);
+        };
+
+        const onArcadeNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keys && this.keys.space) this.keys.space.isDown = false;
+                if (this.fireBtn) this.fireBtn.setScale(1);
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keys && this.keys.w) this.keys.w.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keys && this.keys.a) this.keys.a.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keys && this.keys.d) this.keys.d.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keys && this.keys.s) this.keys.s.isDown = false;
+            }
+            if (e.key === 'z' || e.key === 'Z') {
+                if (this.keys && this.keys.z) this.keys.z.isDown = false;
+                if (this.fireBtn) this.fireBtn.setScale(1);
+            }
+            if (e.key === 'x' || e.key === 'X') {
+                if (this.keys && this.keys.x) this.keys.x.isDown = false;
+                if (this.bombBtn) this.bombBtn.setScale(1);
+            }
+            if (e.key === 'b' || e.key === 'B') {
+                if (this.keys && this.keys.b) this.keys.b.isDown = false;
+                if (this.bombBtn) this.bombBtn.setScale(1);
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetArcadeKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetArcadeKeys);
+        window.addEventListener('focus', resetArcadeKeys);
+        window.addEventListener('keyup', onArcadeNativeKeyUp);
+        const onVis = () => { if (document.hidden) resetArcadeKeys(); };
+        document.addEventListener('visibilitychange', onVis);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetArcadeKeys);
+            window.removeEventListener('focus', resetArcadeKeys);
+            window.removeEventListener('keyup', onArcadeNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVis);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this.physics && this.physics.world && this.physics.world.gravity) {
+                this.physics.world.gravity.y = 1000;
+            }
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
+        });
+
+        // 9. Floating Joystick & Mobile Action Button Overlays (Fire & Bomb)
+        this.setupFloatingJoystickAndTouchControls();
+
+        // 10. Overlaps & Collisions (Strict object discrimination: player is NEVER passed as target)
+        this.physics.add.overlap(this.playerLasers, this.enemies, (laser, enemy) => this.hitEnemyWithLaser(laser, enemy));
+        this.physics.add.overlap(this.player, this.enemyBullets, (objA, objB) => {
+            const bullet = (objA === this.player) ? objB : objA;
+            this.hitPlayerWithBullet(bullet);
+        });
+        this.physics.add.overlap(this.player, this.enemies, (objA, objB) => {
+            const enemy = (objA === this.player) ? objB : objA;
+            this.hitPlayerWithEnemy(enemy);
+        });
+        this.physics.add.overlap(this.player, this.powerups, (objA, objB) => {
+            const powerup = (objA === this.player) ? objB : objA;
+            this.collectPowerup(powerup);
+        });
+
+        // 11. Wave 1 Mission Briefing Attract Banner
+        this.showMissionBriefing();
+
+        // 12. Immediate Enemy Spawn (500ms) + Recurring Spawner
+        this.time.delayedCall(500, () => {
+            if (this.gameState === 'playing' && !this.bossActive) {
+                this.spawnWaveFormation();
+            }
+        });
+
+        this.enemySpawnTimer = this.time.addEvent({
+            delay: 1300,
+            loop: true,
+            callback: () => this.spawnWaveFormation()
+        });
+    }
+
+    renderArcadeCabinetChassis() {
+        const cx = this.scale.width / 2;
+
+        // A. Cabinet Chassis Base (Depth 1) - behind the CRT monitor screen
+        let cab = this.add.graphics().setDepth(1);
+        cab.fillStyle(0x000000, 0.95);
+        cab.fillRect(this.cabX - 4, this.cabY - 4, this.cabW + 8, this.cabH + 8);
+
+        cab.fillStyle(0x0E101D, 1);
+        cab.fillRect(this.cabX, this.cabY, this.cabW, this.cabH);
+
+        const wingW = Math.max(12, Math.round((this.cabW - this.playW) / 2));
+
+        // Side Wings, T-molding & Outer Frame (Depth 30) - in front of playfield entities so screen is recessed
+        let cabWings = this.add.graphics().setDepth(30);
+
+        // Left Side Wing (Synthwave artwork & T-molding)
+        cabWings.fillStyle(0x16142B, 1);
+        cabWings.fillRect(this.cabX, this.cabY, wingW, this.cabH);
+        cabWings.lineStyle(3, 0xFF007F, 0.7);
+        cabWings.lineBetween(this.cabX + 4, this.cabY + 50, this.cabX + wingW - 4, this.cabY + 140);
+        cabWings.lineStyle(3, 0x00E5FF, 0.7);
+        cabWings.lineBetween(this.cabX + 4, this.cabY + 90, this.cabX + wingW - 4, this.cabY + 180);
+        cabWings.lineStyle(2, 0xFFD700, 0.7);
+        cabWings.lineBetween(this.cabX + 4, this.cabY + 130, this.cabX + wingW - 4, this.cabY + 220);
+
+        // Right Side Wing
+        cabWings.fillStyle(0x16142B, 1);
+        cabWings.fillRect(this.cabX + this.cabW - wingW, this.cabY, wingW, this.cabH);
+        cabWings.lineStyle(3, 0xFF007F, 0.7);
+        cabWings.lineBetween(this.cabX + this.cabW - 4, this.cabY + 50, this.cabX + this.cabW - wingW + 4, this.cabY + 140);
+        cabWings.lineStyle(3, 0x00E5FF, 0.7);
+        cabWings.lineBetween(this.cabX + this.cabW - 4, this.cabY + 90, this.cabX + this.cabW - wingW + 4, this.cabY + 180);
+        cabWings.lineStyle(2, 0xFFD700, 0.7);
+        cabWings.lineBetween(this.cabX + this.cabW - 4, this.cabY + 130, this.cabX + this.cabW - wingW + 4, this.cabY + 220);
+
+        // T-Molding Trim (Bright orange/gold rubber edge)
+        cabWings.fillStyle(0xFF5500, 1);
+        cabWings.fillRect(this.cabX, this.cabY, 4, this.cabH);
+        cabWings.fillRect(this.cabX + this.cabW - 4, this.cabY, 4, this.cabH);
+        cabWings.fillStyle(0xFFAA00, 1);
+        cabWings.fillRect(this.cabX + 1, this.cabY, 2, this.cabH);
+        cabWings.fillRect(this.cabX + this.cabW - 3, this.cabY, 2, this.cabH);
+
+        // Chrome Rivet Bolts along cabinet sides
+        for (let ry = this.cabY + 30; ry < this.cabY + this.cabH; ry += 65) {
+            cabWings.fillStyle(0x778899, 1);
+            cabWings.fillCircle(this.cabX + 8, ry, 2.5);
+            cabWings.fillCircle(this.cabX + this.cabW - 8, ry, 2.5);
+            cabWings.fillStyle(0xFFFFFF, 1);
+            cabWings.fillCircle(this.cabX + 7, ry - 1, 1);
+            cabWings.fillCircle(this.cabX + this.cabW - 9, ry - 1, 1);
+        }
+
+        // Outer Side Letterbox Guards (prevent any element from rendering outside cabinet chassis)
+        cabWings.fillStyle(0x030308, 1);
+        if (this.cabX > 0) {
+            cabWings.fillRect(0, 0, this.cabX, this.scale.height);
+        }
+        if (this.cabX + this.cabW < this.scale.width) {
+            cabWings.fillRect(this.cabX + this.cabW, 0, this.scale.width - (this.cabX + this.cabW), this.scale.height);
+        }
+
+        // B. Top Illuminated Marquee (Depth 35)
+        let mq = this.add.graphics().setDepth(35);
+        mq.fillStyle(0x222538, 1);
+        mq.fillRect(this.cabX + 6, this.cabY + 6, this.cabW - 12, this.marqueeH);
+        mq.fillStyle(0x0A0518, 1);
+        mq.fillRect(this.cabX + 10, this.cabY + 10, this.cabW - 20, this.marqueeH - 8);
+
+        mq.lineStyle(2, 0xFFD700, 1);
+        mq.strokeRect(this.cabX + 10, this.cabY + 10, this.cabW - 20, this.marqueeH - 8);
+        mq.lineStyle(1, 0x00E5FF, 0.8);
+        mq.strokeRect(this.cabX + 12, this.cabY + 12, this.cabW - 24, this.marqueeH - 12);
+
+        // Speaker Grille Slits
+        const spkLeftX = this.cabX + 16;
+        const spkRightX = this.cabX + this.cabW - 52;
+        for (let s = 0; s < 4; s++) {
+            let sy = this.cabY + 15 + s * 6;
+            mq.fillStyle(0x000000, 1);
+            mq.fillRect(spkLeftX, sy, 26, 3);
+            mq.fillRect(spkRightX, sy, 26, 3);
+            mq.fillStyle(0x333348, 1);
+            mq.fillRect(spkLeftX, sy + 1, 26, 1);
+            mq.fillRect(spkRightX, sy + 1, 26, 1);
+        }
+
+        // Marquee Text
+        let mTitle = this.add.text(cx, this.cabY + 10 + (this.marqueeH - 8) / 2, '★ GALAXY DESTINY ★', {
+            fontSize: (this.cabW > 500) ? '12px' : '9px',
+            fill: '#FFD700',
+            fontFamily: '"Press Start 2P", monospace',
+            stroke: '#FF0055',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(36);
+
+        this.tweens.add({
+            targets: mTitle,
+            alpha: { from: 0.85, to: 1 },
+            duration: 650,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Exit Cabinet Button (in upper-right corner of Marquee)
+        this.exitBtn = this.add.text(this.cabX + this.cabW - 14, this.cabY + 12, '[ EXIT ]', {
+            fontSize: '7px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 5, y: 3 },
+            fontFamily: '"Press Start 2P"'
+        }).setOrigin(1, 0).setDepth(3000).setInteractive({ useHandCursor: true });
+        this.exitBtn.on('pointerdown', () => this.exitCabinet());
+
+        // C. Molded CRT Monitor Bezel & Curved Corners (Depth 30)
+        let mBezel = this.add.graphics().setDepth(30);
+        // Outer dark frame around the monitor (top, bottom, left, right bars)
+        mBezel.fillStyle(0x0A0C16, 1);
+        mBezel.fillRect(this.playX - 12, this.playY - 12, this.playW + 24, 12); // top bar
+        mBezel.fillRect(this.playX - 12, this.playY + this.playH, this.playW + 24, 12); // bottom bar
+        mBezel.fillRect(this.playX - 12, this.playY, 12, this.playH); // left bar
+        mBezel.fillRect(this.playX + this.playW, this.playY, 12, this.playH); // right bar
+
+        mBezel.lineStyle(2, 0x00E5FF, 1);
+        mBezel.strokeRect(this.playX - 4, this.playY - 4, this.playW + 8, this.playH + 8);
+        mBezel.lineStyle(1, 0xFFD700, 0.7);
+        mBezel.strokeRect(this.playX - 2, this.playY - 2, this.playW + 4, this.playH + 4);
+
+        // 4 CRT Curved Corner Masks
+        const cR = 12;
+        mBezel.fillStyle(0x0A0C16, 1);
+        mBezel.fillTriangle(this.playX, this.playY, this.playX + cR, this.playY, this.playX, this.playY + cR);
+        mBezel.fillTriangle(this.playX + this.playW, this.playY, this.playX + this.playW - cR, this.playY, this.playX + this.playW, this.playY + cR);
+        mBezel.fillTriangle(this.playX, this.playY + this.playH, this.playX + cR, this.playY + this.playH, this.playX, this.playY + this.playH - cR);
+        mBezel.fillTriangle(this.playX + this.playW, this.playY + this.playH, this.playX + this.playW - cR, this.playY + this.playH, this.playX + this.playW, this.playY + this.playH - cR);
+
+        // Bezel Stickers
+        this.add.text(this.playX + 8, this.playY - 8, '• DISNEY EDGE ARCADE •', {
+            fontSize: '6px', fill: '#00E5FF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0, 1).setDepth(32);
+
+        this.add.text(this.playX + this.playW - 8, this.playY - 8, '★ 1 PLAY 25¢ ★', {
+            fontSize: '6px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(1, 1).setDepth(32);
+    }
+
+    setupCabinetControlPanel() {
+        const cx = this.scale.width / 2;
+        const cpoY = this.cpoY;
+        const cpoH = this.cpoH;
+
+        // Control Panel Deck Surface (Depth 40)
+        let cpoG = this.add.graphics().setDepth(40);
+        cpoG.fillStyle(0x181B28, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY, this.cabW - 12, cpoH);
+        cpoG.fillStyle(0x2B3147, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY, this.cabW - 12, 3);
+        cpoG.fillStyle(0x0C0D14, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY + cpoH - 4, this.cabW - 12, 4);
+
+        // Left & Right Chrome Clamps
+        cpoG.fillStyle(0x778899, 1);
+        cpoG.fillRect(this.cabX + 6, cpoY, 8, cpoH);
+        cpoG.fillRect(this.cabX + this.cabW - 14, cpoY, 8, cpoH);
+
+        // --- 1. Left Section: Illustrated 8-Way Joystick ---
+        const joyX = this.cabX + Math.max(38, Math.round(this.cabW * 0.14));
+        const joyY = cpoY + Math.round(cpoH * 0.52);
+
+        // Black dust washer
+        cpoG.fillStyle(0x0D0D11, 1);
+        cpoG.fillCircle(joyX, joyY + 6, 16);
+        cpoG.lineStyle(1, 0x333344, 1);
+        cpoG.strokeCircle(joyX, joyY + 6, 16);
+
+        // Chrome joystick shaft
+        cpoG.fillStyle(0xCCD0E0, 1);
+        cpoG.fillRect(joyX - 3, joyY - 12, 6, 18);
+
+        // 3D Red Ball-Top Knob
+        cpoG.fillStyle(0xEE1133, 1);
+        cpoG.fillCircle(joyX, joyY - 14, 12);
+        cpoG.fillStyle(0xFFFFFF, 0.85);
+        cpoG.fillCircle(joyX - 3, joyY - 17, 3);
+
+        // Joystick Direction Arrows & Label
+        this.add.text(joyX, joyY + 24, 'STEER', {
+            fontSize: '6px', fill: '#00E5FF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+        this.add.text(joyX, joyY + 32, 'ARROWS / WASD', {
+            fontSize: '5px', fill: '#A0B0C0', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        // --- 2. Middle Section: Metal "HOW TO PLAY" Instruction Plate ---
+        const cardW = Math.min(270, Math.max(160, this.cabW - 230));
+        const cardX = cx - cardW / 2;
+        const cardH = cpoH - 14;
+
+        cpoG.fillStyle(0x0B1220, 1);
+        cpoG.fillRect(cardX, cpoY + 7, cardW, cardH);
+        cpoG.lineStyle(1, 0x00E5FF, 1);
+        cpoG.strokeRect(cardX, cpoY + 7, cardW, cardH);
+        cpoG.lineStyle(1, 0xFFD700, 0.8);
+        cpoG.strokeRect(cardX + 2, cpoY + 9, cardW - 4, cardH - 4);
+
+        // 4 Corner Screws
+        cpoG.fillStyle(0x8899AA, 1);
+        cpoG.fillCircle(cardX + 5, cpoY + 12, 1.5);
+        cpoG.fillCircle(cardX + cardW - 5, cpoY + 12, 1.5);
+        cpoG.fillCircle(cardX + 5, cpoY + 7 + cardH - 5, 1.5);
+        cpoG.fillCircle(cardX + cardW - 5, cpoY + 7 + cardH - 5, 1.5);
+
+        // Instruction Text on Plate
+        this.add.text(cx, cpoY + 15, '★ HOW TO PLAY ★', {
+            fontSize: '7px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        this.add.text(cx, cpoY + 28, 'FIRE: [SPACE] OR [Z] (AUTO-FIRE)', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        this.add.text(cx, cpoY + 40, 'BOMB: [X] OR [B] (SMART BOMB)', {
+            fontSize: '6px', fill: '#FF9100', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        this.add.text(cx, cpoY + 52, 'ITEMS: [P]GUN [S]SHIELD [B]BOMB [★]PTS', {
+            fontSize: '5px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(42);
+
+        if (cpoH >= 110) {
+            this.add.text(cx, cpoY + 64, 'DODGE RED BULLETS! TOUCH DRAG / ARROWS', {
+                fontSize: '5px', fill: '#A0D0FF', fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5).setDepth(42);
+        }
+
+        // --- 3. Right Section: Clickable & Touchable 3D Arcade Buttons ---
+        const btnFireX = this.cabX + this.cabW - Math.max(38, Math.round(this.cabW * 0.12));
+        const btnFireY = cpoY + Math.round(cpoH * 0.52);
+        const btnBombX = btnFireX - Math.max(44, Math.round(cpoH * 0.42));
+        const btnBombY = btnFireY + 4;
+
+        // FIRE Button (Red)
+        this.add.circle(btnFireX, btnFireY, 23, 0x111111).setDepth(41);
+        this.fireBtn = this.add.circle(btnFireX, btnFireY, 19, 0xFF2233).setDepth(42)
+            .setInteractive({ useHandCursor: true });
+        this.add.circle(btnFireX - 4, btnFireY - 6, 5, 0xFFAAAA, 0.65).setDepth(43);
+
+        this.add.text(btnFireX, btnFireY - 3, 'FIRE', {
+            fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+        this.add.text(btnFireX, btnFireY + 8, '[SPACE]', {
+            fontSize: '5px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+
+        this.fireBtn.on('pointerdown', () => {
+            this.touchFireActive = true;
+            this.fireBtn.setScale(0.92);
+            this.fireBtn.setFillStyle(0xCC1122);
+            this.fireLaser();
+        });
+        const releaseFireBtn = () => {
+            this.touchFireActive = false;
+            this.fireBtn.setScale(1);
+            this.fireBtn.setFillStyle(0xFF2233);
+        };
+        this.fireBtn.on('pointerup', releaseFireBtn);
+        this.fireBtn.on('pointerout', releaseFireBtn);
+
+        // BOMB Button (Orange/Yellow)
+        this.add.circle(btnBombX, btnBombY, 20, 0x111111).setDepth(41);
+        this.bombBtn = this.add.circle(btnBombX, btnBombY, 16, 0xFF7700).setDepth(42)
+            .setInteractive({ useHandCursor: true });
+        this.add.circle(btnBombX - 3, btnBombY - 5, 4, 0xFFDD88, 0.65).setDepth(43);
+
+        this.add.text(btnBombX, btnBombY - 3, 'BOMB', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+        this.add.text(btnBombX, btnBombY + 7, '[X]', {
+            fontSize: '5px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(44);
+
+        this.bombBtn.on('pointerdown', () => {
+            this.bombBtn.setScale(0.92);
+            this.bombBtn.setFillStyle(0xCC5500);
+            this.detonateSmartBomb();
+        });
+        const releaseBombBtn = () => {
+            this.bombBtn.setScale(1);
+            this.bombBtn.setFillStyle(0xFF7700);
+        };
+        this.bombBtn.on('pointerup', releaseBombBtn);
+        this.bombBtn.on('pointerout', releaseBombBtn);
+    }
+
+    setupFloatingJoystickAndTouchControls() {
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const JOY_RADIUS = 42;
+        const KNOB_RADIUS = 20;
+
+        // 1. Floating Joystick Graphics (Depth 520 - above playfield and cabinet)
+        this.joyBase = this.add.graphics().setDepth(520);
+        this.joyKnob = this.add.graphics().setDepth(521);
+
+        this.joyBase.fillStyle(0x060C1E, 0.6);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(2, 0x00E5FF, 0.85);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(1, 0xFFD700, 0.4);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS - 6);
+
+        this.joyKnob.fillStyle(0x00A8FF, 0.95);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
+        this.joyKnob.lineStyle(2, 0x00FFFF, 1);
+        this.joyKnob.strokeCircle(0, 0, KNOB_RADIUS);
+        this.joyKnob.fillStyle(0xFFFFFF, 0.85);
+        this.joyKnob.fillCircle(-4, -4, 4);
+
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
+
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
+
+        // 2. On-Screen Action Button Overlays (Depth 510) - Primary FIRE & Secondary BOMB
+        const btnFireX = Math.round(W - 60);
+        const btnFireY = Math.round(H - 68);
+        const btnBombX = Math.round(btnFireX - 68);
+        const btnBombY = Math.round(btnFireY + 4);
+
+        // FIRE Button Overlay Container
+        this.overlayFireContainer = this.add.container(btnFireX, btnFireY).setDepth(510);
+        let fireBase = this.add.circle(0, 0, 32, 0x0A0D18, 0.85).setStrokeStyle(2, 0x00E5FF, 0.85);
+        this.overlayFireBtn = this.add.circle(0, 0, 28, 0xFF2244, 0.92).setInteractive({ useHandCursor: true });
+        let fireHighlight = this.add.circle(-7, -8, 6, 0xFFAAAA, 0.65);
+        let fireLabel = this.add.text(0, -4, 'FIRE', {
+            fontSize: '9px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        let fireSub = this.add.text(0, 8, '[HOLD]', {
+            fontSize: '5px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+        this.overlayFireContainer.add([fireBase, this.overlayFireBtn, fireHighlight, fireLabel, fireSub]);
+
+        // BOMB Button Overlay Container
+        this.overlayBombContainer = this.add.container(btnBombX, btnBombY).setDepth(510);
+        let bombBase = this.add.circle(0, 0, 26, 0x0A0D18, 0.85).setStrokeStyle(2, 0xFFD700, 0.85);
+        this.overlayBombBtn = this.add.circle(0, 0, 22, 0xFF7700, 0.92).setInteractive({ useHandCursor: true });
+        let bombHighlight = this.add.circle(-5, -6, 5, 0xFFEEAA, 0.65);
+        let bombLabel = this.add.text(0, -3, 'BOMB', {
+            fontSize: '8px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5);
+        let bombSub = this.add.text(0, 7, '[X]', {
+            fontSize: '5px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+        this.overlayBombContainer.add([bombBase, this.overlayBombBtn, bombHighlight, bombLabel, bombSub]);
+
+        // FIRE Button Handlers
+        this.firePointerId = null;
+        this.overlayFireBtn.on('pointerdown', (ptr) => {
+            this.firePointerId = ptr.id;
+            this.touchFireActive = true;
+            this.overlayFireContainer.setScale(0.92);
+            this.fireLaser();
+        });
+        const releaseOverlayFire = (ptr) => {
+            if (this.firePointerId === null || (ptr && ptr.id === this.firePointerId)) {
+                this.touchFireActive = false;
+                this.overlayFireContainer.setScale(1);
+                this.firePointerId = null;
+            }
+        };
+        this.overlayFireBtn.on('pointerup', releaseOverlayFire);
+        this.overlayFireBtn.on('pointerout', releaseOverlayFire);
+
+        // BOMB Button Handlers
+        this.overlayBombBtn.on('pointerdown', () => {
+            this.overlayBombContainer.setScale(0.92);
+            this.detonateSmartBomb();
+        });
+        const releaseOverlayBomb = () => {
+            this.overlayBombContainer.setScale(1);
+        };
+        this.overlayBombBtn.on('pointerup', releaseOverlayBomb);
+        this.overlayBombBtn.on('pointerout', releaseOverlayBomb);
+
+        // Resize handler for mobile orientation changes
+        this.scale.on('resize', (gameSize) => {
+            const newW = gameSize.width;
+            const newH = gameSize.height;
+            const nFireX = Math.round(newW - 60);
+            const nFireY = Math.round(newH - 68);
+            if (this.overlayFireContainer) {
+                this.overlayFireContainer.setPosition(nFireX, nFireY);
+            }
+            if (this.overlayBombContainer) {
+                this.overlayBombContainer.setPosition(Math.round(nFireX - 68), Math.round(nFireY + 4));
+            }
+        });
+
+        // 3. Floating Joystick Multi-touch Pointer Listeners
+        this.input.on('pointerdown', (ptr) => {
+            if (this.gameState !== 'playing') return;
+
+            // Ignore touches hitting the action buttons
+            const curFireX = this.overlayFireContainer.x;
+            const curFireY = this.overlayFireContainer.y;
+            const curBombX = this.overlayBombContainer.x;
+            const curBombY = this.overlayBombContainer.y;
+            const distFire = Phaser.Math.Distance.Between(ptr.x, ptr.y, curFireX, curFireY);
+            const distBomb = Phaser.Math.Distance.Between(ptr.x, ptr.y, curBombX, curBombY);
+            if (distFire < 38 || distBomb < 32) {
+                return;
+            }
+
+            // Ignore exit button in upper-right
+            if (this.exitBtn && ptr.y < this.cabY + 40 && ptr.x > this.cabX + this.cabW - 80) {
+                return;
+            }
+
+            // Spawn floating joystick at touch point (left 75% of screen)
+            if (this.joyPointer === null && ptr.x < this.scale.width * 0.75) {
+                this.joyPointer = ptr;
+                this.joyOrigin.x = ptr.x;
+                this.joyOrigin.y = ptr.y;
+                this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                this.joystickActive = true;
+                this.joystickVx = 0;
+                this.joystickVy = 0;
+            }
+        });
+
+        this.input.on('pointermove', (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                let dx = ptr.x - this.joyOrigin.x;
+                let dy = ptr.y - this.joyOrigin.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let clamped = Math.min(dist, JOY_RADIUS);
+                let angle = Math.atan2(dy, dx);
+                let kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                let ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                // Deadzone check (8px)
+                if (dist > 8) {
+                    const norm = Math.min(1.0, (dist - 8) / (JOY_RADIUS - 8));
+                    this.joystickVx = Math.cos(angle) * norm * 240;
+                    this.joystickVy = Math.sin(angle) * norm * 240;
+                    this.mobileInput.left = dx < -12;
+                    this.mobileInput.right = dx > 12;
+                    this.mobileInput.up = dy < -12;
+                    this.mobileInput.down = dy > 12;
+                } else {
+                    this.joystickVx = 0;
+                    this.joystickVy = 0;
+                    this.mobileInput.left = false;
+                    this.mobileInput.right = false;
+                    this.mobileInput.up = false;
+                    this.mobileInput.down = false;
+                }
+            }
+        });
+
+        const releaseJoystick = (ptr) => {
+            if (this.joyPointer && (!ptr || ptr.id === this.joyPointer.id)) {
+                this.joyPointer = null;
+                this.joyBase.setVisible(false);
+                this.joyKnob.setVisible(false);
+                this.joystickActive = false;
+                this.joystickVx = 0;
+                this.joystickVy = 0;
+                this.mobileInput.left = false;
+                this.mobileInput.right = false;
+                this.mobileInput.up = false;
+                this.mobileInput.down = false;
+            }
+        };
+
+        this.input.on('pointerup', releaseJoystick);
+        this.input.on('pointercancel', releaseJoystick);
+    }
+
+    showMissionBriefing() {
+        const cx = this.playX + this.playW / 2;
+        const cy = this.playY + this.playH / 2 - 20;
+
+        let brief = this.add.container(cx, cy).setDepth(65);
+        let bg = this.add.rectangle(0, 0, Math.min(360, this.playW - 24), 142, 0x000000, 0.92)
+            .setStrokeStyle(2, 0x00E5FF);
+
+        let t1 = this.add.text(0, -48, '★ MISSION BRIEFING ★', {
+            fontSize: '9px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+
+        let t2 = this.add.text(0, -30, 'DEFEND THE DISNEY DESTINY!', {
+            fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+
+        let t3 = this.add.text(0, -2, '• MOVE: FLOATING JOYSTICK / WASD\n• FIRE: HOLD [FIRE] BUTTON OR [SPACE]\n• BOMB: TAP [BOMB] BUTTON OR [X]\n• DODGE RED BULLETS! CATCH [P][S][B][★]', {
+            fontSize: '6px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"', align: 'left', lineSpacing: 4
+        }).setOrigin(0.5);
+
+        let t4 = this.add.text(0, 46, '>>> BLAST OFF! <<<', {
+            fontSize: '9px', fill: '#FF2A85', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5);
+
+        brief.add([bg, t1, t2, t3, t4]);
+
+        this.tweens.add({
+            targets: t4,
+            alpha: 0.2,
+            duration: 250,
+            yoyo: true,
+            repeat: 6
+        });
+
+        this.missionBriefing = brief;
+        this.time.delayedCall(3400, () => {
+            this.dismissMissionBriefing();
+        });
+    }
+
+    dismissMissionBriefing() {
+        if (!this.missionBriefing || !this.missionBriefing.active) return;
+        let b = this.missionBriefing;
+        this.missionBriefing = null;
+        this.tweens.add({
+            targets: b,
+            alpha: 0,
+            y: b.y - 20,
+            duration: 350,
+            onComplete: () => b.destroy()
+        });
+    }
+
+    updateBottomHUD() {
+        const hearts = '♥ '.repeat(Math.max(0, this.lives));
+        const bombs = '💣 '.repeat(Math.max(0, this.bombs));
+        const shield = this.shieldHits > 0 ? `SHIELD:${this.shieldHits * 50}%` : 'SHIELD:OFF';
+        this.bottomHud.setText(`${hearts} | ${bombs} | LVL${this.weaponLevel} | ${shield}`);
+    }
+
+    fireLaser() {
+        const now = this.time.now;
+        if (now - this.lastShotTime < this.shotCooldown) return;
+        this.lastShotTime = now;
+
+        if (this.missionBriefing && this.missionBriefing.active) {
+            this.dismissMissionBriefing();
+        }
+
+        retroArcadeAudio.playLaser();
+
+        const px = this.player.x;
+        const py = this.player.y - 14;
+
+        if (this.weaponLevel === 1) {
+            // Dual parallel lasers
+            let l1 = this.playerLasers.create(px - 7, py, 'shooter_laser_player').setDepth(15);
+            let l2 = this.playerLasers.create(px + 7, py, 'shooter_laser_player').setDepth(15);
+            if (l1.body) l1.body.allowGravity = false;
+            if (l2.body) l2.body.allowGravity = false;
+            l1.setVelocityY(-560);
+            l2.setVelocityY(-560);
+        } else if (this.weaponLevel === 2) {
+            // Triple spread laser
+            let l1 = this.playerLasers.create(px, py, 'shooter_laser_player').setDepth(15);
+            let l2 = this.playerLasers.create(px - 9, py + 2, 'shooter_laser_spread').setDepth(15);
+            let l3 = this.playerLasers.create(px + 9, py + 2, 'shooter_laser_spread').setDepth(15);
+            if (l1.body) l1.body.allowGravity = false;
+            if (l2.body) l2.body.allowGravity = false;
+            if (l3.body) l3.body.allowGravity = false;
+            l1.setVelocity(0, -560);
+            l2.setVelocity(-140, -500);
+            l3.setVelocity(140, -500);
+        } else {
+            // Quad heavy plasma
+            let l1 = this.playerLasers.create(px - 6, py, 'shooter_laser_player').setDepth(15);
+            let l2 = this.playerLasers.create(px + 6, py, 'shooter_laser_player').setDepth(15);
+            let l3 = this.playerLasers.create(px - 14, py + 4, 'shooter_laser_spread').setDepth(15);
+            let l4 = this.playerLasers.create(px + 14, py + 4, 'shooter_laser_spread').setDepth(15);
+            if (l1.body) l1.body.allowGravity = false;
+            if (l2.body) l2.body.allowGravity = false;
+            if (l3.body) l3.body.allowGravity = false;
+            if (l4.body) l4.body.allowGravity = false;
+            l1.setVelocity(0, -580);
+            l2.setVelocity(0, -580);
+            l3.setVelocity(-190, -480);
+            l4.setVelocity(190, -480);
+        }
+    }
+
+    detonateSmartBomb() {
+        if (this.bombs <= 0 || this.gameState !== 'playing') return;
+        this.bombs--;
+        this.updateBottomHUD();
+
+        retroArcadeAudio.playBomb();
+        this.cameras.main.shake(250, 0.02);
+
+        // Flash screen
+        let flash = this.add.rectangle(this.playX + this.playW / 2, this.playY + this.playH / 2, this.playW, this.playH, 0xFFFFFF, 0.85).setDepth(200);
+        this.tweens.add({
+            targets: flash,
+            alpha: 0,
+            duration: 250,
+            onComplete: () => flash.destroy()
+        });
+
+        // Clear all enemy bullets
+        this.enemyBullets.clear(true, true);
+
+        // Damage all enemies
+        this.enemies.getChildren().forEach(e => {
+            if (e.isBoss) {
+                this.damageBoss(40);
+            } else {
+                this.destroyEnemy(e, true);
+            }
+        });
+    }
+
+    spawnWaveFormation() {
+        if (this.gameState !== 'playing' || this.bossActive) return;
+
+        // Wave Target reached -> Boss spawn on Wave 3 (and multiples of 3)
+        if (this.enemiesDefeatedInWave >= this.waveTargetEnemies) {
+            if (this.wave % 3 === 0 && !this.bossActive) {
+                this.spawnBoss();
+                return;
+            } else if (this.wave % 3 !== 0) {
+                this.advanceWave();
+                return;
+            }
+        }
+
+        const type = Phaser.Math.Between(1, 10);
+        const startX = this.playX + Phaser.Math.Between(24, this.playW - 24);
+
+        if (type <= 5) {
+            // Alien Drone Swarm
+            let drone = this.enemies.create(startX, this.playY - 10, 'shooter_drone').setDepth(10);
+            drone.hp = 1;
+            drone.scoreVal = 100;
+            drone.setVelocityY(90 + this.wave * 10);
+            drone.sineOffset = Phaser.Math.Between(0, 100);
+            drone.shootCooldown = Phaser.Math.Between(1200, 2400);
+            drone.lastShoot = this.time.now;
+        } else if (type <= 8) {
+            // Cosmic Cruiser
+            let cruiser = this.enemies.create(startX, this.playY - 12, 'shooter_cruiser').setDepth(10);
+            cruiser.hp = 3;
+            cruiser.scoreVal = 250;
+            cruiser.setVelocity(Phaser.Math.Between(-30, 30), 60 + this.wave * 8);
+            cruiser.shootCooldown = 1500;
+            cruiser.lastShoot = this.time.now;
+        } else {
+            // Space Asteroid
+            let rock = this.enemies.create(startX, this.playY - 12, 'shooter_asteroid_large').setDepth(10);
+            rock.hp = 2;
+            rock.scoreVal = 150;
+            rock.isAsteroid = true;
+            rock.setVelocity(Phaser.Math.Between(-20, 20), 80);
+            rock.rotSpeed = Phaser.Math.Between(-3, 3);
+        }
+    }
+
+    spawnBoss() {
+        this.bossActive = true;
+        this.maxBossHP = 100 + this.wave * 20;
+        this.bossHP = this.maxBossHP;
+
+        // Siren Warning
+        retroArcadeAudio.playDamage();
+        this.bossText.setVisible(true);
+        this.bossBarContainer.setVisible(true);
+
+        this.tweens.add({
+            targets: this.bossText,
+            alpha: 0.2,
+            duration: 300,
+            yoyo: true,
+            repeat: 4,
+            onComplete: () => this.bossText.setVisible(false)
+        });
+
+        // Create Boss Dreadnought
+        let boss = this.enemies.create(this.playX + this.playW / 2, this.playY - 30, 'shooter_boss').setDepth(11);
+        boss.isBoss = true;
+        boss.body.setSize(68, 44);
+        boss.setVelocityY(40);
+        this.boss = boss;
+
+        this.time.delayedCall(1200, () => {
+            if (this.boss && this.boss.active) {
+                this.boss.setVelocity(80, 0);
+            }
+        });
+    }
+
+    updateBoss(time, delta) {
+        if (!this.boss || !this.boss.active) return;
+
+        // Bounce horizontally
+        if (this.boss.x < this.playX + 44) {
+            this.boss.setVelocityX(80 + this.wave * 10);
+        } else if (this.boss.x > this.playX + this.playW - 44) {
+            this.boss.setVelocityX(-80 - this.wave * 10);
+        }
+
+        // Draw Boss Health Bar
+        this.bossBarContainer.clear();
+        let barW = this.playW - 40;
+        let barH = 6;
+        let bx = this.playX + 20;
+        let by = this.playY + 22;
+
+        this.bossBarContainer.fillStyle(0x000000, 0.8);
+        this.bossBarContainer.fillRect(bx - 2, by - 2, barW + 4, barH + 4);
+        this.bossBarContainer.lineStyle(1, 0xFFD700, 1);
+        this.bossBarContainer.strokeRect(bx - 2, by - 2, barW + 4, barH + 4);
+
+        let pct = Math.max(0, this.bossHP / this.maxBossHP);
+        let col = (pct > 0.5) ? 0x00FF66 : (pct > 0.25) ? 0xFFD700 : 0xFF0055;
+        this.bossBarContainer.fillStyle(col, 1);
+        this.bossBarContainer.fillRect(bx, by, barW * pct, barH);
+
+        // Boss Attack Patterns
+        this.bossLaserTimer += delta;
+        if (this.bossLaserTimer > 1200) {
+            this.bossLaserTimer = 0;
+            // Wing spread bullets
+            let b1 = this.enemyBullets.create(this.boss.x - 24, this.boss.y + 18, 'shooter_bullet_enemy').setDepth(12);
+            let b2 = this.enemyBullets.create(this.boss.x + 24, this.boss.y + 18, 'shooter_bullet_enemy').setDepth(12);
+            b1.setVelocity(-40, 140);
+            b2.setVelocity(40, 140);
+
+            // Aimed energy core orb
+            let angle = Phaser.Math.Angle.Between(this.boss.x, this.boss.y, this.player.x, this.player.y);
+            let b3 = this.enemyBullets.create(this.boss.x, this.boss.y + 20, 'shooter_bullet_boss').setDepth(12);
+            b3.setVelocity(Math.cos(angle) * 160, Math.sin(angle) * 160);
+        }
+    }
+
+    damageBoss(amount) {
+        this.bossHP -= amount;
+        retroArcadeAudio.playBossHit();
+
+        // Flash boss
+        if (this.boss) {
+            this.boss.setTintFill(0xFFFFFF);
+            this.time.delayedCall(60, () => {
+                if (this.boss && this.boss.active) this.boss.clearTint();
+            });
+        }
+
+        if (this.bossHP <= 0) {
+            this.destroyBoss();
+        }
+    }
+
+    destroyBoss() {
+        this.bossActive = false;
+        this.bossBarContainer.setVisible(false);
+
+        // Cascading explosions
+        for (let i = 0; i < 8; i++) {
+            this.time.delayedCall(i * 180, () => {
+                retroArcadeAudio.playExplosion();
+                this.cameras.main.shake(150, 0.015);
+                let ex = this.boss ? this.boss.x + Phaser.Math.Between(-30, 30) : this.playX + this.playW / 2;
+                let ey = this.boss ? this.boss.y + Phaser.Math.Between(-20, 20) : this.playY + 70;
+                this.spawnExplosion(ex, ey);
+            });
+        }
+
+        this.time.delayedCall(1600, () => {
+            if (this.boss) {
+                this.addScore(2500);
+                this.boss.destroy();
+                this.boss = null;
+            }
+            // Drop powerups
+            ['shooter_powerup_P', 'shooter_powerup_S', 'shooter_powerup_B', 'shooter_powerup_STAR'].forEach((key, idx) => {
+                let p = this.powerups.create(this.playX + 80 + idx * 70, this.playY + 60, key).setDepth(14);
+                p.pType = key.replace('shooter_powerup_', '');
+                p.setVelocityY(70);
+            });
+
+            this.advanceWave();
+        });
+    }
+
+    advanceWave() {
+        this.wave++;
+        this.enemiesDefeatedInWave = 0;
+        this.waveTargetEnemies = 16 + this.wave * 4;
+        this.waveText.setText(`WAVE ${String(this.wave).padStart(2, '0')}`);
+
+        // Floating Wave Banner
+        let wMsg = this.add.text(this.playX + this.playW / 2, this.playY + this.playH / 2 - 20, `★ WAVE ${this.wave} ★`, {
+            fontSize: '12px', fill: '#00E5FF', fontFamily: '"Press Start 2P", monospace',
+            stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(200);
+
+        this.tweens.add({
+            targets: wMsg,
+            scale: 1.2,
+            duration: 1000,
+            yoyo: true,
+            onComplete: () => wMsg.destroy()
+        });
+    }
+
+    hitEnemyWithLaser(laser, enemy) {
+        laser.destroy();
+        enemy.hp--;
+
+        if (enemy.isBoss) {
+            this.damageBoss(2);
+            return;
+        }
+
+        if (enemy.hp <= 0) {
+            this.destroyEnemy(enemy, false);
+        } else {
+            enemy.setTintFill(0xFFFFFF);
+            this.time.delayedCall(40, () => {
+                if (enemy && enemy.active) enemy.clearTint();
+            });
+        }
+    }
+
+    destroyEnemy(enemy, isBomb) {
+        if (!enemy || enemy === this.player || !enemy.active) return;
+        const ex = enemy.x;
+        const ey = enemy.y;
+        const pts = enemy.scoreVal || 100;
+
+        retroArcadeAudio.playExplosion();
+        this.spawnExplosion(ex, ey);
+        this.addScore(pts);
+        this.enemiesDefeatedInWave++;
+
+        // Asteroid fragment splitting
+        if (enemy.isAsteroid) {
+            let a1 = this.enemies.create(ex - 8, ey, 'shooter_asteroid_small').setDepth(10);
+            let a2 = this.enemies.create(ex + 8, ey, 'shooter_asteroid_small').setDepth(10);
+            a1.hp = 1; a1.scoreVal = 75; a1.setVelocity(-50, 90);
+            a2.hp = 1; a2.scoreVal = 75; a2.setVelocity(50, 90);
+        }
+
+        // Random Powerup Drop
+        const dropRoll = Phaser.Math.Between(1, 100);
+        if (dropRoll <= 18) {
+            const keys = ['P', 'S', 'B', 'STAR'];
+            const chosen = Phaser.Utils.Array.GetRandom(keys);
+            let p = this.powerups.create(ex, ey, 'shooter_powerup_' + chosen).setDepth(14);
+            p.pType = chosen;
+            p.setVelocityY(65);
+        }
+
+        if (typeof enemy.destroy === 'function') {
+            enemy.destroy();
+        }
+    }
+
+    spawnExplosion(x, y) {
+        let exp = this.add.sprite(x, y, 'shooter_explosion_0').setDepth(18);
+        let frames = ['shooter_explosion_0', 'shooter_explosion_1', 'shooter_explosion_2', 'shooter_explosion_3'];
+        frames.forEach((f, idx) => {
+            this.time.delayedCall(idx * 50, () => {
+                if (exp && exp.active) exp.setTexture(f);
+            });
+        });
+        this.time.delayedCall(220, () => exp.destroy());
+    }
+
+    hitPlayerWithBullet(bullet) {
+        if (!bullet || bullet === this.player) return;
+        if (typeof bullet.destroy === 'function') {
+            bullet.destroy();
+        }
+        this.damagePlayer();
+    }
+
+    hitPlayerWithEnemy(enemy) {
+        if (!enemy || enemy === this.player) return;
+        if (!enemy.isBoss && typeof this.destroyEnemy === 'function') {
+            this.destroyEnemy(enemy, false);
+        }
+        this.damagePlayer();
+    }
+
+    damagePlayer() {
+        if (this.invulnerableTimer > 0 || this.gameState !== 'playing') return;
+
+        // Shield Absorbs Hit
+        if (this.shieldHits > 0) {
+            this.shieldHits--;
+            retroArcadeAudio.playDamage();
+            this.updateBottomHUD();
+            this.cameras.main.shake(120, 0.01);
+            if (this.shieldHits <= 0) {
+                this.shieldSprite.setVisible(false);
+            } else {
+                this.shieldSprite.setTint(0xFFAA00);
+            }
+            let deflect = this.add.circle(this.player.x, this.player.y, 25, 0x00E5FF, 0.6).setDepth(25);
+            this.tweens.add({ targets: deflect, radius: 44, alpha: 0, duration: 250, onComplete: () => deflect.destroy() });
+            this.invulnerableTimer = 400; // Brief grace period so multi-bullet salvo doesn't instantly pierce life
+            return;
+        }
+
+        // Lose Life
+        this.lives--;
+        this.updateBottomHUD();
+        retroArcadeAudio.playDamage();
+        this.spawnExplosion(this.player.x, this.player.y);
+        this.cameras.main.shake(250, 0.02);
+
+        if (this.lives <= 0) {
+            this.triggerGameOver();
+        } else {
+            // Keep ship in place under player control - never teleport or hide the ship!
+            this.tweens.killTweensOf(this.player);
+            this.tweens.killTweensOf(this.thruster);
+
+            this.player.setAlpha(1.0);
+            this.player.setVisible(true);
+            this.thruster.setAlpha(1.0);
+            this.thruster.setVisible(true);
+
+            // Destroy enemy bullets immediately surrounding the player in 110px radius
+            const px = this.player.x;
+            const py = this.player.y;
+            this.enemyBullets.getChildren().forEach(b => {
+                if (Phaser.Math.Distance.Between(b.x, b.y, px, py) < 110) {
+                    b.destroy();
+                }
+            });
+
+            // Activate invulnerability forcefield aura
+            this.invulnerableTimer = 2400;
+            if (this.invulnShield) {
+                this.invulnShield.setPosition(px, py).setVisible(true).setScale(1.0);
+            }
+        }
+    }
+
+    collectPowerup(powerup) {
+        if (!powerup || powerup === this.player) return;
+        const type = powerup.pType;
+        if (typeof powerup.destroy === 'function') {
+            powerup.destroy();
+        }
+        retroArcadeAudio.playPowerup();
+
+        this.player.setVisible(true);
+        this.player.setActive(true);
+        this.player.setAlpha(1.0);
+
+        let label = '';
+        if (type === 'P') {
+            this.weaponLevel = Math.min(3, this.weaponLevel + 1);
+            label = `WEAPON LVL ${this.weaponLevel}!`;
+        } else if (type === 'S') {
+            this.shieldHits = 2;
+            this.shieldSprite.setVisible(true).clearTint();
+            this.invulnerableTimer = 0;
+            if (this.invulnShield) this.invulnShield.setVisible(false);
+            this.player.clearTint();
+            label = 'ENERGY SHIELD (2 HITS)!';
+        } else if (type === 'B') {
+            this.bombs = Math.min(5, this.bombs + 1);
+            label = '+1 SMART BOMB!';
+        } else {
+            this.addScore(1000);
+            label = '+1000 PTS!';
+        }
+        this.updateBottomHUD();
+
+        let t = this.add.text(this.player.x, this.player.y - 25, label, {
+            fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P"', stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(100);
+
+        this.tweens.add({
+            targets: t,
+            y: t.y - 20,
+            alpha: 0,
+            duration: 800,
+            onComplete: () => t.destroy()
+        });
+    }
+
+    addScore(pts) {
+        this.score += pts;
+        this.scoreText.setText(`1UP ${String(this.score).padStart(6, '0')}`);
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            this.highText.setText(`HIGH ${String(this.highScore).padStart(6, '0')}`);
+            this.highText.setStyle({ fill: '#00FF66' });
+        }
+    }
+
+    triggerGameOver() {
+        this.gameState = 'gameover';
+        retroArcadeAudio.playGameOver();
+        this.player.setVisible(false);
+        this.player.clearTint();
+        this.thruster.setVisible(false);
+        this.shieldSprite.setVisible(false);
+        if (this.invulnShield) this.invulnShield.setVisible(false);
+        if (this.joyBase) this.joyBase.setVisible(false);
+        if (this.joyKnob) this.joyKnob.setVisible(false);
+        if (this.overlayFireContainer) this.overlayFireContainer.setVisible(false);
+        if (this.overlayBombContainer) this.overlayBombContainer.setVisible(false);
+        this.touchFireActive = false;
+        this.joystickActive = false;
+
+        // Save High Score
+        const updatedScores = saveEdgeHighScore(this.score, 'RILEY');
+        const isNewHigh = (updatedScores[0] && updatedScores[0].name === 'RILEY' && updatedScores[0].score === this.score);
+
+        // Game Over Dialog Box
+        const cx = this.playX + this.playW / 2;
+        const cy = this.playY + this.playH / 2;
+
+        let box = this.add.rectangle(cx, cy, this.playW - 30, 210, 0x000000, 0.95)
+            .setStrokeStyle(3, isNewHigh ? 0xFFD700 : 0x00E5FF).setDepth(500);
+
+        this.add.text(cx, cy - 75, '★ GAME OVER ★', {
+            fontSize: '12px', fill: '#FF2A85', fontFamily: '"Press Start 2P"', stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(501);
+
+        this.add.text(cx, cy - 45, `FINAL SCORE: ${String(this.score).padStart(6, '0')}`, {
+            fontSize: '9px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(501);
+
+        this.add.text(cx, cy - 25, `WAVES CLEARED: ${this.wave - 1}`, {
+            fontSize: '8px', fill: '#A0D0FF', fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(501);
+
+        if (isNewHigh) {
+            this.add.text(cx, cy + 2, '★ NEW HIGH SCORE! ★', {
+                fontSize: '9px', fill: '#FFD700', fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5).setDepth(501);
+            this.add.text(cx, cy + 20, 'RILEY IS #1 ON EDGE BOARD!', {
+                fontSize: '7px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5).setDepth(501);
+        } else {
+            this.add.text(cx, cy + 12, 'EDGE LEADERBOARD UPDATED', {
+                fontSize: '8px', fill: '#00FF66', fontFamily: '"Press Start 2P"'
+            }).setOrigin(0.5).setDepth(501);
+        }
+
+        // Restart & Exit Buttons
+        let restartBtn = this.add.text(cx, cy + 50, '[ PLAY AGAIN ]', {
+            fontSize: '9px', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 10, y: 6 },
+            fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(501).setInteractive({ useHandCursor: true });
+
+        let exitBtn = this.add.text(cx, cy + 80, '[ RETURN TO LOUNGE ]', {
+            fontSize: '8px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P"'
+        }).setOrigin(0.5).setDepth(501).setInteractive({ useHandCursor: true });
+
+        restartBtn.on('pointerdown', () => {
+            this.scene.restart();
+        });
+        exitBtn.on('pointerdown', () => {
+            this.exitCabinet();
+        });
+
+        this.input.keyboard.on('keydown-ENTER', () => {
+            if (this.gameState === 'gameover') this.scene.restart();
+        });
+    }
+
+    exitCabinet() {
+        if (this.physics && this.physics.world && this.physics.world.gravity) {
+            this.physics.world.gravity.y = 1000;
+        }
+        if (this.invulnShield) this.invulnShield.setVisible(false);
+        if (this.player) this.player.clearTint();
+        if (this.joyBase) this.joyBase.setVisible(false);
+        if (this.joyKnob) this.joyKnob.setVisible(false);
+        if (this.overlayFireContainer) this.overlayFireContainer.setVisible(false);
+        if (this.overlayBombContainer) this.overlayBombContainer.setVisible(false);
+        this.touchFireActive = false;
+        this.joystickActive = false;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        if (this.edgeScene && this.edgeScene.scene) {
+            this.edgeScene.scene.setVisible(true);
+            this.edgeScene.scene.resume();
+        }
+        this.scene.stop('ArcadeShooterScene');
+        if (this.edgeScene && this.edgeScene.onReturnFromArcade) {
+            this.edgeScene.onReturnFromArcade(this.score);
+        }
+    }
+
+    update(time, delta) {
+        const dt = delta / 1000;
+
+        // Scroll Starfield
+        for (let i = 0; i < this.stars.length; i++) {
+            let s = this.stars[i];
+            s.obj.y += s.speed * dt;
+            if (s.obj.y > this.playY + this.playH - 4) {
+                s.obj.y = this.playY + 4;
+                s.obj.x = this.playX + Phaser.Math.Between(4, this.playW - 4);
+            }
+        }
+
+        if (this.gameState !== 'playing') return;
+
+        // Player Movement (Keyboard WASD/Arrows + Floating Joystick)
+        let isLeft = (this.cursors.left && this.cursors.left.isDown) || (this.keys.a && this.keys.a.isDown) || (this.mobileInput && this.mobileInput.left);
+        let isRight = (this.cursors.right && this.cursors.right.isDown) || (this.keys.d && this.keys.d.isDown) || (this.mobileInput && this.mobileInput.right);
+        let isUp = (this.cursors.up && this.cursors.up.isDown) || (this.keys.w && this.keys.w.isDown) || (this.mobileInput && this.mobileInput.up);
+        let isDown = (this.cursors.down && this.cursors.down.isDown) || (this.keys.s && this.keys.s.isDown) || (this.mobileInput && this.mobileInput.down);
+
+        let vx = 0;
+        let vy = 0;
+        const pSpeed = 240;
+
+        if (this.joystickActive && (this.joystickVx !== 0 || this.joystickVy !== 0)) {
+            vx = this.joystickVx;
+            vy = this.joystickVy;
+        } else {
+            if (isLeft && !isRight) vx = -pSpeed;
+            else if (isRight && !isLeft) vx = pSpeed;
+
+            if (isUp && !isDown) vy = -pSpeed;
+            else if (isDown && !isUp) vy = pSpeed;
+
+            if (vx !== 0 && vy !== 0) {
+                vx *= 0.7071;
+                vy *= 0.7071;
+            }
+        }
+
+        this.player.x += vx * dt;
+        this.player.y += vy * dt;
+        this.player.x = Phaser.Math.Clamp(this.player.x, this.playX + 16, this.playX + this.playW - 16);
+        this.player.y = Phaser.Math.Clamp(this.player.y, this.playY + 60, this.playY + this.playH - 30);
+        this.player.body.reset(this.player.x, this.player.y);
+        this.player.setVisible(true);
+        this.player.setActive(true);
+
+        this.thruster.setPosition(this.player.x, this.player.y + 16);
+        this.thruster.setScale(Phaser.Math.Between(8, 12) / 10);
+        this.shieldSprite.setPosition(this.player.x, this.player.y);
+        if (this.shieldHits > 0) {
+            this.shieldSprite.angle += 1.5;
+        }
+
+        // Invulnerability Forcefield & Golden Sparkle Surge (Ship is 100% visible, never transparent or hidden!)
+        if (this.invulnerableTimer > 0) {
+            this.invulnerableTimer -= delta;
+            this.player.setAlpha(1.0);
+            this.thruster.setAlpha(1.0);
+
+            // Sparkling golden energy surge across hull (only when recovering from life loss, not during shield deflection)
+            if (this.shieldHits === 0) {
+                const isTint = Math.floor(this.invulnerableTimer / 70) % 2 === 0;
+                this.player.setTint(isTint ? 0xFFFFAA : 0xFFD700);
+
+                // Pulse glowing invulnerability forcefield around the ship
+                if (this.invulnShield) {
+                    this.invulnShield.setPosition(this.player.x, this.player.y).setVisible(true);
+                    const pulse = 1.0 + Math.sin(time * 0.015) * 0.12;
+                    this.invulnShield.setScale(pulse);
+                    this.invulnShield.setAlpha(0.75 + Math.sin(time * 0.02) * 0.25);
+                }
+            }
+
+            if (this.invulnerableTimer <= 0) {
+                this.invulnerableTimer = 0;
+                this.player.clearTint();
+                if (this.invulnShield) {
+                    this.invulnShield.setVisible(false);
+                }
+            }
+        }
+
+        // Continuous Fire while Space/Z/Fire Button held
+        if (this.cursors.space.isDown || this.keys.space.isDown || this.keys.z.isDown || this.touchFireActive) {
+            this.fireLaser();
+        }
+
+        // Clean off-screen player lasers (all the way to the top of screen)
+        this.playerLasers.getChildren().forEach(laser => {
+            if (laser.y < this.playY - 16 || laser.y > this.playY + this.playH + 16 || laser.x < this.playX - 16 || laser.x > this.playX + this.playW + 16) {
+                laser.destroy();
+            }
+        });
+
+        // Clean off-screen enemy bullets
+        this.enemyBullets.getChildren().forEach(b => {
+            if (b.y > this.playY + this.playH || b.x < this.playX || b.x > this.playX + this.playW) {
+                b.destroy();
+            }
+        });
+
+        // Update Enemies
+        this.enemies.getChildren().forEach(e => {
+            if (e.isBoss) return;
+
+            // Confine enemy horizontal movement within CRT monitor playfield (bounce off side edges)
+            if (e.body && e.body.velocity) {
+                if (e.x <= this.playX + 18 && e.body.velocity.x < 0) {
+                    e.setVelocityX(Math.abs(e.body.velocity.x));
+                } else if (e.x >= this.playX + this.playW - 18 && e.body.velocity.x > 0) {
+                    e.setVelocityX(-Math.abs(e.body.velocity.x));
+                }
+            }
+
+            // Sine wave drone movement with horizontal clamp
+            if (e.sineOffset !== undefined) {
+                e.x += Math.sin((time + e.sineOffset) * 0.005) * 1.5;
+                e.x = Phaser.Math.Clamp(e.x, this.playX + 16, this.playX + this.playW - 16);
+            }
+
+            // Enemy Shooting
+            if (time - e.lastShoot > e.shootCooldown && e.y > this.playY + 20 && e.y < this.playY + this.playH - 60) {
+                e.lastShoot = time;
+                let b = this.enemyBullets.create(e.x, e.y + 10, 'shooter_bullet_enemy').setDepth(12);
+                b.setVelocityY(160 + this.wave * 12);
+            }
+
+            // Clean off-screen enemies (bottom, or abnormal horizontal drift)
+            if (e.y > this.playY + this.playH + 20 || e.x < this.playX - 40 || e.x > this.playX + this.playW + 40) {
+                e.destroy();
+            }
+        });
+
+        // Update Boss
+        if (this.bossActive) {
+            this.updateBoss(time, delta);
+        }
+
+        // Clean off-screen powerups
+        this.powerups.getChildren().forEach(p => {
+            if (p.y > this.playY + this.playH + 10 || p.x < this.playX - 20 || p.x > this.playX + this.playW + 20) {
+                p.destroy();
+            }
+        });
+    }
+}
+
+// =========================================================================
+// PHASER GAME CONFIGURATION & SCENE REGISTRATION
+// =========================================================================
+
+config.scene = [
+    BootScene,
+    TitleScene,
+    CharacterSelectScene,
+    GameScene,
+    ElevatorMenuScene,
+    BoutiqueScene,
+    EdgeClubScene,
+    ArcadeShooterScene
+];
 window.game = new Phaser.Game(config);
 const game = window.game;
+

@@ -24,6 +24,14 @@
   - **Stationary on Stairs**: When horizontal controls are released on stairs, set `this.player.setVelocity(0, 0)` with `allowGravity = false`. Never apply continuous position-snapping when idle.
   - **Continuous Collision Detection (CCD) for Airborne Landings**: Fast falling characters can move 15–20px per frame and may skip narrow trigger zones. Always use swept collision detection (`(bottomY >= sY - 8 && bottomY <= sY + 25) || (prevBottomY <= sY && bottomY >= sY)`) when detecting landings on slopes from above.
   - **Under-Stair Pass-Through on Lower Decks**: Lower deck floors extend under diagonal staircases. Characters walking horizontally at deck level must pass freely underneath stairs without being trapped or redirected upward unless they explicitly press Up/Jump.
+  - **Phaser 3 Arcade Physics Overlap Callback Discrimination**:
+    - In Phaser 3 Arcade Physics, `physics.add.overlap(group, sprite, callback)` and `physics.add.overlap(sprite, group, callback)` both invoke `collideCallback(sprite, groupMember)`. Phaser always passes the `Sprite` as parameter 1 (`bodyA.gameObject`) and the `Group` child as parameter 2 (`bodyB.gameObject`).
+    - Relying on parameter ordering in the callback definition without verifying object identity can lead to accidental destruction of the player sprite (e.g. calling `powerup.destroy()` when parameter 1 is actually `this.player`).
+    - Always enforce defensive identity discrimination (`const target = (objA === this.player) ? objB : objA`) and add safety guards (`if (!obj || obj === this.player) return;`) in all collision, damage, and collection handlers.
+  - **Arcade Shooter Viewport & Mobile Controls Architecture**:
+    - **Recessed CRT Monitor Bezel**: Side cabinet wings, T-molding, and letterbox masks rendered at Depth 30 create a physically recessed viewport for the CRT screen (Depth 2..25). Enemies, lasers, and particles cannot render on top of the cabinet wings.
+    - **Screen Boundary Containment**: Cruisers bank and reverse horizontal velocity (`vx = -vx`) when reaching `playX + 18` or `playX + playW - 18`, and drone sine-waves are clamped to stay inside the monitor.
+    - **Dual-Thumb Mobile Controls**: Floating joystick (`joyBase` / `joyKnob` at Depth 520) spawns on touch in the left screen region with 360° analog deflection. Dedicated action overlays for `FIRE` and `BOMB` at Depth 510 in the lower-right thumb zone allow simultaneous steering and shooting without touch interference via `this.input.addPointer(3)`.
 
 - **Deck & Stair Coordinates**:
   - **Stair 1**: Connects Deck 11 (floor `y = 1280`) to Deck 12 (floor `y = 1000`) between `x = 60` and `x = 340`. Slope equation: `floorY = 1340 - x`.
@@ -69,8 +77,28 @@
     - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI)
     - #45: Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
     - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
-    - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet)
+    - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet - Completed)
   - Storyboard documented in detail in `Issue_12_Storyboard.md`.
+
+- **Riley's Edge Tween Club Arcade (Issue #47 - Completed)**:
+  - **Elevator Navigation**: Added `Deck 5 (Edge Tween Club)` destination in `ElevatorMenuScene`. Selecting it automatically sets active character to Riley and launches `EdgeClubScene`.
+  - **Edge Tween Club Lounge (`EdgeClubScene`)**:
+    - Authentic late-80s Capcom/NES synthwave aesthetic: deep navy walls (`edge_wall`), neon blue/cyan light strips, illuminated diamond tile flooring (`edge_floor`), pulsing neon "EDGE" sign, starry night ocean portholes with twinkling stars, and an animated DJ equalizer station.
+    - **Tween NPCs**: Leo (lounging on sectional couch with headphones) and Maya (cheering by arcade cabinet) with proximity 8-bit Capcom speech bubbles.
+    - **Smoothie Bar ("Edge Chill Bar")**: Interactive counter where Riley can grab a tropical smoothie (`edge_smoothie`), gaining a sparkling rainbow aura and +50% speed boost.
+    - **Wall-Mounted CRT Leaderboard**: Displays Top 5 scores dynamically pulled from `localStorage` (`getEdgeHighScores()`).
+    - **Proximity Prompts**: Blinking retro action prompts for elevator, smoothie bar, and arcade cabinet (`[ ENTER: ... ]` / `[ TAP TO ... ]`).
+  - **"Game Within a Game": Retro Space Shooter ("GALAXY DESTINY" / `ArcadeShooterScene`)**:
+    - Authentic CRT arcade cabinet surround, golden/cyan border bezel, top marquee, and scanlines.
+    - Dual-layer parallax scrolling starfield.
+    - Player starfighter with flickering thrusters, dual laser cannons (upgradable to 3-way spread and quad heavy plasma), and energy shield forcefield.
+    - Enemy formations: Swooping Alien Drones, Armored Cosmic Cruisers, and tumbling Asteroids (splitting into mini fragments).
+    - Boss Battle: **The Destiny Dreadnought** (Wave 3, 120 HP with boss health bar, dual wing spread cannons, aimed homing energy orbs, multi-stage cascading explosions, and victory fanfare).
+    - Power-ups: `[P]` (Weapon upgrade), `[S]` (Energy Shield), `[B]` (Smart Bomb), and `[★]` (+1000 pts).
+    - Smart Bomb: Screen-clearing shockwave that vaporizes bullets and deals massive damage.
+    - **8-Bit Web Audio Synthesizer**: Pure Web Audio oscillators (square, triangle, sawtooth, noise) for laser zaps, explosion booms, powerup chimes, and bomb blasts with zero external dependencies.
+    - **Edge High Score Board Integration**: Updates player score, celebrates new high scores ("★ NEW HIGH SCORE! RILEY IS #1 ON THE EDGE BOARD!"), persists in `localStorage`, and immediately updates the Edge Club wall display upon return.
+    - **Controls**: Full keyboard (Arrow keys/WASD, Space/Z to shoot, X/B for bomb, ESC to exit) and mobile on-screen controls (floating virtual joystick with 360° analog deflection matching deck traversal, dedicated on-screen FIRE [HOLD] and BOMB [X] overlay buttons with multi-touch isolation, and quick exit).
 
 - **Currents Bar Doorway & Signage Removal (Issue #42 - Completed)**:
   - Removed unused doorway sprite and "CURRENTS BAR" banner on Deck 13 aft (`x = 2240`).
