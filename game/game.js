@@ -3461,8 +3461,29 @@ class GameScene extends Phaser.Scene {
         this.add.text(590, 915, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(1680, 915, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
-        doors.create(2000, 910, 'door');
-        this.add.text(1960, 865, 'HERO ZONE', { fontSize: '9px', fill: '#E83818', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        const hzDoor = doors.create(2000, 910, 'door');
+        hzDoor.setInteractive({ useHandCursor: true });
+        hzDoor.on('pointerdown', () => this.openHeroZone());
+
+        const hzSign = this.add.text(2000, 855, '★ HERO ZONE ★', {
+            fontSize: '9px', fill: '#FFD700', backgroundColor: '#D01000', padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(20).setInteractive({ useHandCursor: true });
+        hzSign.on('pointerdown', () => this.openHeroZone());
+
+        const hzEnterPrompt = this.add.text(2000, 875, '▼ TAP / ENTER ▼', {
+            fontSize: '7px', fill: '#FFFFFF', backgroundColor: '#001024', padding: { x: 5, y: 2 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(20).setInteractive({ useHandCursor: true });
+        hzEnterPrompt.on('pointerdown', () => this.openHeroZone());
+
+        this.tweens.add({
+            targets: [hzSign, hzEnterPrompt],
+            y: '-=3',
+            duration: 600,
+            yoyo: true,
+            repeat: -1
+        });
 
         // Stairs up to Deck 13 (left-up): connects Deck 12 (y=1000) to Deck 13 (y=760)
         createStaircase(2300, 1000, 6, -1, -1);
@@ -3872,14 +3893,14 @@ class GameScene extends Phaser.Scene {
 
         // Hero Zone Door logic
         this.nearHeroZone = false;
-        const heroZonePromptLabel = isTouch ? '[ TAP TO ENTER HERO ZONE ]' : '[ ENTER: HERO ZONE ]';
+        const heroZonePromptLabel = isTouch ? '[ TAP TO ENTER HERO ZONE ]' : '[ ENTER / SPACE: ENTER HERO ZONE ]';
         this.heroZonePromptText = this.add.text(2000, 800, heroZonePromptLabel, {
-            fontSize: '10px', fill: '#FFFFFF', backgroundColor: '#E83818', padding: { x: 10, y: 8 },
+            fontSize: '10px', fill: '#FFD700', backgroundColor: '#D01000', padding: { x: 10, y: 8 },
             fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5).setDepth(2000).setVisible(false).setInteractive({ useHandCursor: true });
         this.heroZonePromptText.on('pointerdown', () => this.openHeroZone());
 
-        this.heroZoneDoorZone = this.add.zone(2000, 975, 100, 100);
+        this.heroZoneDoorZone = this.add.zone(2000, 975, 120, 100);
         this.physics.add.existing(this.heroZoneDoorZone, true);
         this.physics.add.overlap(this.player, this.heroZoneDoorZone, () => {
             if (this.currentDeck === 'deck12') {
@@ -4582,11 +4603,13 @@ class GameScene extends Phaser.Scene {
             this.elevatorPromptText.setVisible(false);
         }
 
-        if (this.nearHeroZone && this.currentDeck === 'deck12') {
+        const isNearHeroZoneDoor = (this.currentDeck === 'deck12' && Math.abs(this.player.x - 2000) <= 90 && Math.abs(this.groundY - 975) <= 50);
+        if ((this.nearHeroZone || isNearHeroZoneDoor) && !this.ridingRaft) {
             this.heroZonePromptText.setVisible(true);
             this.heroZonePromptText.x = this.player.x;
-            this.heroZonePromptText.y = this.player.y - 60;
-            if (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+            this.heroZonePromptText.y = this.player.y - 65;
+            if ((this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) ||
+                (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey))) {
                 this.openHeroZone();
             }
         } else {
@@ -5886,8 +5909,9 @@ class ElevatorMenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         const floors = [
-            { label: 'Deck 12 (Hero Zone)', type: 'deck', y: 975 },
-            { label: 'Deck 11 (Pools)', type: 'deck', y: 1255 },
+            { label: 'Deck 12 (Hero Zone Door)', type: 'herozone_door', y: 975 },
+            { label: 'Deck 12 (Quiet Cove)', type: 'deck', y: 975 },
+            { label: 'Deck 11 (Pools & Spa)', type: 'deck', y: 1255 },
             { label: 'Deck 5  (Edge Tween Club)', type: 'edge' },
             { label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' }
         ];
@@ -5909,6 +5933,8 @@ class ElevatorMenuScene extends Phaser.Scene {
                         this.travelToBoutique();
                     } else if (floor.type === 'edge') {
                         this.travelToEdge();
+                    } else if (floor.type === 'herozone_door') {
+                        this.travelToDeck12HeroDoor();
                     } else {
                         this.travelToFloor(floor.y);
                     }
@@ -6023,6 +6049,21 @@ class ElevatorMenuScene extends Phaser.Scene {
     }
 
     closeMenu() {
+        this.scene.stop();
+        this.scene.resume('GameScene');
+    }
+
+    travelToDeck12HeroDoor() {
+        this.gameScene.jumpZ = 0;
+        this.gameScene.jumpV = 0;
+        this.gameScene.isJumping = false;
+        this.gameScene.currentStair = null;
+        
+        this.gameScene.player.x = 1980;
+        this.gameScene.groundY = 975;
+        this.gameScene.player.y = 975;
+        this.gameScene.player.body.reset(1980, 975);
+
         this.scene.stop();
         this.scene.resume('GameScene');
     }
@@ -9505,6 +9546,10 @@ class ArcadeShooterScene extends Phaser.Scene {
 // PHASER GAME CONFIGURATION & SCENE REGISTRATION
 // =========================================================================
 
+// =========================================================================
+// RILEY'S HERO ZONE & AIR HOCKEY SCENES (ISSUE #46)
+// =========================================================================
+
 class HeroZoneScene extends Phaser.Scene {
     constructor() {
         super({ key: 'HeroZoneScene' });
@@ -9512,21 +9557,31 @@ class HeroZoneScene extends Phaser.Scene {
 
     init(data) {
         this.gameScene = data.gameScene;
-        this.heroSpeed = 200;
-        this.jumpForce = -450;
+        this.heroSpeed = 220;
+        this.jumpForce = -480;
         this.timer = 0;
         this.raceStarted = false;
         this.raceFinished = false;
-        this.penaltyTextTimer = 0;
+        this.penaltyCooldown = 0;
+        this.isExiting = false;
         
-        // Basketball
-        this.chargeTime = 0;
-        this.isCharging = false;
+        // Basketball state
+        this.bballCharging = false;
+        this.bballChargeTime = 0;
+        this.bballHeld = false;
+        this.bballScore = 0;
+        
+        // Touch controls state
+        this.touchLeft = false;
+        this.touchRight = false;
+        this.touchJump = false;
+        this.touchAction = false;
     }
 
     create() {
         retroArcadeAudio.init();
 
+        // Hide and pause underlying GameScene
         if (this.gameScene && this.gameScene.scene) {
             this.gameScene.scene.setVisible(false);
             this.gameScene.scene.sleep();
@@ -9536,112 +9591,144 @@ class HeroZoneScene extends Phaser.Scene {
         const H = this.scale.height;
         const worldW = 4000;
         this.worldW = worldW;
+        this.worldH = H;
         
         this.physics.world.setBounds(0, 0, worldW, H);
-        this.physics.world.gravity.y = 1000;
+        this.physics.world.gravity.y = 950;
 
-        // Backgrounds
-        this.add.rectangle(0, 0, worldW * 2, H * 2, 0x111111).setOrigin(0);
-        
-        // Generate Incredibles Bouncy House Texture
-        let bmd = this.add.graphics();
-        bmd.fillStyle(0xE83818, 1);
-        bmd.fillRect(0, 0, 64, 64);
-        bmd.lineStyle(4, 0x000000);
-        bmd.strokeRect(0, 0, 64, 64);
-        bmd.fillStyle(0xF8B800, 1);
-        bmd.fillCircle(32, 32, 10);
-        bmd.generateTexture('hz_wall', 64, 64);
-        bmd.destroy();
-        
-        this.add.tileSprite(0, 0, worldW, H, 'hz_wall').setOrigin(0).setAlpha(0.6).setDepth(0);
+        // Generate Textures if needed
+        this.createTextures();
 
-        // Ground
+        // 1. Deep Wall Background
+        this.add.rectangle(0, 0, worldW, H, 0x140505).setOrigin(0).setDepth(0);
+        this.add.tileSprite(0, 0, worldW, H - 40, 'hz_wall_tile').setOrigin(0).setAlpha(0.75).setDepth(1);
+
+        // Ceiling Inflatable Trusses & Lights
+        for (let x = 100; x < worldW; x += 300) {
+            this.add.rectangle(x, 20, 260, 20, 0xE83818).setDepth(2);
+            this.add.rectangle(x, 32, 240, 6, 0xF8B800).setDepth(2);
+            this.add.circle(x - 80, 42, 6, 0xFFFFFF).setDepth(3);
+            this.add.circle(x + 80, 42, 6, 0xFFFFFF).setDepth(3);
+        }
+
+        // Platforms & Floors
         this.platforms = this.physics.add.staticGroup();
-        
-        // Create floors with some pits
-        this.createFloor(0, 800, H - 40); // Hub area
-        this.createFloor(900, 1500, H - 40);
-        this.createFloor(1650, 2400, H - 40);
-        this.createFloor(2550, worldW, H - 40);
-        
-        // Door back
-        this.add.rectangle(100, H - 90, 60, 100, 0x000000).setDepth(1);
-        this.add.text(100, H - 150, '[ ESC / DOOR ]', { fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
+        const floorY = H - 50;
+        this.floorY = floorY;
 
-        // HUB: Basketball
-        this.add.rectangle(400, H - 150, 10, 100, 0x555555); // Pole
-        this.add.rectangle(420, H - 200, 40, 5, 0xF8B800); // Rim
-        this.hoopSensor = this.add.zone(420, H - 195, 30, 10);
-        this.physics.add.existing(this.hoopSensor, true);
-        
-        this.bball = this.physics.add.sprite(300, H - 60, 'hz_wall');
-        this.bball.setTint(0xFF8800).setScale(0.3).setBounce(0.6).setCollideWorldBounds(true);
-        this.physics.add.collider(this.bball, this.platforms);
-        
-        // HUB: Air Hockey Table
-        this.add.rectangle(600, H - 60, 120, 40, 0x0055FF).setDepth(1);
-        this.ahPrompt = this.add.text(600, H - 100, '[ ENTER: AIR HOCKEY ]', { fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5).setDepth(2);
-        this.ahZone = this.add.zone(600, H - 60, 150, 100);
-        this.physics.add.existing(this.ahZone, true);
+        // Hub Floor (x: 0..850)
+        this.createBouncyFloor(0, 850, floorY, 0xD01000);
+        // Course Section 1 (x: 900..1550)
+        this.createBouncyFloor(920, 1550, floorY, 0x0055AA);
+        // Course Section 2 (x: 1650..2350)
+        this.createBouncyFloor(1650, 2350, floorY, 0xD01000);
+        // Course Section 3 (x: 2450..3150)
+        this.createBouncyFloor(2450, 3150, floorY, 0x0055AA);
+        // Course Section 4 (x: 3250..4000)
+        this.createBouncyFloor(3250, 4000, floorY, 0xD01000);
 
-        // START LINE
-        this.add.rectangle(800, H - 100, 10, 200, 0xFFFFFF).setDepth(1);
-        this.add.text(800, H - 220, 'START', { fontSize: '16px', fontFamily: '"Press Start 2P"', fill: '#0F0' }).setOrigin(0.5);
+        // Bounce Safety Nets in Pitfalls
+        this.createPitNet(850, 920, floorY + 30);
+        this.createPitNet(1550, 1650, floorY + 30);
+        this.createPitNet(2350, 2450, floorY + 30);
+        this.createPitNet(3150, 3250, floorY + 30);
 
-        // OBSTACLES: Hurdles
+        // ----------------------------------------------------
+        // HUB AREA (x: 0..850)
+        // ----------------------------------------------------
+        
+        // 1. Exit Door (x = 80)
+        this.exitDoor = this.add.rectangle(80, floorY - 55, 60, 110, 0x000022).setDepth(3).setInteractive({ useHandCursor: true });
+        this.add.rectangle(80, floorY - 55, 54, 104, 0x1A253A).setDepth(3);
+        this.add.text(80, floorY - 125, 'EXIT TO SHIP', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 4, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+        this.exitPrompt = this.add.text(80, floorY - 145, '▼ TAP TO EXIT ▼', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
+        this.exitDoor.on('pointerdown', () => this.exitToShip());
+        this.exitPrompt.on('pointerdown', () => this.exitToShip());
+
+        // 2. Giant Welcome Billboard & How to Play (x = 250)
+        this.createBillboard(250, floorY - 140);
+
+        // 3. Basketball Station (x = 450)
+        this.createBasketballStation(450, floorY);
+
+        // 4. Air Hockey Station (x = 680)
+        this.createAirHockeyStation(680, floorY);
+
+        // 5. Start Arch & Line (x = 850)
+        this.createStartLine(850, floorY);
+
+        // ----------------------------------------------------
+        // OBSTACLES & COURSE (x: 850..3900)
+        // ----------------------------------------------------
+        
+        // Hurdles (Inflatable barriers)
         this.hurdles = this.physics.add.staticGroup();
-        [1100, 1300, 1900, 2100, 2900, 3100, 3300].forEach(x => {
-            let h = this.add.rectangle(x, H - 60, 20, 40, 0x000000);
-            this.hurdles.add(h);
+        [1120, 1380, 1850, 2100, 2800, 3050, 3450, 3650].forEach(hx => {
+            this.createHurdle(hx, floorY);
         });
 
-        // OBSTACLES: Pendulums
+        // Swinging Pendulums (Inflatable wrecking balls)
         this.pendulums = this.physics.add.group({ allowGravity: false, immovable: true });
-        this.pendulumData = [];
-        [1200, 2000, 3000, 3200].forEach(x => {
-            let p = this.add.circle(x, H - 150, 25, 0x444444);
-            this.physics.add.existing(p);
-            p.body.allowGravity = false;
-            p.body.immovable = true;
-            this.pendulums.add(p);
-            this.pendulumData.push({ sprite: p, startX: x, timeOffset: Math.random() * Math.PI * 2 });
+        this.pendulumList = [];
+        [1250, 1980, 2920, 3550].forEach((px, i) => {
+            this.createPendulum(px, floorY - 170, i * 1.5);
         });
+
+        // Cargo Climbing Wall (x = 2200..2280)
+        this.createClimbingWall(2240, floorY - 100);
+
+        // Super Inflatable Slide (x = 2550..2700)
+        this.createSuperSlide(2620, floorY);
+
+        // Moving Platforms over Pits
+        this.movingPlatforms = this.physics.add.group({ allowGravity: false, immovable: true });
+        this.createMovingPlatform(1600, floorY - 50, 1560, 1640, 60);
+        this.createMovingPlatform(3200, floorY - 60, 3160, 3240, 80);
+
+        // End Buzzer Finish Line (x = 3850)
+        this.createFinishBuzzer(3850, floorY);
+
+        // ----------------------------------------------------
+        // CHARACTERS (Riley & NPC Dash)
+        // ----------------------------------------------------
         
-        // OBSTACLES: Climbing Wall & Slide
-        this.climbZone = this.add.zone(2200, H - 140, 60, 200);
-        this.physics.add.existing(this.climbZone, true);
-        this.add.rectangle(2200, H - 140, 60, 200, 0xF8B800).setAlpha(0.5).setDepth(0); // visual
-
-        this.slideZone = this.add.zone(2700, H - 100, 150, 150);
-        this.physics.add.existing(this.slideZone, true);
-        this.add.rectangle(2700, H - 100, 150, 150, 0x00AAFF).setAlpha(0.5).setDepth(0); // visual
-
-        // END LINE
-        this.add.rectangle(3800, H - 100, 10, 200, 0xFF0000).setDepth(1);
-        this.add.text(3800, H - 220, 'FINISH', { fontSize: '16px', fontFamily: '"Press Start 2P"', fill: '#F00' }).setOrigin(0.5);
-
-        // Player
-        this.player = this.physics.add.sprite(150, H - 100, 'riley_idle').setDepth(10);
+        // Riley Player Sprite
+        this.player = this.physics.add.sprite(150, floorY - 40, 'riley_idle').setDepth(15);
         this.player.setCollideWorldBounds(true);
+        this.player.body.setSize(22, 38);
+        this.player.body.setOffset(5, 10);
+        
         this.physics.add.collider(this.player, this.platforms);
-        this.physics.add.collider(this.player, this.hurdles, this.hitObstacle, null, this);
-        this.physics.add.overlap(this.player, this.pendulums, this.hitObstacle, null, this);
+        this.physics.add.collider(this.player, this.movingPlatforms);
+        this.physics.add.overlap(this.player, this.hurdles, this.handleObstacleHit, null, this);
+        this.physics.add.overlap(this.player, this.pendulums, this.handleObstacleHit, null, this);
 
-        // NPC Racer
-        this.npc = this.physics.add.sprite(750, H - 100, 'npc_tourist_idle').setDepth(9).setTint(0xFF5555);
-        this.physics.add.collider(this.npc, this.platforms);
-        this.physics.add.collider(this.npc, this.hurdles);
+        // NPC Dash (Rival Racer)
+        this.dashRacer = this.physics.add.sprite(820, floorY - 40, 'npc_tourist_idle').setDepth(14).setTint(0xFF3333);
+        this.dashRacer.body.setSize(22, 38);
+        this.dashRacer.body.setOffset(5, 10);
+        this.physics.add.collider(this.dashRacer, this.platforms);
+        this.physics.add.collider(this.dashRacer, this.movingPlatforms);
 
-        // Camera
+        // Dash Name Tag
+        this.dashTag = this.add.text(820, floorY - 80, 'DASH', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000000', padding: { x: 3, y: 2 }
+        }).setOrigin(0.5).setDepth(16);
+
+        // Camera Follow
         this.cameras.main.setBounds(0, 0, worldW, H);
-        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
-        // UI
-        this.uiTimer = this.add.text(W / 2, 30, 'TIME: 0.00', { fontSize: '18px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
-        this.uiPenalty = this.add.text(W / 2, 60, '+3.00s', { fontSize: '16px', fontFamily: '"Press Start 2P"', fill: '#F00' }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setVisible(false);
+        // ----------------------------------------------------
+        // HUD & CONTROLS UI
+        // ----------------------------------------------------
+        this.createHUD();
 
-        // Input
+        // Input Setup
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -9649,191 +9736,691 @@ class HeroZoneScene extends Phaser.Scene {
             down: Phaser.Input.Keyboard.KeyCodes.S,
             right: Phaser.Input.Keyboard.KeyCodes.D,
             enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
-            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
-            space: Phaser.Input.Keyboard.KeyCodes.SPACE
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC
         });
 
-        // Touch controls setup (similar to others, simplified)
-        this.input.addPointer(2);
+        // Setup On-Screen Touch Controls (Mobile Friendly)
+        this.createTouchControls();
     }
 
-    createFloor(x1, x2, y) {
-        let w = x2 - x1;
-        let f = this.add.rectangle(x1 + w/2, y + 20, w, 40, 0x990000);
-        this.physics.add.existing(f, true);
-        this.platforms.add(f);
+    createTextures() {
+        if (!this.textures.exists('hz_wall_tile')) {
+            let g = this.add.graphics();
+            // Background padded diamond texture
+            g.fillStyle(0x3B0808, 1);
+            g.fillRect(0, 0, 48, 48);
+            g.lineStyle(2, 0x6E1010, 1);
+            g.strokeRect(0, 0, 48, 48);
+            g.lineStyle(2, 0x000000, 1);
+            g.strokeCircle(24, 24, 12);
+            g.fillStyle(0xE83818, 1);
+            g.fillCircle(24, 24, 8);
+            g.fillStyle(0xF8B800, 1);
+            g.fillCircle(24, 24, 4);
+            g.generateTexture('hz_wall_tile', 48, 48);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('hz_floor_red')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xD01000, 1);
+            g.fillRect(0, 0, 40, 50);
+            g.fillStyle(0x9E0C00, 1);
+            g.fillRect(0, 40, 40, 10);
+            g.fillStyle(0xF8B800, 1);
+            g.fillRect(0, 0, 40, 6);
+            g.lineStyle(2, 0x000000, 1);
+            g.strokeRect(0, 0, 40, 50);
+            g.generateTexture('hz_floor_red', 40, 50);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('hz_floor_blue')) {
+            let g = this.add.graphics();
+            g.fillStyle(0x0055AA, 1);
+            g.fillRect(0, 0, 40, 50);
+            g.fillStyle(0x003366, 1);
+            g.fillRect(0, 40, 40, 10);
+            g.fillStyle(0x00DDFF, 1);
+            g.fillRect(0, 0, 40, 6);
+            g.lineStyle(2, 0x000000, 1);
+            g.strokeRect(0, 0, 40, 50);
+            g.generateTexture('hz_floor_blue', 40, 50);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('hz_bball')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xE65C00, 1);
+            g.fillCircle(14, 14, 14);
+            g.lineStyle(2, 0x000000, 1);
+            g.strokeCircle(14, 14, 14);
+            g.beginPath();
+            g.moveTo(0, 14); g.lineTo(28, 14);
+            g.moveTo(14, 0); g.lineTo(14, 28);
+            g.strokePath();
+            g.generateTexture('hz_bball', 28, 28);
+            g.destroy();
+        }
     }
 
-    hitObstacle(player, obstacle) {
-        if (!this.raceStarted || this.raceFinished) return;
-        if (this.penaltyTextTimer > this.time.now) return; // Cooldown
+    createBouncyFloor(x1, x2, y, color) {
+        const w = x2 - x1;
+        const key = (color === 0x0055AA) ? 'hz_floor_blue' : 'hz_floor_red';
+        const floor = this.add.tileSprite(x1 + w / 2, y + 25, w, 50, key).setDepth(4);
+        this.physics.add.existing(floor, true);
+        this.platforms.add(floor);
+    }
+
+    createPitNet(x1, x2, y) {
+        const w = x2 - x1;
+        const net = this.add.rectangle(x1 + w / 2, y, w, 14, 0xF8B800, 0.7).setDepth(3);
+        this.physics.add.existing(net, true);
+        this.physics.add.overlap(this.player, net, () => {
+            this.handlePitFall(x1 - 30);
+        });
+    }
+
+    createBillboard(x, y) {
+        // Board Background
+        const board = this.add.rectangle(x, y, 220, 130, 0x000000, 0.9).setDepth(4).setStrokeStyle(3, 0xF8B800);
         
+        this.add.text(x, y - 50, '★ HERO ZONE ★', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(5);
+
+        this.add.text(x, y - 36, 'TIMED OBSTACLE COURSE', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#E83818'
+        }).setOrigin(0.5).setDepth(5);
+
+        const instructions = [
+            '◄ ►/A D : RUN',
+            '▲ / W   : JUMP / CLIMB',
+            '▼ / S   : SLIDE DOWN',
+            'SPACE   : BASKETBALL',
+            'ENTER   : AIR HOCKEY',
+            'RACE DASH TO BUZZER!'
+        ];
+
+        instructions.forEach((line, idx) => {
+            this.add.text(x, y - 18 + (idx * 12), line, {
+                fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+            }).setOrigin(0.5).setDepth(5);
+        });
+    }
+
+    createBasketballStation(x, floorY) {
+        // Backboard & Pole
+        this.add.rectangle(x + 50, floorY - 80, 8, 160, 0x444444).setDepth(3);
+        this.add.rectangle(x + 40, floorY - 145, 12, 50, 0xFFFFFF).setDepth(4).setStrokeStyle(2, 0xD01000);
+        // Rim
+        this.add.rectangle(x + 20, floorY - 130, 30, 4, 0xE65C00).setDepth(5);
+        // Net
+        this.add.triangle(x + 20, floorY - 116, 0, 0, 30, 0, 15, 24, 0xFFFFFF, 0.6).setDepth(4);
+
+        // Hoop Sensor
+        this.hoopSensor = this.add.zone(x + 20, floorY - 130, 24, 10);
+        this.physics.add.existing(this.hoopSensor, true);
+
+        // Station Sign
+        this.add.text(x, floorY - 170, 'BASKETBALL SHOOTOUT', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#F8B800', backgroundColor: '#000000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(4);
+
+        this.bballPrompt = this.add.text(x, floorY - 190, '[ HOLD SPACE: CHARGE SHOT ]', {
+            fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#E65C00', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(4).setVisible(false);
+
+        // Ball Power Meter
+        this.bballPowerBar = this.add.rectangle(x, floorY - 70, 0, 8, 0x00FF00).setDepth(6).setVisible(false);
+
+        // Basketball Physics Sprite
+        this.bball = this.physics.add.sprite(x - 20, floorY - 20, 'hz_bball').setDepth(6);
+        this.bball.setCollideWorldBounds(true);
+        this.bball.setBounce(0.65, 0.65);
+        this.physics.add.collider(this.bball, this.platforms);
+        this.bball.setInteractive({ useHandCursor: true });
+        this.bball.on('pointerdown', () => this.shootBasketball());
+    }
+
+    createAirHockeyStation(x, floorY) {
+        // Table Graphic
+        const table = this.add.rectangle(x, floorY - 24, 110, 48, 0x0055AA).setDepth(4).setStrokeStyle(3, 0xFFFFFF);
+        this.add.rectangle(x, floorY - 24, 100, 38, 0x0088FF).setDepth(4);
+        this.add.line(x, floorY - 24, 0, -18, 0, 18, 0xFF0000).setDepth(5);
+        this.add.circle(x, floorY - 24, 10).setStrokeStyle(2, 0xFFFFFF).setDepth(5);
+        
+        // Glowing table banner
+        this.ahBanner = this.add.text(x, floorY - 65, '★ AIR HOCKEY ★', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', backgroundColor: '#000044', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        this.ahPrompt = this.add.text(x, floorY - 85, '▼ ENTER / TAP TO PLAY ▼', {
+            fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#0055AA', padding: { x: 5, y: 2 }
+        }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
+        
+        table.setInteractive({ useHandCursor: true });
+        table.on('pointerdown', () => this.launchAirHockey());
+        this.ahPrompt.on('pointerdown', () => this.launchAirHockey());
+
+        this.ahZone = this.add.zone(x, floorY - 40, 130, 80);
+        this.physics.add.existing(this.ahZone, true);
+    }
+
+    createStartLine(x, floorY) {
+        // Checkered Arch
+        this.add.rectangle(x, floorY - 110, 16, 220, 0xFFFFFF).setDepth(4);
+        this.add.rectangle(x, floorY - 110, 12, 220, 0x000000).setDepth(4);
+        
+        this.add.text(x, floorY - 210, '► START LINE ◄', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#00FF00', backgroundColor: '#000', padding: { x: 8, y: 4 }, stroke: '#000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(5);
+
+        this.add.text(x, floorY - 185, 'RUN RIGHT TO RACE!', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5);
+    }
+
+    createHurdle(x, floorY) {
+        const h = this.add.rectangle(x, floorY - 22, 22, 44, 0x000000).setDepth(5).setStrokeStyle(3, 0xF8B800);
+        this.add.rectangle(x, floorY - 22, 14, 38, 0xD01000).setDepth(5);
+        this.physics.add.existing(h, true);
+        this.hurdles.add(h);
+    }
+
+    createPendulum(x, anchorY, offset) {
+        // Ceiling anchor
+        this.add.circle(x, anchorY, 8, 0xF8B800).setDepth(4);
+        
+        // Ball sprite
+        const ball = this.add.circle(x, anchorY + 110, 22, 0x111111).setDepth(5).setStrokeStyle(3, 0xD01000);
+        this.physics.add.existing(ball);
+        ball.body.allowGravity = false;
+        ball.body.immovable = true;
+        ball.body.setCircle(22);
+        this.pendulums.add(ball);
+
+        // Chain line connecting anchor to ball
+        const chain = this.add.line(0, 0, x, anchorY, x, anchorY + 110, 0xF8B800).setOrigin(0).setDepth(4).setLineWidth(3);
+
+        this.pendulumList.push({
+            ball: ball,
+            chain: chain,
+            anchorX: x,
+            anchorY: anchorY,
+            length: 110,
+            angleOffset: offset
+        });
+    }
+
+    createClimbingWall(x, y) {
+        // Visual Climbing Lattice
+        this.add.rectangle(x, y, 64, 180, 0xF8B800, 0.4).setDepth(2).setStrokeStyle(3, 0xF8B800);
+        for (let py = y - 80; py <= y + 80; py += 25) {
+            this.add.line(x, py, -30, 0, 30, 0, 0xD01000).setDepth(3).setLineWidth(4);
+        }
+
+        this.add.text(x, y - 105, '▲ CLIMB WALL ▲', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5);
+
+        this.climbZone = this.add.zone(x, y, 70, 190);
+        this.physics.add.existing(this.climbZone, true);
+    }
+
+    createSuperSlide(x, floorY) {
+        // Visual Slide
+        this.add.triangle(x, floorY - 30, -50, 60, 50, 60, 50, -30, 0x00AAFF, 0.7).setDepth(3);
+        this.add.text(x, floorY - 75, '► SUPER SLIDE! ►', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', backgroundColor: '#001133', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        this.slideZone = this.add.zone(x, floorY - 30, 110, 80);
+        this.physics.add.existing(this.slideZone, true);
+    }
+
+    createMovingPlatform(startX, y, minX, maxX, speed) {
+        const plat = this.add.rectangle(startX, y, 65, 14, 0xF8B800).setDepth(4).setStrokeStyle(2, 0x000);
+        this.physics.add.existing(plat);
+        plat.body.allowGravity = false;
+        plat.body.immovable = true;
+        plat.body.setVelocityX(speed);
+        plat.minX = minX;
+        plat.maxX = maxX;
+        plat.speed = speed;
+        this.movingPlatforms.add(plat);
+    }
+
+    createFinishBuzzer(x, floorY) {
+        // Pedestal
+        this.add.rectangle(x, floorY - 30, 40, 60, 0xF8B800).setDepth(4).setStrokeStyle(2, 0x000);
+        // Big Red Dome Buzzer
+        this.buzzerBtn = this.add.circle(x, floorY - 65, 18, 0xD01000).setDepth(5).setStrokeStyle(3, 0xFFFFFF);
+        
+        this.add.text(x, floorY - 110, '★ HIT BUZZER! ★', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FF0000', backgroundColor: '#FFFFFF', padding: { x: 6, y: 4 }
+        }).setOrigin(0.5).setDepth(6);
+
+        this.buzzerZone = this.add.zone(x, floorY - 60, 50, 70);
+        this.physics.add.existing(this.buzzerZone, true);
+
+        // Checkered Finish Gate
+        this.add.rectangle(x + 50, floorY - 110, 16, 220, 0xFFFFFF).setDepth(3);
+        this.add.rectangle(x + 50, floorY - 110, 12, 220, 0x000000).setDepth(3);
+    }
+
+    createHUD() {
+        const W = this.scale.width;
+        
+        // Timer Box
+        this.timerBox = this.add.rectangle(110, 30, 180, 36, 0x000000, 0.85).setScrollFactor(0).setDepth(100).setStrokeStyle(2, 0xF8B800);
+        this.uiTimer = this.add.text(110, 30, 'TIME: 0.00', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+
+        // Penalty Banner
+        this.uiPenalty = this.add.text(W / 2, 45, '+3.00s PENALTY!', {
+            fontSize: '13px', fontFamily: '"Press Start 2P"', fill: '#FF0000', backgroundColor: '#000', padding: { x: 8, y: 4 }, stroke: '#FFF', strokeThickness: 2
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
+
+        // Top-Right Exit Button
+        this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitToShip());
+
+        // Bottom Controls Hint
+        this.hudControlsHint = this.add.text(W / 2, this.scale.height - 14, '◄ ► / WASD: MOVE   ▲/W: JUMP/CLIMB   SPACE: SHOOT   ENTER: HOCKEY', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000000', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+    }
+
+    createTouchControls() {
+        const H = this.scale.height;
+        const W = this.scale.width;
+
+        // Container for touch buttons
+        this.touchContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(99);
+
+        // Left Arrow
+        const btnL = this.add.rectangle(50, H - 55, 60, 50, 0x000000, 0.6).setStrokeStyle(2, 0xFFFFFF).setInteractive();
+        const txtL = this.add.text(50, H - 55, '◄', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
+        btnL.on('pointerdown', () => { this.touchLeft = true; });
+        btnL.on('pointerup', () => { this.touchLeft = false; });
+        btnL.on('pointerout', () => { this.touchLeft = false; });
+
+        // Right Arrow
+        const btnR = this.add.rectangle(125, H - 55, 60, 50, 0x000000, 0.6).setStrokeStyle(2, 0xFFFFFF).setInteractive();
+        const txtR = this.add.text(125, H - 55, '►', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
+        btnR.on('pointerdown', () => { this.touchRight = true; });
+        btnR.on('pointerup', () => { this.touchRight = false; });
+        btnR.on('pointerout', () => { this.touchRight = false; });
+
+        // Jump Button
+        const btnJ = this.add.rectangle(W - 60, H - 55, 70, 50, 0xD01000, 0.7).setStrokeStyle(2, 0xFFD700).setInteractive();
+        const txtJ = this.add.text(W - 60, H - 55, 'JUMP', { fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
+        btnJ.on('pointerdown', () => { this.touchJump = true; });
+        btnJ.on('pointerup', () => { this.touchJump = false; });
+        btnJ.on('pointerout', () => { this.touchJump = false; });
+
+        // Action Button (Basketball / Air Hockey)
+        const btnA = this.add.rectangle(W - 145, H - 55, 70, 50, 0x0055AA, 0.7).setStrokeStyle(2, 0x00FFFF).setInteractive();
+        const txtA = this.add.text(W - 145, H - 55, 'ACTION', { fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
+        btnA.on('pointerdown', () => { 
+            this.touchAction = true;
+            this.handleActionPress();
+        });
+        btnA.on('pointerup', () => { 
+            this.touchAction = false;
+            this.handleActionRelease();
+        });
+        btnA.on('pointerout', () => { 
+            this.touchAction = false;
+            this.handleActionRelease();
+        });
+
+        this.touchContainer.add([btnL, txtL, btnR, txtR, btnJ, txtJ, btnA, txtA]);
+    }
+
+    handleActionPress() {
+        // If near air hockey
+        if (this.physics.overlap(this.player, this.ahZone)) {
+            this.launchAirHockey();
+            return;
+        }
+        // If near basketball
+        const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.bball.x, this.bball.y);
+        if (dist < 60) {
+            this.bballCharging = true;
+            this.bballChargeTime = 0;
+        }
+    }
+
+    handleActionRelease() {
+        if (this.bballCharging) {
+            this.shootBasketball();
+        }
+    }
+
+    shootBasketball() {
+        this.bballCharging = false;
+        const power = Phaser.Math.Clamp(this.bballChargeTime, 200, 700);
+        const vx = (this.player.flipX ? -1 : 1) * (power * 0.75 + 120);
+        const vy = -(power * 0.9 + 180);
+        
+        this.bball.setPosition(this.player.x + (this.player.flipX ? -15 : 15), this.player.y - 15);
+        this.bball.setVelocity(vx, vy);
+        this.bballChargeTime = 0;
+        if (this.bballPowerBar) this.bballPowerBar.setVisible(false);
+        retroArcadeAudio.play('shoot');
+    }
+
+    launchAirHockey() {
+        retroArcadeAudio.play('powerup');
+        this.scene.pause();
+        this.scene.launch('AirHockeyScene', { heroZone: this });
+    }
+
+    exitToShip() {
+        if (this.isExiting) return;
+        this.isExiting = true;
+        this.scene.stop('HeroZoneScene');
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.wake();
+            this.gameScene.scene.setVisible(true);
+        }
+    }
+
+    handleObstacleHit(player, obstacle) {
+        if (!this.raceStarted || this.raceFinished) return;
+        if (this.time.now < this.penaltyCooldown) return;
+
         retroArcadeAudio.play('explosion');
         this.timer += 3000;
+        this.penaltyCooldown = this.time.now + 1200;
+
+        // Show penalty banner
         this.uiPenalty.setVisible(true);
-        this.penaltyTextTimer = this.time.now + 1000;
-        
-        // Knockback
-        this.player.setVelocity(-150, -200);
-        
+        this.time.delayedCall(900, () => {
+            if (this.uiPenalty) this.uiPenalty.setVisible(false);
+        });
+
+        // Knockback player
+        this.player.setVelocity(-180, -220);
+
+        // Flash invulnerability tween
         this.tweens.add({
             targets: this.player,
-            alpha: 0,
-            duration: 100,
+            alpha: 0.2,
+            duration: 80,
             yoyo: true,
-            repeat: 3
+            repeat: 5,
+            onComplete: () => {
+                if (this.player) this.player.setAlpha(1);
+            }
         });
+    }
+
+    handlePitFall(safeX) {
+        if (this.time.now < this.penaltyCooldown) return;
+        this.timer += 3000;
+        this.penaltyCooldown = this.time.now + 1500;
+        retroArcadeAudio.play('explosion');
+
+        this.uiPenalty.setVisible(true);
+        this.time.delayedCall(900, () => {
+            if (this.uiPenalty) this.uiPenalty.setVisible(false);
+        });
+
+        // Bounce player safely back onto ledge
+        this.player.setPosition(safeX, this.floorY - 50);
+        this.player.setVelocity(0, -320);
     }
 
     update(time, delta) {
-        if (this.wasd.esc.isDown && !this.isExiting) {
-            this.isExiting = true;
-            this.scene.stop('HeroZoneScene');
-            if (this.gameScene && this.gameScene.scene) {
-                this.gameScene.scene.wake();
-                this.gameScene.scene.setVisible(true);
-            }
+        // Exit check via ESC
+        if (this.wasd.esc.isDown) {
+            this.exitToShip();
             return;
         }
 
-        // Air Hockey Trigger
-        if (this.physics.overlap(this.player, this.ahZone) && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) {
-            this.scene.launch('AirHockeyScene', { heroZone: this });
-            this.scene.pause();
+        // Proximity to exit door (x < 115)
+        if (this.player.x < 115 && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) {
+            this.exitToShip();
+            return;
         }
 
-        // Basketball Logic
-        if (this.player.x < 800) {
-            let dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.bball.x, this.bball.y);
-            if (dist < 40) {
-                if (this.wasd.space.isDown) {
-                    this.isCharging = true;
-                    this.chargeTime += delta;
-                    this.bball.x = this.player.x;
-                    this.bball.y = this.player.y - 30;
-                    this.bball.body.allowGravity = false;
-                    this.bball.setVelocity(0, 0);
-                } else if (this.isCharging) {
-                    this.isCharging = false;
-                    this.bball.body.allowGravity = true;
-                    let powerX = Math.min(this.chargeTime * 0.5, 400);
-                    let powerY = Math.min(this.chargeTime * 0.8, 600);
-                    this.bball.setVelocity(this.player.flipX ? -powerX : powerX, -powerY);
-                    this.chargeTime = 0;
-                    retroArcadeAudio.play('shoot');
-                }
+        // Update Moving Platforms
+        this.movingPlatforms.getChildren().forEach(plat => {
+            if (plat.x >= plat.maxX) {
+                plat.body.setVelocityX(-Math.abs(plat.speed));
+            } else if (plat.x <= plat.minX) {
+                plat.body.setVelocityX(Math.abs(plat.speed));
             }
+        });
+
+        // Update Swinging Pendulums
+        this.pendulumList.forEach(p => {
+            const angle = Math.sin((time * 0.0025) + p.angleOffset) * 0.85;
+            const bx = p.anchorX + Math.sin(angle) * p.length;
+            const by = p.anchorY + Math.cos(angle) * p.length;
+            p.ball.setPosition(bx, by);
+            p.chain.setTo(p.anchorX, p.anchorY, bx, by);
+        });
+
+        // Proximity checks for Hub Stations
+        const nearAirHockey = this.physics.overlap(this.player, this.ahZone);
+        if (this.ahPrompt) this.ahPrompt.setVisible(nearAirHockey);
+        if (nearAirHockey && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) {
+            this.launchAirHockey();
         }
-        
-        // Hoops score
+
+        const distToBall = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.bball.x, this.bball.y);
+        const nearBball = (distToBall < 65);
+        if (this.bballPrompt) this.bballPrompt.setVisible(nearBball);
+
+        // Basketball charge handling
+        if (nearBball && (this.wasd.space.isDown || this.touchAction)) {
+            this.bballCharging = true;
+            this.bballChargeTime += delta * 0.8;
+            if (this.bballPowerBar) {
+                this.bballPowerBar.setVisible(true);
+                this.bballPowerBar.setPosition(this.player.x, this.player.y - 35);
+                this.bballPowerBar.width = Math.min(this.bballChargeTime * 0.1, 50);
+            }
+        } else if (this.bballCharging) {
+            this.shootBasketball();
+        }
+
+        // Check Basketball Swish through Hoop Sensor
         if (this.physics.overlap(this.bball, this.hoopSensor)) {
-            if (this.bball.body.velocity.y > 0) { // Going down through hoop
+            if (this.bball.body.velocity.y > 0) {
+                this.bballScore += 100;
                 retroArcadeAudio.play('powerup');
-                this.bball.setVelocity(0, 50);
+                
+                const scorePop = this.add.text(this.hoopSensor.x, this.hoopSensor.y - 20, '★ SWISH! +100 PTS! ★', {
+                    fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: { x: 4, y: 2 }
+                }).setOrigin(0.5).setDepth(20);
+                this.tweens.add({
+                    targets: scorePop,
+                    y: '-=30',
+                    alpha: 0,
+                    duration: 1000,
+                    onComplete: () => scorePop.destroy()
+                });
+
+                this.bball.setVelocity(0, 80);
                 this.bball.x = this.hoopSensor.x;
             }
         }
 
-        // Pendulums
-        this.pendulumData.forEach(p => {
-            p.sprite.x = p.startX + Math.sin((time * 0.003) + p.timeOffset) * 100;
-        });
+        // Horizontal Movement Input
+        const moveLeft = this.cursors.left.isDown || this.wasd.left.isDown || this.touchLeft;
+        const moveRight = this.cursors.right.isDown || this.wasd.right.isDown || this.touchRight;
+        const moveUp = this.cursors.up.isDown || this.wasd.up.isDown || this.touchJump;
+        const moveDown = this.cursors.down.isDown || this.wasd.down.isDown;
 
-        // Player Movement
-        let left = this.cursors.left.isDown || this.wasd.left.isDown;
-        let right = this.cursors.right.isDown || this.wasd.right.isDown;
-        let up = this.cursors.up.isDown || this.wasd.up.isDown;
-        let down = this.cursors.down.isDown || this.wasd.down.isDown;
-
-        // Climbing
-        let isClimbing = false;
-        if (this.physics.overlap(this.player, this.climbZone)) {
+        // Cargo Climbing Wall Check
+        const inClimbZone = this.physics.overlap(this.player, this.climbZone);
+        if (inClimbZone) {
             this.player.body.allowGravity = false;
-            isClimbing = true;
-            if (up) this.player.setVelocityY(-150);
-            else if (down) this.player.setVelocityY(150);
-            else this.player.setVelocityY(0);
+            if (moveUp) {
+                this.player.setVelocityY(-160);
+            } else if (moveDown) {
+                this.player.setVelocityY(160);
+            } else {
+                this.player.setVelocityY(0);
+            }
         } else {
             this.player.body.allowGravity = true;
         }
 
-        // Sliding
-        if (this.physics.overlap(this.player, this.slideZone)) {
-            this.player.setVelocityX(300);
-            this.player.setVelocityY(300);
+        // Super Slide Zone Check
+        const inSlideZone = this.physics.overlap(this.player, this.slideZone);
+        if (inSlideZone) {
+            this.player.setVelocityX(360);
+            this.player.setVelocityY(180);
+            this.player.anims.play('riley_walk', true);
         } else {
-            if (left) {
+            // Normal Horizontal Running
+            if (moveLeft) {
                 this.player.setVelocityX(-this.heroSpeed);
                 this.player.flipX = true;
-                if (!isClimbing) this.player.anims.play('riley_walk', true);
-            } else if (right) {
+                if (!inClimbZone) this.player.anims.play('riley_walk', true);
+            } else if (moveRight) {
                 this.player.setVelocityX(this.heroSpeed);
                 this.player.flipX = false;
-                if (!isClimbing) this.player.anims.play('riley_walk', true);
+                if (!inClimbZone) this.player.anims.play('riley_walk', true);
             } else {
                 this.player.setVelocityX(0);
-                if (!isClimbing) this.player.anims.play('riley_idle', true);
+                if (!inClimbZone) this.player.anims.play('riley_idle', true);
             }
         }
 
         // Jumping
-        if (up && this.player.body.touching.down && !isClimbing) {
+        if (moveUp && (this.player.body.touching.down || this.player.body.blocked.down) && !inClimbZone && !inSlideZone) {
             this.player.setVelocityY(this.jumpForce);
             retroArcadeAudio.play('jump');
         }
 
-        // Pitfalls
-        if (this.player.y > this.scale.height - 10) {
-            this.hitObstacle(this.player, null);
-            this.player.y = this.scale.height - 100;
-            this.player.setVelocityY(0);
-        }
-
-        // Race Logic
-        if (this.player.x > 800 && !this.raceStarted) {
+        // ----------------------------------------------------
+        // RACE & TIMER LOGIC
+        // ----------------------------------------------------
+        
+        // Start Race when crossing x = 850
+        if (this.player.x > 850 && !this.raceStarted) {
             this.raceStarted = true;
             retroArcadeAudio.play('powerup');
+            
+            const startBanner = this.add.text(this.scale.width / 2, this.scale.height / 2 - 50, 'RACE STARTED!\nGO GO GO!', {
+                fontSize: '18px', fontFamily: '"Press Start 2P"', fill: '#00FF00', align: 'center', backgroundColor: '#000', padding: 15, stroke: '#FFF', strokeThickness: 2
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
+            
+            this.tweens.add({
+                targets: startBanner,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                alpha: 0,
+                duration: 1200,
+                onComplete: () => startBanner.destroy()
+            });
         }
 
         if (this.raceStarted && !this.raceFinished) {
             this.timer += delta;
             this.uiTimer.setText('TIME: ' + (this.timer / 1000).toFixed(2));
-            
-            // NPC AI
-            if (this.npc.x < 3800) {
-                this.npc.setVelocityX(140);
-                this.npc.anims.play('npc_tourist_walk', true);
+
+            // Dash Rival AI
+            if (this.dashRacer && this.dashRacer.x < 3850) {
+                this.dashRacer.setVelocityX(160);
+                this.dashRacer.anims.play('npc_tourist_walk', true);
+                if (this.dashTag) this.dashTag.setPosition(this.dashRacer.x, this.dashRacer.y - 30);
+
+                // Auto-jump hurdles & pits
+                const hurdlesX = [1120, 1380, 1850, 2100, 2800, 3050, 3450, 3650];
+                const pitsX = [850, 1550, 2350, 3150];
                 
-                // Jump over hurdles/pits logic for NPC
-                let jump = false;
-                [1100, 1300, 1900, 2100, 2900, 3100, 3300].forEach(hx => {
-                    if (this.npc.x > hx - 50 && this.npc.x < hx && this.npc.body.touching.down) jump = true;
-                });
-                // Pits
-                if (this.npc.x > 800 && this.npc.x < 900 && this.npc.body.touching.down) jump = true;
-                if (this.npc.x > 1500 && this.npc.x < 1650 && this.npc.body.touching.down) jump = true;
-                if (this.npc.x > 2400 && this.npc.x < 2550 && this.npc.body.touching.down) jump = true;
-                
-                if (jump && this.npc.body.touching.down) {
-                    this.npc.setVelocityY(this.jumpForce);
+                const nearHurdle = hurdlesX.some(hx => (this.dashRacer.x > hx - 50 && this.dashRacer.x < hx));
+                const nearPit = pitsX.some(px => (this.dashRacer.x > px - 45 && this.dashRacer.x < px));
+
+                if ((nearHurdle || nearPit) && (this.dashRacer.body.touching.down || this.dashRacer.body.blocked.down)) {
+                    this.dashRacer.setVelocityY(-450);
                 }
             }
 
-            // Finish
-            if (this.player.x >= 3800) {
-                this.raceFinished = true;
-                retroArcadeAudio.play('powerup');
-                let winMsg = this.npc.x >= 3800 ? "NPC WINS!" : "RILEY WINS!";
-                let fin = this.add.text(this.scale.width/2, this.scale.height/2, 'COURSE COMPLETE!\n' + winMsg + '\nTIME: ' + (this.timer/1000).toFixed(2), {
-                    fontSize: '24px', fontFamily: '"Press Start 2P"', fill: '#FFD700', align: 'center', backgroundColor: '#000', padding: 20
-                }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
+            // Finish Buzzer Collision
+            if (this.physics.overlap(this.player, this.buzzerZone) || this.player.x >= 3850) {
+                this.completeCourse();
             }
         }
+    }
 
-        if (this.penaltyTextTimer > 0 && time > this.penaltyTextTimer) {
-            this.uiPenalty.setVisible(false);
-            this.penaltyTextTimer = 0;
+    completeCourse() {
+        if (this.raceFinished) return;
+        this.raceFinished = true;
+        retroArcadeAudio.play('powerup');
+
+        const finalTime = (this.timer / 1000).toFixed(2);
+        const rileyWon = (this.player.x >= 3840 && (!this.dashRacer || this.dashRacer.x < 3840));
+
+        // Save Best Score
+        const savedBest = localStorage.getItem('disney_destiny_hero_zone_best_time');
+        let isNewRecord = false;
+        if (!savedBest || parseFloat(finalTime) < parseFloat(savedBest)) {
+            localStorage.setItem('disney_destiny_hero_zone_best_time', finalTime);
+            isNewRecord = true;
         }
+
+        // Victory Fireworks / Star Burst
+        for (let i = 0; i < 20; i++) {
+            const rx = this.player.x + (Math.random() - 0.5) * 200;
+            const ry = this.player.y + (Math.random() - 0.5) * 150;
+            const star = this.add.text(rx, ry, '★', {
+                fontSize: `${Phaser.Math.Between(16, 28)}px`, fill: (i % 2 === 0 ? '#FFD700' : '#FF0000')
+            }).setDepth(201);
+            this.tweens.add({
+                targets: star,
+                y: ry - 60,
+                alpha: 0,
+                duration: 800 + i * 50,
+                onComplete: () => star.destroy()
+            });
+        }
+
+        // Results Modal
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const modal = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(300);
+
+        const bg = this.add.rectangle(0, 0, 340, 240, 0x000000, 0.92).setStrokeStyle(4, 0xF8B800);
+        const title = this.add.text(0, -85, '★ COURSE COMPLETE! ★', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5);
+
+        const winnerText = this.add.text(0, -55, rileyWon ? 'RILEY DEFEATED DASH!' : 'DASH WAS FASTER!', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: rileyWon ? '#00FF00' : '#FF5555'
+        }).setOrigin(0.5);
+
+        const timeText = this.add.text(0, -25, `FINAL TIME: ${finalTime}s`, {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5);
+
+        const recordText = this.add.text(0, 0, isNewRecord ? '★ NEW BEST RECORD! ★' : `BEST RECORD: ${localStorage.getItem('disney_destiny_hero_zone_best_time')}s`, {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: isNewRecord ? '#FFFF00' : '#A0D0FF'
+        }).setOrigin(0.5);
+
+        const btnRetry = this.add.text(0, 40, '[ PLAY AGAIN ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#00FF00', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        btnRetry.on('pointerdown', () => this.scene.restart());
+
+        const btnExit = this.add.text(0, 80, '[ EXIT TO SHIP ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        btnExit.on('pointerdown', () => this.exitToShip());
+
+        modal.add([bg, title, winnerText, timeText, recordText, btnRetry, btnExit]);
     }
 }
 
@@ -9850,55 +10437,119 @@ class AirHockeyScene extends Phaser.Scene {
     }
 
     create() {
+        retroArcadeAudio.init();
         const W = this.scale.width;
         const H = this.scale.height;
         
-        this.add.rectangle(0, 0, W, H, 0x000000, 0.8).setOrigin(0);
+        // Dark backdrop
+        this.add.rectangle(0, 0, W, H, 0x07091B, 0.95).setOrigin(0);
         
-        let cx = W/2;
-        let cy = H/2;
+        const cx = W / 2;
+        const cy = H / 2;
         
-        // Table
-        this.add.rectangle(cx, cy, 300, 500, 0xFFFFFF).setStrokeStyle(4, 0x0000FF);
-        this.add.line(cx, cy, -150, 0, 150, 0, 0xFF0000); // Center line
-        this.add.circle(cx, cy, 40).setStrokeStyle(4, 0xFF0000);
+        // Air Hockey Table Surface
+        const tableW = 320;
+        const tableH = 460;
+        this.add.rectangle(cx, cy, tableW + 20, tableH + 20, 0x111111).setStrokeStyle(4, 0x00FFFF);
+        this.add.rectangle(cx, cy, tableW, tableH, 0x0B1B3A);
         
+        // Center Line & Circle
+        this.add.line(cx, cy, -tableW / 2, 0, tableW / 2, 0, 0xFF3333).setLineWidth(2);
+        this.add.circle(cx, cy, 38).setStrokeStyle(2, 0xFF3333);
+
         // Goals
-        this.goalTop = this.add.zone(cx, cy - 250, 100, 20);
+        this.goalTop = this.add.zone(cx, cy - tableH / 2 + 5, 110, 24);
         this.physics.add.existing(this.goalTop, true);
-        this.add.rectangle(cx, cy - 250, 100, 10, 0x000000);
+        this.add.rectangle(cx, cy - tableH / 2, 110, 10, 0x000000).setStrokeStyle(2, 0xFF5555);
         
-        this.goalBot = this.add.zone(cx, cy + 250, 100, 20);
+        this.goalBot = this.add.zone(cx, cy + tableH / 2 - 5, 110, 24);
         this.physics.add.existing(this.goalBot, true);
-        this.add.rectangle(cx, cy + 250, 100, 10, 0x000000);
+        this.add.rectangle(cx, cy + tableH / 2, 110, 10, 0x000000).setStrokeStyle(2, 0x55FF55);
         
-        // Physics bounds
-        this.physics.world.setBounds(cx - 150, cy - 250, 300, 500);
+        // Physics Bounds for Table
+        this.physics.world.setBounds(cx - tableW / 2, cy - tableH / 2, tableW, tableH);
         
+        // Textures
+        if (!this.textures.exists('ah_puck')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xFF0000, 1);
+            g.fillCircle(12, 12, 12);
+            g.lineStyle(2, 0xFFFFFF, 1);
+            g.strokeCircle(12, 12, 12);
+            g.generateTexture('ah_puck', 24, 24);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('ah_mallet_player')) {
+            let g = this.add.graphics();
+            g.fillStyle(0x00FF88, 1);
+            g.fillCircle(20, 20, 20);
+            g.fillStyle(0x008844, 1);
+            g.fillCircle(20, 20, 10);
+            g.lineStyle(2, 0xFFFFFF, 1);
+            g.strokeCircle(20, 20, 20);
+            g.generateTexture('ah_mallet_player', 40, 40);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('ah_mallet_ai')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xFF5555, 1);
+            g.fillCircle(20, 20, 20);
+            g.fillStyle(0x990000, 1);
+            g.fillCircle(20, 20, 10);
+            g.lineStyle(2, 0xFFFFFF, 1);
+            g.strokeCircle(20, 20, 20);
+            g.generateTexture('ah_mallet_ai', 40, 40);
+            g.destroy();
+        }
+
         // Puck
-        this.puck = this.physics.add.sprite(cx, cy, 'hz_wall').setScale(0.3).setTint(0x000000);
-        this.puck.setBounce(1, 1).setCollideWorldBounds(true);
-        this.puck.body.setCircle(32);
+        this.puck = this.physics.add.sprite(cx, cy, 'ah_puck');
+        this.puck.setBounce(1.05, 1.05);
+        this.puck.setCollideWorldBounds(true);
+        this.puck.body.setCircle(12);
         this.puck.body.allowGravity = false;
+        this.puck.body.setMaxVelocity(600, 600);
         
-        // Paddles
-        this.paddlePlayer = this.physics.add.sprite(cx, cy + 200, 'hz_wall').setScale(0.5).setTint(0x00FF00);
-        this.paddlePlayer.setCollideWorldBounds(true).setImmovable(true);
-        this.paddlePlayer.body.setCircle(32);
+        // Player Mallet (Bottom half)
+        this.paddlePlayer = this.physics.add.sprite(cx, cy + 150, 'ah_mallet_player');
+        this.paddlePlayer.setCollideWorldBounds(true);
+        this.paddlePlayer.body.setCircle(20);
         this.paddlePlayer.body.allowGravity = false;
+        this.paddlePlayer.body.immovable = true;
         
-        this.paddleAI = this.physics.add.sprite(cx, cy - 200, 'hz_wall').setScale(0.5).setTint(0xFF0000);
-        this.paddleAI.setCollideWorldBounds(true).setImmovable(true);
-        this.paddleAI.body.setCircle(32);
+        // AI Mallet (Top half)
+        this.paddleAI = this.physics.add.sprite(cx, cy - 150, 'ah_mallet_ai');
+        this.paddleAI.setCollideWorldBounds(true);
+        this.paddleAI.body.setCircle(20);
         this.paddleAI.body.allowGravity = false;
+        this.paddleAI.body.immovable = true;
         
-        this.physics.add.collider(this.puck, this.paddlePlayer);
-        this.physics.add.collider(this.puck, this.paddleAI);
+        // Collisions
+        this.physics.add.collider(this.puck, this.paddlePlayer, () => {
+            retroArcadeAudio.play('shoot');
+        });
+        this.physics.add.collider(this.puck, this.paddleAI, () => {
+            retroArcadeAudio.play('shoot');
+        });
         
-        // UI
-        this.scoreText = this.add.text(W/2 + 200, H/2, 'SCORE\nP:0\nAI:0', { fontSize: '16px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
-        this.add.text(W/2, H - 40, '[ ESC TO EXIT ]', { fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
-        
+        // Score Board
+        this.scoreText = this.add.text(cx, 35, 'RILEY 0  -  0 AI', {
+            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5);
+
+        this.add.text(cx, 65, 'FIRST TO 3 GOALS WINS!', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
+        }).setOrigin(0.5);
+
+        // Exit Button
+        this.exitBtn = this.add.text(W - 65, 35, '[ EXIT ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        this.exitBtn.on('pointerdown', () => this.exitAirHockey());
+
+        // Keyboard & Mouse Controls
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -9907,70 +10558,149 @@ class AirHockeyScene extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.D,
             esc: Phaser.Input.Keyboard.KeyCodes.ESC
         });
-        
+
+        // Touch & Mouse Dragging for Paddle
+        this.input.on('pointermove', (pointer) => {
+            if (pointer.isDown || !this.sys.game.device.os.desktop) {
+                const targetX = Phaser.Math.Clamp(pointer.x, cx - tableW / 2 + 25, cx + tableW / 2 - 25);
+                const targetY = Phaser.Math.Clamp(pointer.y, cy + 20, cy + tableH / 2 - 25);
+                this.paddlePlayer.setPosition(targetX, targetY);
+            }
+        });
+
+        this.tableBounds = { cx, cy, tableW, tableH };
         this.resetPuck();
     }
     
     resetPuck() {
-        this.puck.setPosition(this.scale.width/2, this.scale.height/2);
-        let vx = (Math.random() - 0.5) * 400;
-        let vy = (Math.random() > 0.5 ? 200 : -200);
+        const { cx, cy } = this.tableBounds;
+        this.puck.setPosition(cx, cy);
+        const vx = (Math.random() - 0.5) * 350;
+        const vy = (Math.random() > 0.5 ? 220 : -220);
         this.puck.setVelocity(vx, vy);
+    }
+
+    exitAirHockey() {
+        this.scene.stop();
+        if (this.parentScene) {
+            this.parentScene.scene.resume();
+        }
     }
     
     update(time, delta) {
         if (this.wasd.esc.isDown) {
-            this.scene.stop();
-            if (this.parentScene) this.parentScene.scene.resume();
+            this.exitAirHockey();
             return;
         }
+
         if (this.isGameOver) return;
         
-        // Player Input
-        let speed = 400;
+        const { cx, cy, tableW, tableH } = this.tableBounds;
+
+        // Keyboard movement for player mallet
+        const speed = 380;
         let vx = 0; let vy = 0;
         if (this.cursors.left.isDown || this.wasd.left.isDown) vx = -speed;
         if (this.cursors.right.isDown || this.wasd.right.isDown) vx = speed;
         if (this.cursors.up.isDown || this.wasd.up.isDown) vy = -speed;
         if (this.cursors.down.isDown || this.wasd.down.isDown) vy = speed;
         
-        this.paddlePlayer.setVelocity(vx, vy);
-        // Constrain player to bottom half
-        if (this.paddlePlayer.y < this.scale.height/2) this.paddlePlayer.y = this.scale.height/2;
-        
-        // AI Logic
-        if (this.puck.y < this.scale.height/2) {
-            if (this.paddleAI.x < this.puck.x - 10) this.paddleAI.setVelocityX(250);
-            else if (this.paddleAI.x > this.puck.x + 10) this.paddleAI.setVelocityX(-250);
-            else this.paddleAI.setVelocityX(0);
-        } else {
-            // Return to center
-            if (this.paddleAI.x < this.scale.width/2 - 10) this.paddleAI.setVelocityX(200);
-            else if (this.paddleAI.x > this.scale.width/2 + 10) this.paddleAI.setVelocityX(-200);
-            else this.paddleAI.setVelocityX(0);
+        if (vx !== 0 || vy !== 0) {
+            this.paddlePlayer.x = Phaser.Math.Clamp(this.paddlePlayer.x + (vx * delta * 0.001), cx - tableW / 2 + 25, cx + tableW / 2 - 25);
+            this.paddlePlayer.y = Phaser.Math.Clamp(this.paddlePlayer.y + (vy * delta * 0.001), cy + 20, cy + tableH / 2 - 25);
         }
         
-        // Goal checks
+        // AI Mallet Logic (Smooth tracking)
+        const aiSpeed = 240;
+        if (this.puck.y < cy) {
+            // Track puck on AI side
+            if (this.paddleAI.x < this.puck.x - 12) {
+                this.paddleAI.setVelocityX(aiSpeed);
+            } else if (this.paddleAI.x > this.puck.x + 12) {
+                this.paddleAI.setVelocityX(-aiSpeed);
+            } else {
+                this.paddleAI.setVelocityX(0);
+            }
+
+            // Move towards puck Y slightly to hit it
+            if (this.paddleAI.y < this.puck.y - 30) {
+                this.paddleAI.setVelocityY(aiSpeed * 0.6);
+            } else {
+                this.paddleAI.setVelocityY(-aiSpeed * 0.6);
+            }
+        } else {
+            // Return to top center defense position
+            if (this.paddleAI.x < cx - 15) {
+                this.paddleAI.setVelocityX(aiSpeed * 0.7);
+            } else if (this.paddleAI.x > cx + 15) {
+                this.paddleAI.setVelocityX(-aiSpeed * 0.7);
+            } else {
+                this.paddleAI.setVelocityX(0);
+            }
+            if (this.paddleAI.y > cy - 140) {
+                this.paddleAI.setVelocityY(-aiSpeed * 0.5);
+            } else {
+                this.paddleAI.setVelocityY(0);
+            }
+        }
+
+        // Clamp AI Mallet to top half
+        this.paddleAI.y = Phaser.Math.Clamp(this.paddleAI.y, cy - tableH / 2 + 25, cy - 20);
+        
+        // Goal Checks
         if (this.physics.overlap(this.puck, this.goalTop)) {
             this.playerScore++;
-            this.updateScore();
+            this.handleGoal('RILEY SCORED!');
         } else if (this.physics.overlap(this.puck, this.goalBot)) {
             this.aiScore++;
-            this.updateScore();
+            this.handleGoal('AI SCORED!');
         }
     }
     
-    updateScore() {
+    handleGoal(msg) {
         retroArcadeAudio.play('powerup');
-        this.scoreText.setText('SCORE\nP:' + this.playerScore + '\nAI:' + this.aiScore);
-        if (this.playerScore >= 3 || this.aiScore >= 3) {
-            this.isGameOver = true;
-            this.puck.setVelocity(0,0);
-            let msg = this.playerScore >= 3 ? "YOU WIN!" : "AI WINS!";
-            this.add.text(this.scale.width/2, this.scale.height/2, msg, { fontSize: '24px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
-        } else {
-            this.resetPuck();
-        }
+        this.scoreText.setText(`RILEY ${this.playerScore}  -  ${this.aiScore} AI`);
+        
+        const goalText = this.add.text(this.scale.width / 2, this.scale.height / 2, msg, {
+            fontSize: '14px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: 8
+        }).setOrigin(0.5);
+        
+        this.time.delayedCall(800, () => {
+            goalText.destroy();
+            if (this.playerScore >= 3 || this.aiScore >= 3) {
+                this.finishGame();
+            } else {
+                this.resetPuck();
+            }
+        });
+    }
+
+    finishGame() {
+        this.isGameOver = true;
+        this.puck.setVelocity(0, 0);
+        retroArcadeAudio.play('powerup');
+
+        const win = (this.playerScore >= 3);
+        const cx = this.scale.width / 2;
+        const cy = this.scale.height / 2;
+
+        const endBox = this.add.container(cx, cy).setDepth(200);
+        const bg = this.add.rectangle(0, 0, 260, 180, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800);
+        const title = this.add.text(0, -50, win ? '★ YOU WIN! ★' : 'AI WINS!', {
+            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: win ? '#00FF00' : '#FF5555'
+        }).setOrigin(0.5);
+
+        const btnAgain = this.add.text(0, 5, '[ PLAY AGAIN ]', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#000', backgroundColor: '#00FF00', padding: { x: 8, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        btnAgain.on('pointerdown', () => this.scene.restart());
+
+        const btnExit = this.add.text(0, 45, '[ RETURN TO HERO ZONE ]', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        btnExit.on('pointerdown', () => this.exitAirHockey());
+
+        endBox.add([bg, title, btnAgain, btnExit]);
     }
 }
 
