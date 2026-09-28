@@ -4608,8 +4608,7 @@ class GameScene extends Phaser.Scene {
             this.heroZonePromptText.setVisible(true);
             this.heroZonePromptText.x = this.player.x;
             this.heroZonePromptText.y = this.player.y - 65;
-            if ((this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) ||
-                (this.spaceKey && Phaser.Input.Keyboard.JustDown(this.spaceKey))) {
+            if (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
                 this.openHeroZone();
             }
         } else {
@@ -5861,6 +5860,41 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    openHeroZone() {
+        if (this.ridingRaft) return;
+        if (this.cursors) {
+            if (this.cursors.left) this.cursors.left.isDown = false;
+            if (this.cursors.right) this.cursors.right.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+        }
+        if (this.wasd) {
+            if (this.wasd.left) this.wasd.left.isDown = false;
+            if (this.wasd.right) this.wasd.right.isDown = false;
+            if (this.wasd.up) this.wasd.up.isDown = false;
+            if (this.wasd.down) this.wasd.down.isDown = false;
+        }
+        if (this.heroZonePromptText) {
+            this.heroZonePromptText.setVisible(false);
+        }
+        this.nearHeroZone = false;
+
+        // Switch to Riley for Hero Zone
+        this.selectedCharacter = 'riley';
+        this.characterName = 'Riley';
+        if (this.hudPlayerIcon) this.hudPlayerIcon.setTexture('riley_idle');
+        if (this.hudPlayerName) this.hudPlayerName.setText('RILEY');
+        if (this.layoutHUD) this.layoutHUD(this.scale.width, this.scale.height);
+        if (this.player) {
+            this.player.setTexture('riley_idle');
+            this.player.body.setSize(22, 16);
+            this.player.body.setOffset(5, 32);
+        }
+
+        this.scene.pause('GameScene');
+        this.scene.launch('HeroZoneScene', { gameScene: this });
+    }
+
     openElevatorMenu() {
         if (this.ridingRaft) return;
         // Stop player movement
@@ -5909,7 +5943,6 @@ class ElevatorMenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         const floors = [
-            { label: 'Deck 12 (Hero Zone Door)', type: 'herozone_door', y: 975 },
             { label: 'Deck 12 (Quiet Cove)', type: 'deck', y: 975 },
             { label: 'Deck 11 (Pools & Spa)', type: 'deck', y: 1255 },
             { label: 'Deck 5  (Edge Tween Club)', type: 'edge' },
@@ -5933,8 +5966,6 @@ class ElevatorMenuScene extends Phaser.Scene {
                         this.travelToBoutique();
                     } else if (floor.type === 'edge') {
                         this.travelToEdge();
-                    } else if (floor.type === 'herozone_door') {
-                        this.travelToDeck12HeroDoor();
                     } else {
                         this.travelToFloor(floor.y);
                     }
@@ -6049,21 +6080,6 @@ class ElevatorMenuScene extends Phaser.Scene {
     }
 
     closeMenu() {
-        this.scene.stop();
-        this.scene.resume('GameScene');
-    }
-
-    travelToDeck12HeroDoor() {
-        this.gameScene.jumpZ = 0;
-        this.gameScene.jumpV = 0;
-        this.gameScene.isJumping = false;
-        this.gameScene.currentStair = null;
-        
-        this.gameScene.player.x = 1980;
-        this.gameScene.groundY = 975;
-        this.gameScene.player.y = 975;
-        this.gameScene.player.body.reset(1980, 975);
-
         this.scene.stop();
         this.scene.resume('GameScene');
     }
@@ -9550,6 +9566,10 @@ class ArcadeShooterScene extends Phaser.Scene {
 // RILEY'S HERO ZONE & AIR HOCKEY SCENES (ISSUE #46)
 // =========================================================================
 
+// =========================================================================
+// RILEY'S HERO ZONE & AIR HOCKEY SCENES (ISSUE #46)
+// =========================================================================
+
 class HeroZoneScene extends Phaser.Scene {
     constructor() {
         super({ key: 'HeroZoneScene' });
@@ -9568,7 +9588,6 @@ class HeroZoneScene extends Phaser.Scene {
         // Basketball state
         this.bballCharging = false;
         this.bballChargeTime = 0;
-        this.bballHeld = false;
         this.bballScore = 0;
         
         // Touch controls state
@@ -9581,7 +9600,7 @@ class HeroZoneScene extends Phaser.Scene {
     create() {
         retroArcadeAudio.init();
 
-        // Hide and pause underlying GameScene
+        // Hide and sleep underlying GameScene
         if (this.gameScene && this.gameScene.scene) {
             this.gameScene.scene.setVisible(false);
             this.gameScene.scene.sleep();
@@ -9618,7 +9637,7 @@ class HeroZoneScene extends Phaser.Scene {
 
         // Hub Floor (x: 0..850)
         this.createBouncyFloor(0, 850, floorY, 0xD01000);
-        // Course Section 1 (x: 900..1550)
+        // Course Section 1 (x: 920..1550)
         this.createBouncyFloor(920, 1550, floorY, 0x0055AA);
         // Course Section 2 (x: 1650..2350)
         this.createBouncyFloor(1650, 2350, floorY, 0xD01000);
@@ -9674,6 +9693,7 @@ class HeroZoneScene extends Phaser.Scene {
         // Swinging Pendulums (Inflatable wrecking balls)
         this.pendulums = this.physics.add.group({ allowGravity: false, immovable: true });
         this.pendulumList = [];
+        this.pendulumGfx = this.add.graphics().setDepth(4);
         [1250, 1980, 2920, 3550].forEach((px, i) => {
             this.createPendulum(px, floorY - 170, i * 1.5);
         });
@@ -9747,7 +9767,6 @@ class HeroZoneScene extends Phaser.Scene {
     createTextures() {
         if (!this.textures.exists('hz_wall_tile')) {
             let g = this.add.graphics();
-            // Background padded diamond texture
             g.fillStyle(0x3B0808, 1);
             g.fillRect(0, 0, 48, 48);
             g.lineStyle(2, 0x6E1010, 1);
@@ -9823,8 +9842,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createBillboard(x, y) {
-        // Board Background
-        const board = this.add.rectangle(x, y, 220, 130, 0x000000, 0.9).setDepth(4).setStrokeStyle(3, 0xF8B800);
+        this.add.rectangle(x, y, 220, 130, 0x000000, 0.9).setDepth(4).setStrokeStyle(3, 0xF8B800);
         
         this.add.text(x, y - 50, '★ HERO ZONE ★', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
@@ -9851,19 +9869,14 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createBasketballStation(x, floorY) {
-        // Backboard & Pole
         this.add.rectangle(x + 50, floorY - 80, 8, 160, 0x444444).setDepth(3);
         this.add.rectangle(x + 40, floorY - 145, 12, 50, 0xFFFFFF).setDepth(4).setStrokeStyle(2, 0xD01000);
-        // Rim
         this.add.rectangle(x + 20, floorY - 130, 30, 4, 0xE65C00).setDepth(5);
-        // Net
-        this.add.triangle(x + 20, floorY - 116, 0, 0, 30, 0, 15, 24, 0xFFFFFF, 0.6).setDepth(4);
+        this.add.rectangle(x + 20, floorY - 118, 24, 20, 0xFFFFFF, 0.7).setDepth(4);
 
-        // Hoop Sensor
         this.hoopSensor = this.add.zone(x + 20, floorY - 130, 24, 10);
         this.physics.add.existing(this.hoopSensor, true);
 
-        // Station Sign
         this.add.text(x, floorY - 170, 'BASKETBALL SHOOTOUT', {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#F8B800', backgroundColor: '#000000', padding: { x: 4, y: 2 }
         }).setOrigin(0.5).setDepth(4);
@@ -9872,10 +9885,8 @@ class HeroZoneScene extends Phaser.Scene {
             fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#E65C00', padding: { x: 4, y: 2 }
         }).setOrigin(0.5).setDepth(4).setVisible(false);
 
-        // Ball Power Meter
         this.bballPowerBar = this.add.rectangle(x, floorY - 70, 0, 8, 0x00FF00).setDepth(6).setVisible(false);
 
-        // Basketball Physics Sprite
         this.bball = this.physics.add.sprite(x - 20, floorY - 20, 'hz_bball').setDepth(6);
         this.bball.setCollideWorldBounds(true);
         this.bball.setBounce(0.65, 0.65);
@@ -9885,13 +9896,11 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createAirHockeyStation(x, floorY) {
-        // Table Graphic
         const table = this.add.rectangle(x, floorY - 24, 110, 48, 0x0055AA).setDepth(4).setStrokeStyle(3, 0xFFFFFF);
         this.add.rectangle(x, floorY - 24, 100, 38, 0x0088FF).setDepth(4);
-        this.add.line(x, floorY - 24, 0, -18, 0, 18, 0xFF0000).setDepth(5);
+        this.add.rectangle(x, floorY - 24, 2, 36, 0xFF0000).setDepth(5);
         this.add.circle(x, floorY - 24, 10).setStrokeStyle(2, 0xFFFFFF).setDepth(5);
         
-        // Glowing table banner
         this.ahBanner = this.add.text(x, floorY - 65, '★ AIR HOCKEY ★', {
             fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', backgroundColor: '#000044', padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setDepth(5);
@@ -9909,7 +9918,6 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createStartLine(x, floorY) {
-        // Checkered Arch
         this.add.rectangle(x, floorY - 110, 16, 220, 0xFFFFFF).setDepth(4);
         this.add.rectangle(x, floorY - 110, 12, 220, 0x000000).setDepth(4);
         
@@ -9930,10 +9938,8 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createPendulum(x, anchorY, offset) {
-        // Ceiling anchor
         this.add.circle(x, anchorY, 8, 0xF8B800).setDepth(4);
         
-        // Ball sprite
         const ball = this.add.circle(x, anchorY + 110, 22, 0x111111).setDepth(5).setStrokeStyle(3, 0xD01000);
         this.physics.add.existing(ball);
         ball.body.allowGravity = false;
@@ -9941,12 +9947,8 @@ class HeroZoneScene extends Phaser.Scene {
         ball.body.setCircle(22);
         this.pendulums.add(ball);
 
-        // Chain line connecting anchor to ball
-        const chain = this.add.line(0, 0, x, anchorY, x, anchorY + 110, 0xF8B800).setOrigin(0).setDepth(4).setLineWidth(3);
-
         this.pendulumList.push({
             ball: ball,
-            chain: chain,
             anchorX: x,
             anchorY: anchorY,
             length: 110,
@@ -9955,10 +9957,9 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createClimbingWall(x, y) {
-        // Visual Climbing Lattice
         this.add.rectangle(x, y, 64, 180, 0xF8B800, 0.4).setDepth(2).setStrokeStyle(3, 0xF8B800);
         for (let py = y - 80; py <= y + 80; py += 25) {
-            this.add.line(x, py, -30, 0, 30, 0, 0xD01000).setDepth(3).setLineWidth(4);
+            this.add.rectangle(x, py, 60, 4, 0xD01000).setDepth(3);
         }
 
         this.add.text(x, y - 105, '▲ CLIMB WALL ▲', {
@@ -9970,9 +9971,8 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createSuperSlide(x, floorY) {
-        // Visual Slide
-        this.add.triangle(x, floorY - 30, -50, 60, 50, 60, 50, -30, 0x00AAFF, 0.7).setDepth(3);
-        this.add.text(x, floorY - 75, '► SUPER SLIDE! ►', {
+        this.add.rectangle(x, floorY - 25, 110, 40, 0x00AAFF, 0.7).setDepth(3);
+        this.add.text(x, floorY - 65, '► SUPER SLIDE! ►', {
             fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', backgroundColor: '#001133', padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setDepth(5);
 
@@ -9993,9 +9993,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     createFinishBuzzer(x, floorY) {
-        // Pedestal
         this.add.rectangle(x, floorY - 30, 40, 60, 0xF8B800).setDepth(4).setStrokeStyle(2, 0x000);
-        // Big Red Dome Buzzer
         this.buzzerBtn = this.add.circle(x, floorY - 65, 18, 0xD01000).setDepth(5).setStrokeStyle(3, 0xFFFFFF);
         
         this.add.text(x, floorY - 110, '★ HIT BUZZER! ★', {
@@ -10005,7 +10003,6 @@ class HeroZoneScene extends Phaser.Scene {
         this.buzzerZone = this.add.zone(x, floorY - 60, 50, 70);
         this.physics.add.existing(this.buzzerZone, true);
 
-        // Checkered Finish Gate
         this.add.rectangle(x + 50, floorY - 110, 16, 220, 0xFFFFFF).setDepth(3);
         this.add.rectangle(x + 50, floorY - 110, 12, 220, 0x000000).setDepth(3);
     }
@@ -10013,24 +10010,20 @@ class HeroZoneScene extends Phaser.Scene {
     createHUD() {
         const W = this.scale.width;
         
-        // Timer Box
         this.timerBox = this.add.rectangle(110, 30, 180, 36, 0x000000, 0.85).setScrollFactor(0).setDepth(100).setStrokeStyle(2, 0xF8B800);
         this.uiTimer = this.add.text(110, 30, 'TIME: 0.00', {
             fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
 
-        // Penalty Banner
         this.uiPenalty = this.add.text(W / 2, 45, '+3.00s PENALTY!', {
             fontSize: '13px', fontFamily: '"Press Start 2P"', fill: '#FF0000', backgroundColor: '#000', padding: { x: 8, y: 4 }, stroke: '#FFF', strokeThickness: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
 
-        // Top-Right Exit Button
         this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
             fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 6 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
         this.hudExitBtn.on('pointerdown', () => this.exitToShip());
 
-        // Bottom Controls Hint
         this.hudControlsHint = this.add.text(W / 2, this.scale.height - 14, '◄ ► / WASD: MOVE   ▲/W: JUMP/CLIMB   SPACE: SHOOT   ENTER: HOCKEY', {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000000', padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
@@ -10040,31 +10033,26 @@ class HeroZoneScene extends Phaser.Scene {
         const H = this.scale.height;
         const W = this.scale.width;
 
-        // Container for touch buttons
         this.touchContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(99);
 
-        // Left Arrow
         const btnL = this.add.rectangle(50, H - 55, 60, 50, 0x000000, 0.6).setStrokeStyle(2, 0xFFFFFF).setInteractive();
         const txtL = this.add.text(50, H - 55, '◄', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
         btnL.on('pointerdown', () => { this.touchLeft = true; });
         btnL.on('pointerup', () => { this.touchLeft = false; });
         btnL.on('pointerout', () => { this.touchLeft = false; });
 
-        // Right Arrow
         const btnR = this.add.rectangle(125, H - 55, 60, 50, 0x000000, 0.6).setStrokeStyle(2, 0xFFFFFF).setInteractive();
         const txtR = this.add.text(125, H - 55, '►', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
         btnR.on('pointerdown', () => { this.touchRight = true; });
         btnR.on('pointerup', () => { this.touchRight = false; });
         btnR.on('pointerout', () => { this.touchRight = false; });
 
-        // Jump Button
         const btnJ = this.add.rectangle(W - 60, H - 55, 70, 50, 0xD01000, 0.7).setStrokeStyle(2, 0xFFD700).setInteractive();
         const txtJ = this.add.text(W - 60, H - 55, 'JUMP', { fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
         btnJ.on('pointerdown', () => { this.touchJump = true; });
         btnJ.on('pointerup', () => { this.touchJump = false; });
         btnJ.on('pointerout', () => { this.touchJump = false; });
 
-        // Action Button (Basketball / Air Hockey)
         const btnA = this.add.rectangle(W - 145, H - 55, 70, 50, 0x0055AA, 0.7).setStrokeStyle(2, 0x00FFFF).setInteractive();
         const txtA = this.add.text(W - 145, H - 55, 'ACTION', { fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
         btnA.on('pointerdown', () => { 
@@ -10084,12 +10072,10 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     handleActionPress() {
-        // If near air hockey
         if (this.physics.overlap(this.player, this.ahZone)) {
             this.launchAirHockey();
             return;
         }
-        // If near basketball
         const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.bball.x, this.bball.y);
         if (dist < 60) {
             this.bballCharging = true;
@@ -10129,6 +10115,7 @@ class HeroZoneScene extends Phaser.Scene {
         if (this.gameScene && this.gameScene.scene) {
             this.gameScene.scene.wake();
             this.gameScene.scene.setVisible(true);
+            this.gameScene.scene.resume();
         }
     }
 
@@ -10140,16 +10127,13 @@ class HeroZoneScene extends Phaser.Scene {
         this.timer += 3000;
         this.penaltyCooldown = this.time.now + 1200;
 
-        // Show penalty banner
         this.uiPenalty.setVisible(true);
         this.time.delayedCall(900, () => {
             if (this.uiPenalty) this.uiPenalty.setVisible(false);
         });
 
-        // Knockback player
         this.player.setVelocity(-180, -220);
 
-        // Flash invulnerability tween
         this.tweens.add({
             targets: this.player,
             alpha: 0.2,
@@ -10173,25 +10157,21 @@ class HeroZoneScene extends Phaser.Scene {
             if (this.uiPenalty) this.uiPenalty.setVisible(false);
         });
 
-        // Bounce player safely back onto ledge
         this.player.setPosition(safeX, this.floorY - 50);
         this.player.setVelocity(0, -320);
     }
 
     update(time, delta) {
-        // Exit check via ESC
         if (this.wasd.esc.isDown) {
             this.exitToShip();
             return;
         }
 
-        // Proximity to exit door (x < 115)
         if (this.player.x < 115 && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) {
             this.exitToShip();
             return;
         }
 
-        // Update Moving Platforms
         this.movingPlatforms.getChildren().forEach(plat => {
             if (plat.x >= plat.maxX) {
                 plat.body.setVelocityX(-Math.abs(plat.speed));
@@ -10200,16 +10180,19 @@ class HeroZoneScene extends Phaser.Scene {
             }
         });
 
-        // Update Swinging Pendulums
-        this.pendulumList.forEach(p => {
-            const angle = Math.sin((time * 0.0025) + p.angleOffset) * 0.85;
-            const bx = p.anchorX + Math.sin(angle) * p.length;
-            const by = p.anchorY + Math.cos(angle) * p.length;
-            p.ball.setPosition(bx, by);
-            p.chain.setTo(p.anchorX, p.anchorY, bx, by);
-        });
+        // Draw and update Pendulums via Graphics lineBetween
+        if (this.pendulumGfx) {
+            this.pendulumGfx.clear();
+            this.pendulumGfx.lineStyle(3, 0xF8B800, 1);
+            this.pendulumList.forEach(p => {
+                const angle = Math.sin((time * 0.0025) + p.angleOffset) * 0.85;
+                const bx = p.anchorX + Math.sin(angle) * p.length;
+                const by = p.anchorY + Math.cos(angle) * p.length;
+                p.ball.setPosition(bx, by);
+                this.pendulumGfx.lineBetween(p.anchorX, p.anchorY, bx, by);
+            });
+        }
 
-        // Proximity checks for Hub Stations
         const nearAirHockey = this.physics.overlap(this.player, this.ahZone);
         if (this.ahPrompt) this.ahPrompt.setVisible(nearAirHockey);
         if (nearAirHockey && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) {
@@ -10220,7 +10203,6 @@ class HeroZoneScene extends Phaser.Scene {
         const nearBball = (distToBall < 65);
         if (this.bballPrompt) this.bballPrompt.setVisible(nearBball);
 
-        // Basketball charge handling
         if (nearBball && (this.wasd.space.isDown || this.touchAction)) {
             this.bballCharging = true;
             this.bballChargeTime += delta * 0.8;
@@ -10233,7 +10215,6 @@ class HeroZoneScene extends Phaser.Scene {
             this.shootBasketball();
         }
 
-        // Check Basketball Swish through Hoop Sensor
         if (this.physics.overlap(this.bball, this.hoopSensor)) {
             if (this.bball.body.velocity.y > 0) {
                 this.bballScore += 100;
@@ -10255,13 +10236,11 @@ class HeroZoneScene extends Phaser.Scene {
             }
         }
 
-        // Horizontal Movement Input
         const moveLeft = this.cursors.left.isDown || this.wasd.left.isDown || this.touchLeft;
         const moveRight = this.cursors.right.isDown || this.wasd.right.isDown || this.touchRight;
         const moveUp = this.cursors.up.isDown || this.wasd.up.isDown || this.touchJump;
         const moveDown = this.cursors.down.isDown || this.wasd.down.isDown;
 
-        // Cargo Climbing Wall Check
         const inClimbZone = this.physics.overlap(this.player, this.climbZone);
         if (inClimbZone) {
             this.player.body.allowGravity = false;
@@ -10276,14 +10255,12 @@ class HeroZoneScene extends Phaser.Scene {
             this.player.body.allowGravity = true;
         }
 
-        // Super Slide Zone Check
         const inSlideZone = this.physics.overlap(this.player, this.slideZone);
         if (inSlideZone) {
             this.player.setVelocityX(360);
             this.player.setVelocityY(180);
             this.player.anims.play('riley_walk', true);
         } else {
-            // Normal Horizontal Running
             if (moveLeft) {
                 this.player.setVelocityX(-this.heroSpeed);
                 this.player.flipX = true;
@@ -10298,17 +10275,11 @@ class HeroZoneScene extends Phaser.Scene {
             }
         }
 
-        // Jumping
         if (moveUp && (this.player.body.touching.down || this.player.body.blocked.down) && !inClimbZone && !inSlideZone) {
             this.player.setVelocityY(this.jumpForce);
             retroArcadeAudio.play('jump');
         }
 
-        // ----------------------------------------------------
-        // RACE & TIMER LOGIC
-        // ----------------------------------------------------
-        
-        // Start Race when crossing x = 850
         if (this.player.x > 850 && !this.raceStarted) {
             this.raceStarted = true;
             retroArcadeAudio.play('powerup');
@@ -10331,13 +10302,11 @@ class HeroZoneScene extends Phaser.Scene {
             this.timer += delta;
             this.uiTimer.setText('TIME: ' + (this.timer / 1000).toFixed(2));
 
-            // Dash Rival AI
             if (this.dashRacer && this.dashRacer.x < 3850) {
                 this.dashRacer.setVelocityX(160);
                 this.dashRacer.anims.play('npc_tourist_walk', true);
                 if (this.dashTag) this.dashTag.setPosition(this.dashRacer.x, this.dashRacer.y - 30);
 
-                // Auto-jump hurdles & pits
                 const hurdlesX = [1120, 1380, 1850, 2100, 2800, 3050, 3450, 3650];
                 const pitsX = [850, 1550, 2350, 3150];
                 
@@ -10349,7 +10318,6 @@ class HeroZoneScene extends Phaser.Scene {
                 }
             }
 
-            // Finish Buzzer Collision
             if (this.physics.overlap(this.player, this.buzzerZone) || this.player.x >= 3850) {
                 this.completeCourse();
             }
@@ -10364,7 +10332,6 @@ class HeroZoneScene extends Phaser.Scene {
         const finalTime = (this.timer / 1000).toFixed(2);
         const rileyWon = (this.player.x >= 3840 && (!this.dashRacer || this.dashRacer.x < 3840));
 
-        // Save Best Score
         const savedBest = localStorage.getItem('disney_destiny_hero_zone_best_time');
         let isNewRecord = false;
         if (!savedBest || parseFloat(finalTime) < parseFloat(savedBest)) {
@@ -10372,7 +10339,6 @@ class HeroZoneScene extends Phaser.Scene {
             isNewRecord = true;
         }
 
-        // Victory Fireworks / Star Burst
         for (let i = 0; i < 20; i++) {
             const rx = this.player.x + (Math.random() - 0.5) * 200;
             const ry = this.player.y + (Math.random() - 0.5) * 150;
@@ -10388,7 +10354,6 @@ class HeroZoneScene extends Phaser.Scene {
             });
         }
 
-        // Results Modal
         const W = this.scale.width;
         const H = this.scale.height;
         const modal = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(300);
@@ -10441,23 +10406,19 @@ class AirHockeyScene extends Phaser.Scene {
         const W = this.scale.width;
         const H = this.scale.height;
         
-        // Dark backdrop
         this.add.rectangle(0, 0, W, H, 0x07091B, 0.95).setOrigin(0);
         
         const cx = W / 2;
         const cy = H / 2;
         
-        // Air Hockey Table Surface
         const tableW = 320;
         const tableH = 460;
         this.add.rectangle(cx, cy, tableW + 20, tableH + 20, 0x111111).setStrokeStyle(4, 0x00FFFF);
         this.add.rectangle(cx, cy, tableW, tableH, 0x0B1B3A);
         
-        // Center Line & Circle
-        this.add.line(cx, cy, -tableW / 2, 0, tableW / 2, 0, 0xFF3333).setLineWidth(2);
+        this.add.rectangle(cx, cy, tableW, 2, 0xFF3333);
         this.add.circle(cx, cy, 38).setStrokeStyle(2, 0xFF3333);
 
-        // Goals
         this.goalTop = this.add.zone(cx, cy - tableH / 2 + 5, 110, 24);
         this.physics.add.existing(this.goalTop, true);
         this.add.rectangle(cx, cy - tableH / 2, 110, 10, 0x000000).setStrokeStyle(2, 0xFF5555);
@@ -10466,10 +10427,8 @@ class AirHockeyScene extends Phaser.Scene {
         this.physics.add.existing(this.goalBot, true);
         this.add.rectangle(cx, cy + tableH / 2, 110, 10, 0x000000).setStrokeStyle(2, 0x55FF55);
         
-        // Physics Bounds for Table
         this.physics.world.setBounds(cx - tableW / 2, cy - tableH / 2, tableW, tableH);
         
-        // Textures
         if (!this.textures.exists('ah_puck')) {
             let g = this.add.graphics();
             g.fillStyle(0xFF0000, 1);
@@ -10504,7 +10463,6 @@ class AirHockeyScene extends Phaser.Scene {
             g.destroy();
         }
 
-        // Puck
         this.puck = this.physics.add.sprite(cx, cy, 'ah_puck');
         this.puck.setBounce(1.05, 1.05);
         this.puck.setCollideWorldBounds(true);
@@ -10512,21 +10470,18 @@ class AirHockeyScene extends Phaser.Scene {
         this.puck.body.allowGravity = false;
         this.puck.body.setMaxVelocity(600, 600);
         
-        // Player Mallet (Bottom half)
         this.paddlePlayer = this.physics.add.sprite(cx, cy + 150, 'ah_mallet_player');
         this.paddlePlayer.setCollideWorldBounds(true);
         this.paddlePlayer.body.setCircle(20);
         this.paddlePlayer.body.allowGravity = false;
         this.paddlePlayer.body.immovable = true;
         
-        // AI Mallet (Top half)
         this.paddleAI = this.physics.add.sprite(cx, cy - 150, 'ah_mallet_ai');
         this.paddleAI.setCollideWorldBounds(true);
         this.paddleAI.body.setCircle(20);
         this.paddleAI.body.allowGravity = false;
         this.paddleAI.body.immovable = true;
         
-        // Collisions
         this.physics.add.collider(this.puck, this.paddlePlayer, () => {
             retroArcadeAudio.play('shoot');
         });
@@ -10534,7 +10489,6 @@ class AirHockeyScene extends Phaser.Scene {
             retroArcadeAudio.play('shoot');
         });
         
-        // Score Board
         this.scoreText = this.add.text(cx, 35, 'RILEY 0  -  0 AI', {
             fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
         }).setOrigin(0.5);
@@ -10543,13 +10497,11 @@ class AirHockeyScene extends Phaser.Scene {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
         }).setOrigin(0.5);
 
-        // Exit Button
         this.exitBtn = this.add.text(W - 65, 35, '[ EXIT ]', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 5 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         this.exitBtn.on('pointerdown', () => this.exitAirHockey());
 
-        // Keyboard & Mouse Controls
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -10559,7 +10511,6 @@ class AirHockeyScene extends Phaser.Scene {
             esc: Phaser.Input.Keyboard.KeyCodes.ESC
         });
 
-        // Touch & Mouse Dragging for Paddle
         this.input.on('pointermove', (pointer) => {
             if (pointer.isDown || !this.sys.game.device.os.desktop) {
                 const targetX = Phaser.Math.Clamp(pointer.x, cx - tableW / 2 + 25, cx + tableW / 2 - 25);
@@ -10597,7 +10548,6 @@ class AirHockeyScene extends Phaser.Scene {
         
         const { cx, cy, tableW, tableH } = this.tableBounds;
 
-        // Keyboard movement for player mallet
         const speed = 380;
         let vx = 0; let vy = 0;
         if (this.cursors.left.isDown || this.wasd.left.isDown) vx = -speed;
@@ -10610,10 +10560,8 @@ class AirHockeyScene extends Phaser.Scene {
             this.paddlePlayer.y = Phaser.Math.Clamp(this.paddlePlayer.y + (vy * delta * 0.001), cy + 20, cy + tableH / 2 - 25);
         }
         
-        // AI Mallet Logic (Smooth tracking)
         const aiSpeed = 240;
         if (this.puck.y < cy) {
-            // Track puck on AI side
             if (this.paddleAI.x < this.puck.x - 12) {
                 this.paddleAI.setVelocityX(aiSpeed);
             } else if (this.paddleAI.x > this.puck.x + 12) {
@@ -10622,14 +10570,12 @@ class AirHockeyScene extends Phaser.Scene {
                 this.paddleAI.setVelocityX(0);
             }
 
-            // Move towards puck Y slightly to hit it
             if (this.paddleAI.y < this.puck.y - 30) {
                 this.paddleAI.setVelocityY(aiSpeed * 0.6);
             } else {
                 this.paddleAI.setVelocityY(-aiSpeed * 0.6);
             }
         } else {
-            // Return to top center defense position
             if (this.paddleAI.x < cx - 15) {
                 this.paddleAI.setVelocityX(aiSpeed * 0.7);
             } else if (this.paddleAI.x > cx + 15) {
@@ -10644,10 +10590,8 @@ class AirHockeyScene extends Phaser.Scene {
             }
         }
 
-        // Clamp AI Mallet to top half
         this.paddleAI.y = Phaser.Math.Clamp(this.paddleAI.y, cy - tableH / 2 + 25, cy - 20);
         
-        // Goal Checks
         if (this.physics.overlap(this.puck, this.goalTop)) {
             this.playerScore++;
             this.handleGoal('RILEY SCORED!');
