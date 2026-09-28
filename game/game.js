@@ -10325,6 +10325,9 @@ class ObstacleCourseScene extends Phaser.Scene {
         this.penaltyCooldown = 0;
         this.isExiting = false;
 
+        this.completionMenuOpen = false;
+        this.menuSelectionIndex = 0;
+
         // Mobile touch controls
         this.touchLeft = false;
         this.touchRight = false;
@@ -10464,7 +10467,8 @@ class ObstacleCourseScene extends Phaser.Scene {
                 Phaser.Input.Keyboard.KeyCodes.W,
                 Phaser.Input.Keyboard.KeyCodes.A,
                 Phaser.Input.Keyboard.KeyCodes.S,
-                Phaser.Input.Keyboard.KeyCodes.D
+                Phaser.Input.Keyboard.KeyCodes.D,
+                Phaser.Input.Keyboard.KeyCodes.R
             ]);
         }
 
@@ -10483,7 +10487,9 @@ class ObstacleCourseScene extends Phaser.Scene {
             down: Phaser.Input.Keyboard.KeyCodes.S,
             right: Phaser.Input.Keyboard.KeyCodes.D,
             space: Phaser.Input.Keyboard.KeyCodes.SPACE,
-            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            r: Phaser.Input.Keyboard.KeyCodes.R
         });
 
         const resetCourseKeys = () => {
@@ -10500,6 +10506,9 @@ class ObstacleCourseScene extends Phaser.Scene {
                 if (this.keysWASD.up) this.keysWASD.up.isDown = false;
                 if (this.keysWASD.down) this.keysWASD.down.isDown = false;
                 if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+                if (this.keysWASD.esc) this.keysWASD.esc.isDown = false;
+                if (this.keysWASD.r) this.keysWASD.r.isDown = false;
             }
             this.touchLeft = false;
             this.touchRight = false;
@@ -10510,6 +10519,12 @@ class ObstacleCourseScene extends Phaser.Scene {
             if (e.code === 'Space') {
                 if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
                 if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.keysWASD && this.keysWASD.r) this.keysWASD.r.isDown = false;
             }
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
                 if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
@@ -10655,10 +10670,27 @@ class ObstacleCourseScene extends Phaser.Scene {
             fontSize: '13px', fontFamily: '"Press Start 2P"', fill: '#FF0000', backgroundColor: '#000', padding: { x: 8, y: 4 }, stroke: '#FFF', strokeThickness: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
 
-        const exitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
-            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 6 }
+        // Top-Right [ RESTART ] Button
+        this.hudRestartBtn = this.add.text(W - 195, 30, '[ RESTART ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 6 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
-        exitBtn.on('pointerdown', () => this.exitToHeroZone());
+        this.hudRestartBtn.on('pointerdown', () => this.restartCourse());
+
+        // Top-Right [ EXIT ] Button
+        this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitToHeroZone());
+    }
+
+    restartCourse() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        this.scene.restart();
     }
 
     createTouchControls() {
@@ -10734,6 +10766,7 @@ class ObstacleCourseScene extends Phaser.Scene {
     }
 
     handlePitFall(safeX) {
+        if (!this.raceStarted || this.raceFinished) return;
         if (this.time.now < this.penaltyCooldown) return;
         this.timer += 3000;
         this.penaltyCooldown = this.time.now + 1500;
@@ -10751,8 +10784,43 @@ class ObstacleCourseScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.keysWASD.esc && this.keysWASD.esc.isDown) {
+        if (this.keysWASD.r && Phaser.Input.Keyboard.JustDown(this.keysWASD.r)) {
+            this.restartCourse();
+            return;
+        }
+
+        if (this.keysWASD.esc && Phaser.Input.Keyboard.JustDown(this.keysWASD.esc)) {
             this.exitToHeroZone();
+            return;
+        }
+
+        if (this.completionMenuOpen) {
+            this.player.setVelocity(0, 0);
+            const isUp = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) || 
+                         (this.keysWASD.up && Phaser.Input.Keyboard.JustDown(this.keysWASD.up)) ||
+                         (this.cursors.left && Phaser.Input.Keyboard.JustDown(this.cursors.left)) || 
+                         (this.keysWASD.left && Phaser.Input.Keyboard.JustDown(this.keysWASD.left));
+
+            const isDown = (this.cursors.down && Phaser.Input.Keyboard.JustDown(this.cursors.down)) || 
+                           (this.keysWASD.down && Phaser.Input.Keyboard.JustDown(this.keysWASD.down)) ||
+                           (this.cursors.right && Phaser.Input.Keyboard.JustDown(this.cursors.right)) || 
+                           (this.keysWASD.right && Phaser.Input.Keyboard.JustDown(this.keysWASD.right));
+
+            if (isUp || isDown) {
+                this.menuSelectionIndex = (this.menuSelectionIndex === 0) ? 1 : 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            }
+
+            const isConfirm = (this.keysWASD.enter && Phaser.Input.Keyboard.JustDown(this.keysWASD.enter)) || 
+                              (this.keysWASD.space && Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) || 
+                              (this.cursors.space && Phaser.Input.Keyboard.JustDown(this.cursors.space));
+
+            if (isConfirm) {
+                this.confirmMenuChoice();
+            }
             return;
         }
 
@@ -10889,6 +10957,14 @@ class ObstacleCourseScene extends Phaser.Scene {
     completeCourse() {
         if (this.raceFinished) return;
         this.raceFinished = true;
+        this.completionMenuOpen = true;
+        this.menuSelectionIndex = 0;
+        this.player.setVelocity(0, 0);
+
+        if (this.touchContainer) {
+            this.touchContainer.setVisible(false);
+        }
+
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
@@ -10907,36 +10983,86 @@ class ObstacleCourseScene extends Phaser.Scene {
 
         const W = this.scale.width;
         const H = this.scale.height;
-        const modal = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(300);
 
-        const bg = this.add.rectangle(0, 0, 340, 240, 0x000000, 0.95).setStrokeStyle(4, 0xF8B800);
-        const title = this.add.text(0, -85, '★ COURSE COMPLETE! ★', {
+        this.modalBackdrop = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.6)
+            .setScrollFactor(0).setDepth(500);
+
+        this.modalBg = this.add.rectangle(W / 2, H / 2, 380, 240, 0x000000, 0.95)
+            .setStrokeStyle(4, 0xF8B800).setScrollFactor(0).setDepth(501);
+
+        this.modalTitle = this.add.text(W / 2, H / 2 - 85, '★ COURSE COMPLETE! ★', {
             fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const winnerText = this.add.text(0, -55, rileyWon ? 'RILEY DEFEATED DASH!' : 'DASH WAS FASTER!', {
+        this.modalWinner = this.add.text(W / 2, H / 2 - 55, rileyWon ? 'RILEY DEFEATED DASH!' : 'DASH WAS FASTER!', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: rileyWon ? '#00FF00' : '#FF5555'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const timeText = this.add.text(0, -25, `FINAL TIME: ${finalTime}s`, {
+        this.modalTime = this.add.text(W / 2, H / 2 - 25, `FINAL TIME: ${finalTime}s`, {
             fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const recordText = this.add.text(0, 5, isNewRecord ? '★ NEW BEST RECORD! ★' : `BEST RECORD: ${scores.obstacleTime}s (${scores.obstacleHolder})`, {
+        this.modalRecord = this.add.text(W / 2, H / 2 + 5, isNewRecord ? '★ NEW BEST RECORD! ★' : `BEST RECORD: ${scores.obstacleTime}s (${scores.obstacleHolder})`, {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: isNewRecord ? '#FFFF00' : '#A0D0FF'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const btnRetry = this.add.text(0, 45, '[ PLAY AGAIN ]', {
-            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#00FF00', padding: { x: 10, y: 6 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        btnRetry.on('pointerdown', () => this.scene.restart());
+        this.btnRetry = this.add.text(W / 2, H / 2 + 45, '  PLAY AGAIN  ', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 12, y: 7 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        const btnExit = this.add.text(0, 85, '[ RETURN TO HERO ZONE ]', {
-            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 10, y: 6 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        btnExit.on('pointerdown', () => this.exitToHeroZone());
+        this.btnExit = this.add.text(W / 2, H / 2 + 85, '  RETURN TO HERO ZONE  ', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 12, y: 7 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        modal.add([bg, title, winnerText, timeText, recordText, btnRetry, btnExit]);
+        this.menuCursor = this.add.text(W / 2 - 110, H / 2 + 45, '►', {
+            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+= 6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        this.btnRetry.on('pointerover', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+        });
+        this.btnRetry.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.btnExit.on('pointerover', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+        });
+        this.btnExit.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.updateMenuVisuals();
+    }
+
+    updateMenuVisuals() {
+        if (!this.btnRetry || !this.btnExit || !this.menuCursor) return;
+        const W = this.scale.width;
+        const H = this.scale.height;
+        if (this.menuSelectionIndex === 0) {
+            this.btnRetry.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+            this.btnExit.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
+            this.menuCursor.setPosition(W / 2 - 110, H / 2 + 45);
+        } else {
+            this.btnRetry.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
+            this.btnExit.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
+            this.menuCursor.setPosition(W / 2 - 150, H / 2 + 85);
+        }
+    }
+
+    confirmMenuChoice() {
+        if (this.menuSelectionIndex === 0) {
+            this.restartCourse();
+        } else {
+            this.exitToHeroZone();
+        }
     }
 }
 
@@ -10955,6 +11081,8 @@ class AirHockeyScene extends Phaser.Scene {
         this.aiScore = 0;
         this.isGameOver = false;
         this.isExiting = false;
+        this.completionMenuOpen = false;
+        this.menuSelectionIndex = 0;
     }
 
     create() {
@@ -11059,10 +11187,17 @@ class AirHockeyScene extends Phaser.Scene {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
         }).setOrigin(0.5);
 
-        this.exitBtn = this.add.text(W - 75, 35, '[ EXIT ]', {
-            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 5 }
+        // Top-Right [ RESTART ] Button
+        this.hudRestartBtn = this.add.text(W - 195, 35, '[ RESTART ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 5 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        this.exitBtn.on('pointerdown', () => this.exitAirHockey());
+        this.hudRestartBtn.on('pointerdown', () => this.restartAirHockey());
+
+        // Top-Right [ EXIT ] Button
+        this.hudExitBtn = this.add.text(W - 75, 35, '[ EXIT ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitAirHockey());
 
         if (this.input && this.input.keyboard) {
             this.input.keyboard.resetKeys();
@@ -11075,7 +11210,10 @@ class AirHockeyScene extends Phaser.Scene {
                 Phaser.Input.Keyboard.KeyCodes.W,
                 Phaser.Input.Keyboard.KeyCodes.A,
                 Phaser.Input.Keyboard.KeyCodes.S,
-                Phaser.Input.Keyboard.KeyCodes.D
+                Phaser.Input.Keyboard.KeyCodes.D,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.R
             ]);
         }
 
@@ -11093,7 +11231,10 @@ class AirHockeyScene extends Phaser.Scene {
             left: Phaser.Input.Keyboard.KeyCodes.A,
             down: Phaser.Input.Keyboard.KeyCodes.S,
             right: Phaser.Input.Keyboard.KeyCodes.D,
-            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            r: Phaser.Input.Keyboard.KeyCodes.R
         });
 
         const resetHockeyKeys = () => {
@@ -11102,16 +11243,31 @@ class AirHockeyScene extends Phaser.Scene {
                 if (this.cursors.right) this.cursors.right.isDown = false;
                 if (this.cursors.up) this.cursors.up.isDown = false;
                 if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
             }
             if (this.wasd) {
                 if (this.wasd.left) this.wasd.left.isDown = false;
                 if (this.wasd.right) this.wasd.right.isDown = false;
                 if (this.wasd.up) this.wasd.up.isDown = false;
                 if (this.wasd.down) this.wasd.down.isDown = false;
+                if (this.wasd.space) this.wasd.space.isDown = false;
+                if (this.wasd.enter) this.wasd.enter.isDown = false;
+                if (this.wasd.esc) this.wasd.esc.isDown = false;
+                if (this.wasd.r) this.wasd.r.isDown = false;
             }
         };
 
         const onHockeyNativeKeyUp = (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.wasd && this.wasd.r) this.wasd.r.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.wasd && this.wasd.enter) this.wasd.enter.isDown = false;
+            }
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.wasd && this.wasd.space) this.wasd.space.isDown = false;
+            }
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
                 if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
                 if (this.wasd && this.wasd.up) this.wasd.up.isDown = false;
@@ -11170,6 +11326,16 @@ class AirHockeyScene extends Phaser.Scene {
         this.puck.setVelocity(vx, vy);
     }
 
+    restartAirHockey() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        this.scene.restart();
+    }
+
     exitAirHockey() {
         if (this.isExiting) return;
         this.isExiting = true;
@@ -11187,8 +11353,42 @@ class AirHockeyScene extends Phaser.Scene {
     }
     
     update(time, delta) {
-        if (this.wasd.esc && this.wasd.esc.isDown) {
+        if (this.wasd.r && Phaser.Input.Keyboard.JustDown(this.wasd.r)) {
+            this.restartAirHockey();
+            return;
+        }
+
+        if (this.wasd.esc && Phaser.Input.Keyboard.JustDown(this.wasd.esc)) {
             this.exitAirHockey();
+            return;
+        }
+
+        if (this.completionMenuOpen) {
+            const isUp = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) || 
+                         (this.wasd.up && Phaser.Input.Keyboard.JustDown(this.wasd.up)) ||
+                         (this.cursors.left && Phaser.Input.Keyboard.JustDown(this.cursors.left)) || 
+                         (this.wasd.left && Phaser.Input.Keyboard.JustDown(this.wasd.left));
+
+            const isDown = (this.cursors.down && Phaser.Input.Keyboard.JustDown(this.cursors.down)) || 
+                           (this.wasd.down && Phaser.Input.Keyboard.JustDown(this.wasd.down)) ||
+                           (this.cursors.right && Phaser.Input.Keyboard.JustDown(this.cursors.right)) || 
+                           (this.wasd.right && Phaser.Input.Keyboard.JustDown(this.wasd.right));
+
+            if (isUp || isDown) {
+                this.menuSelectionIndex = (this.menuSelectionIndex === 0) ? 1 : 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            }
+
+            const isConfirm = (this.wasd.enter && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) || 
+                              (this.wasd.space && Phaser.Input.Keyboard.JustDown(this.wasd.space)) || 
+                              (this.cursors.space && Phaser.Input.Keyboard.JustDown(this.cursors.space));
+
+            if (isConfirm) {
+                this.confirmMenuChoice();
+            }
             return;
         }
 
@@ -11293,6 +11493,8 @@ class AirHockeyScene extends Phaser.Scene {
 
     finishGame() {
         this.isGameOver = true;
+        this.completionMenuOpen = true;
+        this.menuSelectionIndex = 0;
         this.puck.setVelocity(0, 0);
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
@@ -11307,24 +11509,76 @@ class AirHockeyScene extends Phaser.Scene {
 
         const cx = this.scale.width / 2;
         const cy = this.scale.height / 2;
+        const W = this.scale.width;
+        const H = this.scale.height;
 
-        const endBox = this.add.container(cx, cy).setDepth(200);
-        const bg = this.add.rectangle(0, 0, 280, 190, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800);
-        const title = this.add.text(0, -50, win ? '★ YOU WIN! ★' : 'AI WINS!', {
+        this.modalBackdrop = this.add.rectangle(cx, cy, W, H, 0x000000, 0.6).setScrollFactor(0).setDepth(500);
+        this.modalBg = this.add.rectangle(cx, cy, 320, 210, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800).setScrollFactor(0).setDepth(501);
+        this.modalTitle = this.add.text(cx, cy - 60, win ? '★ YOU WIN! ★' : 'AI WINS!', {
             fontSize: '12px', fontFamily: '"Press Start 2P"', fill: win ? '#00FF00' : '#FF5555'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const btnAgain = this.add.text(0, 5, '[ PLAY AGAIN ]', {
-            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#000', backgroundColor: '#00FF00', padding: { x: 8, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        btnAgain.on('pointerdown', () => this.scene.restart());
+        this.modalScore = this.add.text(cx, cy - 30, `FINAL: RILEY ${this.playerScore} - ${this.aiScore} AI`, {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const btnExit = this.add.text(0, 45, '[ RETURN TO HERO ZONE ]', {
-            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        btnExit.on('pointerdown', () => this.exitAirHockey());
+        this.btnAgain = this.add.text(cx, cy + 15, '  PLAY AGAIN  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        endBox.add([bg, title, btnAgain, btnExit]);
+        this.btnExitModal = this.add.text(cx, cy + 55, '  RETURN TO HERO ZONE  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.menuCursor = this.add.text(cx - 95, cy + 15, '►', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+= 6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        this.btnAgain.on('pointerover', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+        });
+        this.btnAgain.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.btnExitModal.on('pointerover', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+        });
+        this.btnExitModal.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.updateMenuVisuals();
+    }
+
+    updateMenuVisuals() {
+        if (!this.btnAgain || !this.btnExitModal || !this.menuCursor) return;
+        const cx = this.scale.width / 2;
+        const cy = this.scale.height / 2;
+        if (this.menuSelectionIndex === 0) {
+            this.btnAgain.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+            this.btnExitModal.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
+            this.menuCursor.setPosition(cx - 95, cy + 15);
+        } else {
+            this.btnAgain.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
+            this.btnExitModal.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
+            this.menuCursor.setPosition(cx - 135, cy + 55);
+        }
+    }
+
+    confirmMenuChoice() {
+        if (this.menuSelectionIndex === 0) {
+            this.restartAirHockey();
+        } else {
+            this.exitAirHockey();
+        }
     }
 }
 
@@ -11345,6 +11599,8 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.bestStreak = 0;
         this.isGameOver = false;
         this.isExiting = false;
+        this.completionMenuOpen = false;
+        this.menuSelectionIndex = 0;
 
         this.isCharging = false;
         this.chargeTime = 0;
@@ -11475,18 +11731,33 @@ class BasketballShootoutScene extends Phaser.Scene {
             fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
         }).setOrigin(0.5).setDepth(21);
 
-        // Top-Right Exit Button
-        const exitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
-            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 6 }
+        // Top-Right [ RESTART ] Button
+        this.hudRestartBtn = this.add.text(W - 195, 30, '[ RESTART ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 6 }
         }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
-        exitBtn.on('pointerdown', () => this.exitShootout());
+        this.hudRestartBtn.on('pointerdown', () => this.restartShootout());
+
+        // Top-Right [ EXIT ] Button
+        this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitShootout());
 
         if (this.input && this.input.keyboard) {
             this.input.keyboard.resetKeys();
             this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
                 Phaser.Input.Keyboard.KeyCodes.SPACE,
                 Phaser.Input.Keyboard.KeyCodes.ENTER,
-                Phaser.Input.Keyboard.KeyCodes.ESC
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D,
+                Phaser.Input.Keyboard.KeyCodes.R
             ]);
         }
 
@@ -11500,15 +11771,34 @@ class BasketballShootoutScene extends Phaser.Scene {
 
         // Keyboard Controls
         this.keys = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.UP,
+            down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+            w: Phaser.Input.Keyboard.KeyCodes.W,
+            s: Phaser.Input.Keyboard.KeyCodes.S,
+            a: Phaser.Input.Keyboard.KeyCodes.A,
+            d: Phaser.Input.Keyboard.KeyCodes.D,
             space: Phaser.Input.Keyboard.KeyCodes.SPACE,
             enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
-            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            r: Phaser.Input.Keyboard.KeyCodes.R
         });
 
         const resetHoopKeys = () => {
             if (this.keys) {
                 if (this.keys.space) this.keys.space.isDown = false;
                 if (this.keys.enter) this.keys.enter.isDown = false;
+                if (this.keys.up) this.keys.up.isDown = false;
+                if (this.keys.down) this.keys.down.isDown = false;
+                if (this.keys.left) this.keys.left.isDown = false;
+                if (this.keys.right) this.keys.right.isDown = false;
+                if (this.keys.w) this.keys.w.isDown = false;
+                if (this.keys.s) this.keys.s.isDown = false;
+                if (this.keys.a) this.keys.a.isDown = false;
+                if (this.keys.d) this.keys.d.isDown = false;
+                if (this.keys.esc) this.keys.esc.isDown = false;
+                if (this.keys.r) this.keys.r.isDown = false;
             }
             if (this.isCharging) {
                 this.releaseShot();
@@ -11521,6 +11811,12 @@ class BasketballShootoutScene extends Phaser.Scene {
                 if (this.isCharging) {
                     this.releaseShot();
                 }
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.keys && this.keys.r) this.keys.r.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keys && this.keys.enter) this.keys.enter.isDown = false;
             }
             if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
                 resetHoopKeys();
@@ -11687,8 +11983,24 @@ class BasketballShootoutScene extends Phaser.Scene {
         }
     }
 
+    restartShootout() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this.gameTimer) {
+            this.gameTimer.remove();
+        }
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        this.scene.restart();
+    }
+
     finishShootout() {
         this.isGameOver = true;
+        this.completionMenuOpen = true;
+        this.menuSelectionIndex = 0;
+        this.isCharging = false;
         if (this.gameTimer) this.gameTimer.remove();
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('explosion');
@@ -11705,36 +12017,82 @@ class BasketballShootoutScene extends Phaser.Scene {
 
         const W = this.scale.width;
         const H = this.scale.height;
-        const modal = this.add.container(W / 2, H / 2).setDepth(200);
 
-        const bg = this.add.rectangle(0, 0, 320, 220, 0x000000, 0.95).setStrokeStyle(4, 0xF8B800);
-        const title = this.add.text(0, -75, '★ TIME\'S UP! ★', {
+        this.modalBackdrop = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.6).setScrollFactor(0).setDepth(500);
+        this.modalBg = this.add.rectangle(W / 2, H / 2, 340, 230, 0x000000, 0.95).setStrokeStyle(4, 0xF8B800).setScrollFactor(0).setDepth(501);
+        this.modalTitle = this.add.text(W / 2, H / 2 - 75, '★ TIME\'S UP! ★', {
             fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FF5555'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const scoreTxt = this.add.text(0, -45, `FINAL SCORE: ${this.score} PTS`, {
+        const scoreTxt = this.add.text(W / 2, H / 2 - 45, `FINAL SCORE: ${this.score} PTS`, {
             fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#00FF00'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const streakTxt = this.add.text(0, -20, `BEST STREAK: ${this.bestStreak}`, {
+        const streakTxt = this.add.text(W / 2, H / 2 - 20, `BEST STREAK: ${this.bestStreak}`, {
             fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const recordTxt = this.add.text(0, 10, isNewRecord ? '★ NEW HIGH SCORE! ★' : `RECORD: ${scores.basketballScore} PTS (${scores.basketballHolder})`, {
+        const recordTxt = this.add.text(W / 2, H / 2 + 10, isNewRecord ? '★ NEW HIGH SCORE! ★' : `RECORD: ${scores.basketballScore} PTS (${scores.basketballHolder})`, {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: isNewRecord ? '#FFD700' : '#A0D0FF'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        const btnAgain = this.add.text(0, 48, '[ PLAY AGAIN ]', {
-            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#000', backgroundColor: '#00FF00', padding: { x: 8, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        btnAgain.on('pointerdown', () => this.scene.restart());
+        this.btnAgain = this.add.text(W / 2, H / 2 + 48, '  PLAY AGAIN  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        const btnExit = this.add.text(0, 85, '[ RETURN TO HERO ZONE ]', {
-            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        btnExit.on('pointerdown', () => this.exitShootout());
+        this.btnExitModal = this.add.text(W / 2, H / 2 + 85, '  RETURN TO HERO ZONE  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        modal.add([bg, title, scoreTxt, streakTxt, recordTxt, btnAgain, btnExit]);
+        this.menuCursor = this.add.text(W / 2 - 105, H / 2 + 48, '►', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+= 6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        this.btnAgain.on('pointerover', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+        });
+        this.btnAgain.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.btnExitModal.on('pointerover', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+        });
+        this.btnExitModal.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.updateMenuVisuals();
+    }
+
+    updateMenuVisuals() {
+        if (!this.btnAgain || !this.btnExitModal || !this.menuCursor) return;
+        const W = this.scale.width;
+        const H = this.scale.height;
+        if (this.menuSelectionIndex === 0) {
+            this.btnAgain.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+            this.btnExitModal.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
+            this.menuCursor.setPosition(W / 2 - 105, H / 2 + 48);
+        } else {
+            this.btnAgain.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
+            this.btnExitModal.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
+            this.menuCursor.setPosition(W / 2 - 145, H / 2 + 85);
+        }
+    }
+
+    confirmMenuChoice() {
+        if (this.menuSelectionIndex === 0) {
+            this.restartShootout();
+        } else {
+            this.exitShootout();
+        }
     }
 
     exitShootout() {
@@ -11755,8 +12113,41 @@ class BasketballShootoutScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.keys.esc && this.keys.esc.isDown) {
+        if (this.keys.r && Phaser.Input.Keyboard.JustDown(this.keys.r)) {
+            this.restartShootout();
+            return;
+        }
+
+        if (this.keys.esc && Phaser.Input.Keyboard.JustDown(this.keys.esc)) {
             this.exitShootout();
+            return;
+        }
+
+        if (this.completionMenuOpen) {
+            const isUp = (this.keys.up && Phaser.Input.Keyboard.JustDown(this.keys.up)) || 
+                         (this.keys.w && Phaser.Input.Keyboard.JustDown(this.keys.w)) ||
+                         (this.keys.left && Phaser.Input.Keyboard.JustDown(this.keys.left)) || 
+                         (this.keys.a && Phaser.Input.Keyboard.JustDown(this.keys.a));
+
+            const isDown = (this.keys.down && Phaser.Input.Keyboard.JustDown(this.keys.down)) || 
+                           (this.keys.s && Phaser.Input.Keyboard.JustDown(this.keys.s)) ||
+                           (this.keys.right && Phaser.Input.Keyboard.JustDown(this.keys.right)) || 
+                           (this.keys.d && Phaser.Input.Keyboard.JustDown(this.keys.d));
+
+            if (isUp || isDown) {
+                this.menuSelectionIndex = (this.menuSelectionIndex === 0) ? 1 : 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            }
+
+            const isConfirm = (this.keys.enter && Phaser.Input.Keyboard.JustDown(this.keys.enter)) || 
+                              (this.keys.space && Phaser.Input.Keyboard.JustDown(this.keys.space));
+
+            if (isConfirm) {
+                this.confirmMenuChoice();
+            }
             return;
         }
 
