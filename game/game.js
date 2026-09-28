@@ -7009,6 +7009,32 @@ class RetroArcadeAudio {
             this.ctx.resume();
         }
     }
+    play(soundName) {
+        if (!this.ctx) return;
+        try {
+            if (soundName === 'powerup') this.playPowerup();
+            else if (soundName === 'explosion' || soundName === 'damage') this.playExplosion();
+            else if (soundName === 'laser' || soundName === 'shoot') this.playLaser();
+            else if (soundName === 'bomb') this.playBomb();
+            else if (soundName === 'gameover') this.playGameOver();
+            else if (soundName === 'jump') {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else {
+                this.playPowerup();
+            }
+        } catch(e) {}
+    }
     playLaser() {
         if (!this.ctx) return;
         try {
@@ -9647,6 +9673,7 @@ class HeroZoneScene extends Phaser.Scene {
         this.createBouncyFloor(3250, 4000, floorY, 0xD01000);
 
         // Bounce Safety Nets in Pitfalls
+        this.pitNets = this.physics.add.staticGroup();
         this.createPitNet(850, 920, floorY + 30);
         this.createPitNet(1550, 1650, floorY + 30);
         this.createPitNet(2350, 2450, floorY + 30);
@@ -9726,6 +9753,9 @@ class HeroZoneScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.movingPlatforms);
         this.physics.add.overlap(this.player, this.hurdles, this.handleObstacleHit, null, this);
         this.physics.add.overlap(this.player, this.pendulums, this.handleObstacleHit, null, this);
+        this.physics.add.overlap(this.player, this.pitNets, (player, net) => {
+            this.handlePitFall(net.safeX || net.x - 30);
+        });
 
         // NPC Dash (Rival Racer)
         this.dashRacer = this.physics.add.sprite(820, floorY - 40, 'npc_tourist_idle').setDepth(14).setTint(0xFF3333);
@@ -9836,9 +9866,8 @@ class HeroZoneScene extends Phaser.Scene {
         const w = x2 - x1;
         const net = this.add.rectangle(x1 + w / 2, y, w, 14, 0xF8B800, 0.7).setDepth(3);
         this.physics.add.existing(net, true);
-        this.physics.add.overlap(this.player, net, () => {
-            this.handlePitFall(x1 - 30);
-        });
+        net.safeX = x1 - 30;
+        this.pitNets.add(net);
     }
 
     createBillboard(x, y) {
