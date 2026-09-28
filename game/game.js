@@ -5874,6 +5874,15 @@ class GameScene extends Phaser.Scene {
             if (this.wasd.up) this.wasd.up.isDown = false;
             if (this.wasd.down) this.wasd.down.isDown = false;
         }
+        if (this.enterKey) {
+            this.enterKey.isDown = false;
+        }
+        if (this.spaceKey) {
+            this.spaceKey.isDown = false;
+        }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+        }
         if (this.heroZonePromptText) {
             this.heroZonePromptText.setVisible(false);
         }
@@ -5892,6 +5901,8 @@ class GameScene extends Phaser.Scene {
         }
 
         this.scene.pause('GameScene');
+        this.scene.setVisible(false);
+        this.scene.sleep('GameScene');
         this.scene.launch('HeroZoneScene', { gameScene: this });
     }
 
@@ -9737,6 +9748,31 @@ class HeroZoneScene extends Phaser.Scene {
         this.promptText.on('pointerdown', () => this.handleStationAction());
 
         // Keyboard Controls
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keysWASD = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -9746,6 +9782,73 @@ class HeroZoneScene extends Phaser.Scene {
             space: Phaser.Input.Keyboard.KeyCodes.SPACE,
             enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
             esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+        const resetKeyInputs = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keysWASD) {
+                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            this.touchMoveDir = 0;
+            this.touchMoveDepth = 0;
+        };
+
+        const onNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeyInputs();
+            }
+        };
+
+        window.addEventListener('blur', resetKeyInputs);
+        window.addEventListener('focus', resetKeyInputs);
+        window.addEventListener('keyup', onNativeKeyUp);
+        const onVisChange = () => { if (document.hidden) resetKeyInputs(); };
+        document.addEventListener('visibilitychange', onVisChange);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetKeyInputs);
+            window.removeEventListener('focus', resetKeyInputs);
+            window.removeEventListener('keyup', onNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisChange);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
         // Top-Right Exit Button
@@ -9758,13 +9861,12 @@ class HeroZoneScene extends Phaser.Scene {
 
         // Clear input states and refresh leaderboard on resume
         this.events.on('resume', () => {
-            this.touchMoveDir = 0;
-            this.touchMoveDepth = 0;
-            if (this.keysWASD) {
-                Object.values(this.keysWASD).forEach(k => { if (k) k.isDown = false; });
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
             }
-            if (this.cursors) {
-                Object.values(this.cursors).forEach(k => { if (k) k.isDown = false; });
+            resetKeyInputs();
+            if (this.game && this.game.canvas) {
+                this.game.canvas.focus();
             }
             this.refreshLeaderboard();
         });
@@ -9980,6 +10082,9 @@ class HeroZoneScene extends Phaser.Scene {
     exitToShip() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
         if (this.gameScene && this.gameScene.scene) {
             this.gameScene.scene.setVisible(true);
             this.gameScene.scene.wake();
@@ -10023,6 +10128,7 @@ class HeroZoneScene extends Phaser.Scene {
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
         this.scene.setVisible(false);
         this.scene.pause('HeroZoneScene');
         this.scene.launch('ObstacleCourseScene', { heroZone: this });
@@ -10032,6 +10138,7 @@ class HeroZoneScene extends Phaser.Scene {
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
         this.scene.setVisible(false);
         this.scene.pause('HeroZoneScene');
         this.scene.launch('AirHockeyScene', { heroZone: this });
@@ -10041,6 +10148,7 @@ class HeroZoneScene extends Phaser.Scene {
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
         this.scene.setVisible(false);
         this.scene.pause('HeroZoneScene');
         this.scene.launch('BasketballShootoutScene', { heroZone: this });
@@ -10059,7 +10167,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.keysWASD.esc.isDown) {
+        if (this.keysWASD.esc && this.keysWASD.esc.isDown) {
             this.exitToShip();
             return;
         }
@@ -10086,17 +10194,31 @@ class HeroZoneScene extends Phaser.Scene {
         let moveX = 0;
         let moveY = 0;
 
-        if (isLeft && !isRight) {
+        if (isLeft && isRight) {
+            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.keysWASD.left ? this.keysWASD.left.timeDown : 0));
+            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.keysWASD.right ? this.keysWASD.right.timeDown : 0));
+            if (rightTime >= leftTime) {
+                moveX = 1;
+                this.player.setFlipX(false);
+            } else {
+                moveX = -1;
+                this.player.setFlipX(true);
+            }
+        } else if (isLeft) {
             moveX = -1;
             this.player.setFlipX(true);
-        } else if (isRight && !isLeft) {
+        } else if (isRight) {
             moveX = 1;
             this.player.setFlipX(false);
         }
 
-        if (isUp && !isDown) {
+        if (isUp && isDown) {
+            const upTime = Math.max((this.cursors.up ? this.cursors.up.timeDown : 0), (this.keysWASD.up ? this.keysWASD.up.timeDown : 0));
+            const downTime = Math.max((this.cursors.down ? this.cursors.down.timeDown : 0), (this.keysWASD.down ? this.keysWASD.down.timeDown : 0));
+            moveY = (downTime >= upTime) ? 1 : -1;
+        } else if (isUp) {
             moveY = -1;
-        } else if (isDown && !isUp) {
+        } else if (isDown) {
             moveY = 1;
         }
 
@@ -10329,6 +10451,31 @@ class ObstacleCourseScene extends Phaser.Scene {
         // HUD & Controls
         this.createHUD();
 
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keysWASD = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -10337,6 +10484,69 @@ class ObstacleCourseScene extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.D,
             space: Phaser.Input.Keyboard.KeyCodes.SPACE,
             esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        const resetCourseKeys = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keysWASD) {
+                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            this.touchLeft = false;
+            this.touchRight = false;
+            this.touchJump = false;
+        };
+
+        const onCourseNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetCourseKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetCourseKeys);
+        window.addEventListener('focus', resetCourseKeys);
+        window.addEventListener('keyup', onCourseNativeKeyUp);
+        const onVisCourse = () => { if (document.hidden) resetCourseKeys(); };
+        document.addEventListener('visibilitychange', onVisCourse);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetCourseKeys);
+            window.removeEventListener('focus', resetCourseKeys);
+            window.removeEventListener('keyup', onCourseNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisCourse);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
         this.createTouchControls();
@@ -10481,6 +10691,9 @@ class ObstacleCourseScene extends Phaser.Scene {
     exitToHeroZone() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
         if (this.heroZone && this.heroZone.scene) {
             this.heroZone.scene.setVisible(true);
             this.heroZone.scene.resume();
@@ -10538,7 +10751,7 @@ class ObstacleCourseScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.keysWASD.esc.isDown) {
+        if (this.keysWASD.esc && this.keysWASD.esc.isDown) {
             this.exitToHeroZone();
             return;
         }
@@ -10556,11 +10769,34 @@ class ObstacleCourseScene extends Phaser.Scene {
             });
         }
 
-        // Horizontal Movement
-        const moveLeft = this.cursors.left.isDown || this.keysWASD.left.isDown || this.touchLeft;
-        const moveRight = this.cursors.right.isDown || this.keysWASD.right.isDown || this.touchRight;
-        const moveUp = this.cursors.up.isDown || this.keysWASD.up.isDown || this.touchJump || this.keysWASD.space.isDown;
-        const moveDown = this.cursors.down.isDown || this.keysWASD.down.isDown;
+        // Horizontal Movement with SOCD Resolution
+        const isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                       (this.keysWASD.left && this.keysWASD.left.isDown) || 
+                       this.touchLeft;
+
+        const isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                        (this.keysWASD.right && this.keysWASD.right.isDown) || 
+                        this.touchRight;
+
+        const moveUp = (this.cursors.up && this.cursors.up.isDown) || 
+                       (this.keysWASD.up && this.keysWASD.up.isDown) || 
+                       this.touchJump || 
+                       (this.keysWASD.space && this.keysWASD.space.isDown) || 
+                       (this.cursors.space && this.cursors.space.isDown);
+
+        const moveDown = (this.cursors.down && this.cursors.down.isDown) || 
+                         (this.keysWASD.down && this.keysWASD.down.isDown);
+
+        let moveX = 0;
+        if (isLeft && isRight) {
+            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.keysWASD.left ? this.keysWASD.left.timeDown : 0));
+            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.keysWASD.right ? this.keysWASD.right.timeDown : 0));
+            moveX = (rightTime >= leftTime) ? 1 : -1;
+        } else if (isLeft) {
+            moveX = -1;
+        } else if (isRight) {
+            moveX = 1;
+        }
 
         const inClimbZone = this.physics.overlap(this.player, this.climbZone);
         if (inClimbZone) {
@@ -10582,11 +10818,11 @@ class ObstacleCourseScene extends Phaser.Scene {
             this.player.setVelocityY(180);
             this.player.anims.play('riley_walk', true);
         } else {
-            if (moveLeft) {
+            if (moveX === -1) {
                 this.player.setVelocityX(-this.heroSpeed);
                 this.player.flipX = true;
                 if (!inClimbZone) this.player.anims.play('riley_walk', true);
-            } else if (moveRight) {
+            } else if (moveX === 1) {
                 this.player.setVelocityX(this.heroSpeed);
                 this.player.flipX = false;
                 if (!inClimbZone) this.player.anims.play('riley_walk', true);
@@ -10828,6 +11064,29 @@ class AirHockeyScene extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         this.exitBtn.on('pointerdown', () => this.exitAirHockey());
 
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -10835,6 +11094,60 @@ class AirHockeyScene extends Phaser.Scene {
             down: Phaser.Input.Keyboard.KeyCodes.S,
             right: Phaser.Input.Keyboard.KeyCodes.D,
             esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        const resetHockeyKeys = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+            }
+            if (this.wasd) {
+                if (this.wasd.left) this.wasd.left.isDown = false;
+                if (this.wasd.right) this.wasd.right.isDown = false;
+                if (this.wasd.up) this.wasd.up.isDown = false;
+                if (this.wasd.down) this.wasd.down.isDown = false;
+            }
+        };
+
+        const onHockeyNativeKeyUp = (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.wasd && this.wasd.up) this.wasd.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.wasd && this.wasd.left) this.wasd.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.wasd && this.wasd.right) this.wasd.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.wasd && this.wasd.down) this.wasd.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetHockeyKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetHockeyKeys);
+        window.addEventListener('focus', resetHockeyKeys);
+        window.addEventListener('keyup', onHockeyNativeKeyUp);
+        const onVisHockey = () => { if (document.hidden) resetHockeyKeys(); };
+        document.addEventListener('visibilitychange', onVisHockey);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetHockeyKeys);
+            window.removeEventListener('focus', resetHockeyKeys);
+            window.removeEventListener('keyup', onHockeyNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisHockey);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
         this.input.on('pointermove', (pointer) => {
@@ -10860,6 +11173,9 @@ class AirHockeyScene extends Phaser.Scene {
     exitAirHockey() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
         if (this.heroZone && this.heroZone.scene) {
             this.heroZone.scene.setVisible(true);
             this.heroZone.scene.resume();
@@ -10871,7 +11187,7 @@ class AirHockeyScene extends Phaser.Scene {
     }
     
     update(time, delta) {
-        if (this.wasd.esc.isDown) {
+        if (this.wasd.esc && this.wasd.esc.isDown) {
             this.exitAirHockey();
             return;
         }
@@ -10881,11 +11197,33 @@ class AirHockeyScene extends Phaser.Scene {
         const { cx, cy, tableW, tableH } = this.tableBounds;
 
         const speed = 380;
-        let vx = 0; let vy = 0;
-        if (this.cursors.left.isDown || this.wasd.left.isDown) vx = -speed;
-        if (this.cursors.right.isDown || this.wasd.right.isDown) vx = speed;
-        if (this.cursors.up.isDown || this.wasd.up.isDown) vy = -speed;
-        if (this.cursors.down.isDown || this.wasd.down.isDown) vy = speed;
+        let vx = 0;
+        let vy = 0;
+
+        const isLeft = (this.cursors.left && this.cursors.left.isDown) || (this.wasd.left && this.wasd.left.isDown);
+        const isRight = (this.cursors.right && this.cursors.right.isDown) || (this.wasd.right && this.wasd.right.isDown);
+        const isUp = (this.cursors.up && this.cursors.up.isDown) || (this.wasd.up && this.wasd.up.isDown);
+        const isDown = (this.cursors.down && this.cursors.down.isDown) || (this.wasd.down && this.wasd.down.isDown);
+
+        if (isLeft && isRight) {
+            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.wasd.left ? this.wasd.left.timeDown : 0));
+            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.wasd.right ? this.wasd.right.timeDown : 0));
+            vx = (rightTime >= leftTime) ? speed : -speed;
+        } else if (isLeft) {
+            vx = -speed;
+        } else if (isRight) {
+            vx = speed;
+        }
+
+        if (isUp && isDown) {
+            const upTime = Math.max((this.cursors.up ? this.cursors.up.timeDown : 0), (this.wasd.up ? this.wasd.up.timeDown : 0));
+            const downTime = Math.max((this.cursors.down ? this.cursors.down.timeDown : 0), (this.wasd.down ? this.wasd.down.timeDown : 0));
+            vy = (downTime >= upTime) ? speed : -speed;
+        } else if (isUp) {
+            vy = -speed;
+        } else if (isDown) {
+            vy = speed;
+        }
         
         if (vx !== 0 || vy !== 0) {
             this.paddlePlayer.x = Phaser.Math.Clamp(this.paddlePlayer.x + (vx * delta * 0.001), cx - tableW / 2 + 25, cx + tableW / 2 - 25);
@@ -11143,11 +11481,67 @@ class BasketballShootoutScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
         exitBtn.on('pointerdown', () => this.exitShootout());
 
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.ESC
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
         // Keyboard Controls
         this.keys = this.input.keyboard.addKeys({
             space: Phaser.Input.Keyboard.KeyCodes.SPACE,
             enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
             esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        const resetHoopKeys = () => {
+            if (this.keys) {
+                if (this.keys.space) this.keys.space.isDown = false;
+                if (this.keys.enter) this.keys.enter.isDown = false;
+            }
+            if (this.isCharging) {
+                this.releaseShot();
+            }
+        };
+
+        const onHoopNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.keys && this.keys.space) this.keys.space.isDown = false;
+                if (this.isCharging) {
+                    this.releaseShot();
+                }
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetHoopKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetHoopKeys);
+        window.addEventListener('focus', resetHoopKeys);
+        window.addEventListener('keyup', onHoopNativeKeyUp);
+        const onVisHoop = () => { if (document.hidden) resetHoopKeys(); };
+        document.addEventListener('visibilitychange', onVisHoop);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetHoopKeys);
+            window.removeEventListener('focus', resetHoopKeys);
+            window.removeEventListener('keyup', onHoopNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisHoop);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
         // Mobile Shoot Button
@@ -11346,6 +11740,9 @@ class BasketballShootoutScene extends Phaser.Scene {
     exitShootout() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
         if (this.gameTimer) this.gameTimer.remove();
         if (this.heroZone && this.heroZone.scene) {
             this.heroZone.scene.setVisible(true);
@@ -11358,7 +11755,7 @@ class BasketballShootoutScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.keys.esc.isDown) {
+        if (this.keys.esc && this.keys.esc.isDown) {
             this.exitShootout();
             return;
         }
