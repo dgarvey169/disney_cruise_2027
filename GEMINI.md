@@ -32,6 +32,15 @@
     - **Recessed CRT Monitor Bezel**: Side cabinet wings, T-molding, and letterbox masks rendered at Depth 30 create a physically recessed viewport for the CRT screen (Depth 2..25). Enemies, lasers, and particles cannot render on top of the cabinet wings.
     - **Screen Boundary Containment**: Cruisers bank and reverse horizontal velocity (`vx = -vx`) when reaching `playX + 18` or `playX + playW - 18`, and drone sine-waves are clamped to stay inside the monitor.
     - **Dual-Thumb Mobile Controls**: Floating joystick (`joyBase` / `joyKnob` at Depth 520) spawns on touch in the left screen region with 360° analog deflection. Dedicated action overlays for `FIRE` and `BOMB` at Depth 510 in the lower-right thumb zone allow simultaneous steering and shooting without touch interference via `this.input.addPointer(3)`.
+  - **Kinematic Projectile Physics & Basketball Hoops Architecture**:
+    - In 2D/Arcade physics projectile shooting, calculating exact velocities $(v_x, v_y)$ via target distance and apex rise ($apexRise = 100$) guarantees realistic ballistic arcs that clear the front rim on descending trajectories.
+    - Arcade Physics static bodies default to square AABB boxes. Front rim colliders must use custom `processCallback` guards (`if (ball.body.velocity.y > 0 && ball.x >= rim.x - 4) return false;`) so downward-falling basketballs can enter the hoop for clean swishes without bouncing off an invisible square corner above the rim.
+  - **Scrolled-Camera Hit-Testing & Standalone GameObjects**:
+    - In Phaser 3, child GameObjects within positioned Containers can suffer skewed or unprojected hit-test bounding boxes when cameras are scrolled or scaled. Interactive UI elements (buttons, menus) on HUD overlays should be instantiated as standalone GameObjects with `setScrollFactor(0)` and explicit origins to guarantee pixel-accurate pointer and touch hit detection across all camera zoom levels.
+  - **Modal Input Debouncing & SOCD Last-Input Priority**:
+    - Mini-game end-screens and completion dialogs must implement a mandatory input debounce window (e.g. 500–600ms) with strict directional navigation (`Up`/`W`, `Down`/`S`), preventing sprint/jump keys held at the finish line from auto-confirming exit actions.
+    - Continuous 2.5D movement loops should use Last-Input-Priority (SOCD) for opposing key pairs (`A`/`D`, `W`/`S`) alongside window `blur`, `focus`, and `visibilitychange` release handlers to eliminate stuck keys when switching tabs or windows.
+
 
 - **Deck & Stair Coordinates**:
   - **Stair 1**: Connects Deck 11 (floor `y = 1280`) to Deck 12 (floor `y = 1000`) between `x = 60` and `x = 340`. Slope equation: `floorY = 1340 - x`.
@@ -74,11 +83,30 @@
 - **Bespoke Character Levels & Storylines (Issue #12 - Triaged & Closed)**:
   - **Sub-Tasks Generated & Tracked**: Broken down into discrete issues on the project board:
     - #43: Midship Elevators and UI Floor Selection Menu (Completed)
-    - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI)
+    - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI - Completed)
     - #45: Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
     - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course - Completed)
     - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet - Completed)
   - Storyboard documented in detail in `Issue_12_Storyboard.md`.
+
+- **Amelia's Bibbidi Bobbidi Boutique (Issue #44 - Completed)**:
+  - **Elevator Navigation**: Added `Deck 4 (Bibbidi Bobbidi)` destination in `ElevatorMenuScene`. Selecting it automatically switches the active character to Amelia and launches `BoutiqueScene`.
+  - **Boutique Salon (`BoutiqueScene`)**:
+    - Authentic 8-bit royal makeover salon featuring an illuminated stained-glass archway, gilded full-length mirror pedestal, sparkling chandelier, and Fairy Godmother Apprentice Pippa with interactive Capcom-style dialogue bubbles.
+    - **4 Customization Tiers**:
+      - `WIG`: Hairstyles (Royal Bun Updo, Princess Braid, Flowing Curls) with 5 NES-authentic shades (Chestnut Brown, Golden Sun Blonde, Raven Silk Black, Royal Auburn, Fairy Pastel Pink).
+      - `DRESS`: Silhouettes (Royal Ballgown, Princess Peplum, Mermaid Gown, Classic Play) paired with 6 Disney Princess-themed palettes (Cinderella Sapphire Blue, Aurora Royal Rose, Belle Radiant Gold, Tiana Bayou Emerald, Elsa Ice Crystal, Rapunzel Corona Violet).
+      - `CROWN`: Headpieces (None, Sparkling Diamond Tiara, Royal 24K Gold Crown, Enchanted Blossom Wreath).
+      - `WAND / SCEPTER`: Hand accessories (None, Gold Star Scepter, Crystal Heart Wand, Enchanted Rose).
+    - **Dynamic Procedural Sprite Generation & Palette Swapping**:
+      - `buildAmeliaMatrix(outfit, frameType)` procedurally regenerates 16x24 Capcom NES sprite pixel matrices across all animations (`idle`, `walk1`, `walk2`, `swim1`, `swim2`).
+      - Textures are re-rendered in real time, immediately updating Amelia's appearance across the entire cruise ship (decks, elevators, pools).
+    - **Persistence & Audio**:
+      - Saved to `localStorage` (`disney_cruise_amelia_outfit`) to persist across sessions and page reloads.
+      - Pure Web Audio synthesizer glissando harp chimes and celebratory radial fairy star sparkle bursts upon makeover completion.
+    - **Controls & Responsiveness**:
+      - Full keyboard navigation (`Left`/`Right` or `A`/`D` to select item, `Up`/`Down` or `W`/`S` to switch tiers, `Enter`/`Space` to apply, `ESC` to return to Deck 4/cruise ship).
+      - Touch/mobile responsive UI with direct category tab selection, color swatch picker, and proportional scaling.
 
 - **Riley's Hero Zone (Issue #46 - Completed)**:
   - **Deck 12 Venue Entrance**: Interactive entrance doorway at Deck 12 (`x = 1750`) with marquee signage and prompt `[ ENTER: HERO ZONE ]` / `[ TAP TO ENTER HERO ZONE ]`. Entering automatically sets active character to Riley and opens `HeroZoneScene`.
