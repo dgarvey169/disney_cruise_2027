@@ -3461,8 +3461,29 @@ class GameScene extends Phaser.Scene {
         this.add.text(590, 915, 'SPLASHDOWN', { fontSize: '9px', fill: '#58B8F8', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
         this.add.text(1680, 915, 'TOY STORY SPLASH', { fontSize: '9px', fill: '#F8A800', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
 
-        doors.create(2000, 910, 'door');
-        this.add.text(1960, 865, 'HERO ZONE', { fontSize: '9px', fill: '#E83818', backgroundColor: '#001024', padding: { x: 6, y: 4 }, fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2 });
+        const hzDoor = doors.create(2000, 910, 'door');
+        hzDoor.setInteractive({ useHandCursor: true });
+        hzDoor.on('pointerdown', () => this.openHeroZone());
+
+        const hzSign = this.add.text(2000, 855, '★ HERO ZONE ★', {
+            fontSize: '9px', fill: '#FFD700', backgroundColor: '#D01000', padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(20).setInteractive({ useHandCursor: true });
+        hzSign.on('pointerdown', () => this.openHeroZone());
+
+        const hzEnterPrompt = this.add.text(2000, 875, '▼ TAP / ENTER ▼', {
+            fontSize: '7px', fill: '#FFFFFF', backgroundColor: '#001024', padding: { x: 5, y: 2 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(20).setInteractive({ useHandCursor: true });
+        hzEnterPrompt.on('pointerdown', () => this.openHeroZone());
+
+        this.tweens.add({
+            targets: [hzSign, hzEnterPrompt],
+            y: '-=3',
+            duration: 600,
+            yoyo: true,
+            repeat: -1
+        });
 
         // Stairs up to Deck 13 (left-up): connects Deck 12 (y=1000) to Deck 13 (y=760)
         createStaircase(2300, 1000, 6, -1, -1);
@@ -3869,6 +3890,24 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.elevatorZones, () => {
             this.nearElevator = true;
         });
+
+        // Hero Zone Door logic
+        this.nearHeroZone = false;
+        const heroZonePromptLabel = isTouch ? '[ TAP TO ENTER HERO ZONE ]' : '[ ENTER: ENTER HERO ZONE ]';
+        this.heroZonePromptText = this.add.text(2000, 800, heroZonePromptLabel, {
+            fontSize: '10px', fill: '#FFD700', backgroundColor: '#D01000', padding: { x: 10, y: 8 },
+            fontFamily: '"Press Start 2P", monospace', stroke: '#000000', strokeThickness: 3
+        }).setOrigin(0.5).setDepth(2000).setVisible(false).setInteractive({ useHandCursor: true });
+        this.heroZonePromptText.on('pointerdown', () => this.openHeroZone());
+
+        this.heroZoneDoorZone = this.add.zone(2000, 975, 120, 100);
+        this.physics.add.existing(this.heroZoneDoorZone, true);
+        this.physics.add.overlap(this.player, this.heroZoneDoorZone, () => {
+            if (this.currentDeck === 'deck12') {
+                this.nearHeroZone = true;
+            }
+        });
+
 
         // Board the raft
         const boardRaft = () => {
@@ -4564,6 +4603,19 @@ class GameScene extends Phaser.Scene {
             this.elevatorPromptText.setVisible(false);
         }
 
+        const isNearHeroZoneDoor = (this.currentDeck === 'deck12' && Math.abs(this.player.x - 2000) <= 90 && Math.abs(this.groundY - 975) <= 50);
+        if ((this.nearHeroZone || isNearHeroZoneDoor) && !this.ridingRaft) {
+            this.heroZonePromptText.setVisible(true);
+            this.heroZonePromptText.x = this.player.x;
+            this.heroZonePromptText.y = this.player.y - 65;
+            if (this.enterKey && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+                this.openHeroZone();
+            }
+        } else {
+            if (this.heroZonePromptText) this.heroZonePromptText.setVisible(false);
+        }
+
+
         // Dynamic Funnel Vision Screen Animation
         this.updateFunnelVision(this.time.now, this.game.loop.delta);
 
@@ -4617,6 +4669,7 @@ class GameScene extends Phaser.Scene {
         this.inWater = false;
         this.nearRaft = false;
         this.nearElevator = false;
+        this.nearHeroZone = false;
     }
 
     createFunnelVision() {
@@ -5807,6 +5860,52 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    openHeroZone() {
+        if (this.ridingRaft) return;
+        if (this.cursors) {
+            if (this.cursors.left) this.cursors.left.isDown = false;
+            if (this.cursors.right) this.cursors.right.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+        }
+        if (this.wasd) {
+            if (this.wasd.left) this.wasd.left.isDown = false;
+            if (this.wasd.right) this.wasd.right.isDown = false;
+            if (this.wasd.up) this.wasd.up.isDown = false;
+            if (this.wasd.down) this.wasd.down.isDown = false;
+        }
+        if (this.enterKey) {
+            this.enterKey.isDown = false;
+        }
+        if (this.spaceKey) {
+            this.spaceKey.isDown = false;
+        }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+        }
+        if (this.heroZonePromptText) {
+            this.heroZonePromptText.setVisible(false);
+        }
+        this.nearHeroZone = false;
+
+        // Switch to Riley for Hero Zone
+        this.selectedCharacter = 'riley';
+        this.characterName = 'Riley';
+        if (this.hudPlayerIcon) this.hudPlayerIcon.setTexture('riley_idle');
+        if (this.hudPlayerName) this.hudPlayerName.setText('RILEY');
+        if (this.layoutHUD) this.layoutHUD(this.scale.width, this.scale.height);
+        if (this.player) {
+            this.player.setTexture('riley_idle');
+            this.player.body.setSize(22, 16);
+            this.player.body.setOffset(5, 32);
+        }
+
+        this.scene.pause('GameScene');
+        this.scene.setVisible(false);
+        this.scene.sleep('GameScene');
+        this.scene.launch('HeroZoneScene', { gameScene: this });
+    }
+
     openElevatorMenu() {
         if (this.ridingRaft) return;
         // Stop player movement
@@ -5855,8 +5954,8 @@ class ElevatorMenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         const floors = [
-            { label: 'Deck 12 (Hero Zone)', type: 'deck', y: 975 },
-            { label: 'Deck 11 (Pools)', type: 'deck', y: 1255 },
+            { label: 'Deck 12 (Quiet Cove)', type: 'deck', y: 975 },
+            { label: 'Deck 11 (Pools & Spa)', type: 'deck', y: 1255 },
             { label: 'Deck 5  (Edge Tween Club)', type: 'edge' },
             { label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' }
         ];
@@ -6920,6 +7019,32 @@ class RetroArcadeAudio {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
+    }
+    play(soundName) {
+        if (!this.ctx) return;
+        try {
+            if (soundName === 'powerup') this.playPowerup();
+            else if (soundName === 'explosion' || soundName === 'damage') this.playExplosion();
+            else if (soundName === 'laser' || soundName === 'shoot') this.playLaser();
+            else if (soundName === 'bomb') this.playBomb();
+            else if (soundName === 'gameover') this.playGameOver();
+            else if (soundName === 'jump') {
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else {
+                this.playPowerup();
+            }
+        } catch(e) {}
     }
     playLaser() {
         if (!this.ctx) return;
@@ -9474,6 +9599,2735 @@ class ArcadeShooterScene extends Phaser.Scene {
 // PHASER GAME CONFIGURATION & SCENE REGISTRATION
 // =========================================================================
 
+// =========================================================================
+// RILEY'S HERO ZONE - 2.5D LOUNGE & STATION-BASED MINI-GAMES (ISSUE #46)
+// =========================================================================
+
+// High Scores storage
+function getHeroZoneScores() {
+    try {
+        const s = localStorage.getItem('disney_destiny_hero_zone_scores');
+        if (s) return JSON.parse(s);
+    } catch(e) {}
+    return {
+        obstacleTime: '45.20',
+        obstacleHolder: 'DASH',
+        basketballScore: 24,
+        basketballHolder: 'RILEY',
+        airHockeyWins: 3
+    };
+}
+
+function saveHeroZoneScores(scores) {
+    try {
+        localStorage.setItem('disney_destiny_hero_zone_scores', JSON.stringify(scores));
+    } catch(e) {}
+}
+
+class HeroZoneScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'HeroZoneScene' });
+    }
+
+    init(data) {
+        this.gameScene = data ? data.gameScene : null;
+        this.fromStation = (data && data.fromStation) ? data.fromStation : 180;
+        this.groundY = 445;
+        this.jumpZ = 0;
+        this.jumpV = 0;
+        this.isJumping = false;
+        this.isExiting = false;
+        this.playerSpeed = 180;
+
+        // Station flags
+        this.nearExit = false;
+        this.nearObstacleCourse = false;
+        this.nearAirHockey = false;
+        this.nearBasketball = false;
+
+        // Mobile touch controls state
+        this.touchMoveDir = 0;
+        this.touchMoveDepth = 0;
+    }
+
+    create(data) {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.init) {
+            retroArcadeAudio.init();
+        }
+
+        // Hide and sleep underlying GameScene
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(false);
+            if (this.gameScene.scene.isActive()) {
+                this.gameScene.scene.sleep();
+            }
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        const roomH = Math.max(540, H);
+        const roomW = Math.max(1600, W);
+        this.roomW = roomW;
+        this.roomH = roomH;
+
+        const floorH = Math.max(140, Math.round(roomH * 0.24));
+        const floorY = roomH - floorH;
+        this.floorY = floorY;
+        this.floorH = floorH;
+        this.groundY = floorY + 35;
+
+        this.physics.world.setBounds(0, 0, roomW, roomH);
+
+        // 0. Solid room background
+        this.add.rectangle(0, 0, 10000, 10000, 0x110404).setOrigin(0.5).setDepth(0);
+
+        // 1. Room Background & Framing
+        this.createTextures();
+        this.add.tileSprite(roomW / 2, floorY / 2, roomW, floorY, 'hz_wall_pattern').setDepth(1);
+        this.add.tileSprite(roomW / 2, floorY + (floorH / 2), roomW, floorH, 'hz_floor_mat').setDepth(2);
+
+        // Gold & Incredibles Red division curb
+        let curb = this.add.graphics().setDepth(3);
+        curb.fillStyle(0xE83818, 1);
+        curb.fillRect(0, floorY - 3, roomW, 3);
+        curb.fillStyle(0xFFD700, 0.8);
+        curb.fillRect(0, floorY, roomW, 2);
+
+        // Ceiling Trusses & Arena Lighting
+        for (let tx = 80; tx < roomW; tx += 200) {
+            this.add.rectangle(tx, 15, 180, 14, 0x222222).setDepth(4);
+            this.add.circle(tx, 26, 6, 0xFFFFCC).setDepth(4);
+        }
+
+        // Top Marquee Banner
+        this.add.rectangle(roomW / 2, 45, 480, 36, 0x000000, 0.85).setDepth(5).setStrokeStyle(2, 0xF8B800);
+        this.add.text(roomW / 2, 45, '★ RILEY\'S HERO ZONE ARENA ★', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(6);
+
+        // ----------------------------------------------------
+        // STATIONS IN THE 2.5D LOUNGE
+        // ----------------------------------------------------
+
+        // Station 1: Exit Door back to Deck 12 (x = 120)
+        this.createExitStation(120, floorY);
+
+        // Station 2: Incredibles Obstacle Course Entrance (x = 440)
+        this.createObstacleStation(440, floorY);
+
+        // Leaderboard Wall & NPC Dash (x = 750)
+        this.createLeaderboardStation(750, floorY);
+
+        // Station 3: Air Hockey Tournament Table (x = 1060)
+        this.createAirHockeyStation(1060, floorY);
+
+        // Station 4: Basketball Shootout Station (x = 1380)
+        this.createBasketballStation(1380, floorY);
+
+        // ----------------------------------------------------
+        // 2.5D PLAYER (Riley)
+        // ----------------------------------------------------
+        const spawnX = (data && data.fromStation) ? data.fromStation : (this.fromStation || 180);
+        this.player = this.physics.add.sprite(spawnX, this.groundY, 'riley_idle').setDepth(Math.round(this.groundY));
+        this.player.body.allowGravity = false;
+        this.player.body.setSize(22, 16);
+        this.player.body.setOffset(5, 32);
+
+        // Foot Shadow
+        this.playerShadow = this.add.ellipse(spawnX, this.groundY + 16, 26, 10, 0x000000, 0.45).setDepth(Math.round(this.groundY) - 1);
+
+        // Camera Follow
+        this.cameras.main.setBounds(0, 0, roomW, roomH);
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+
+        // Station Prompt Text (floats above player)
+        this.promptText = this.add.text(spawnX, this.groundY - 55, '', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000000', padding: { x: 8, y: 5 }, stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(2000).setVisible(false).setInteractive({ useHandCursor: true });
+        this.promptText.on('pointerdown', () => this.handleStationAction());
+
+        // Keyboard Controls
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keysWASD = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC
+        });
+
+        // Direct DOM safety release: guarantees keys are cleared even if OS or browser dropped Phaser keyup
+        const resetKeyInputs = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keysWASD) {
+                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            this.touchMoveDir = 0;
+            this.touchMoveDepth = 0;
+        };
+
+        const onNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeyInputs();
+            }
+        };
+
+        window.addEventListener('blur', resetKeyInputs);
+        window.addEventListener('focus', resetKeyInputs);
+        window.addEventListener('keyup', onNativeKeyUp);
+        const onVisChange = () => { if (document.hidden) resetKeyInputs(); };
+        document.addEventListener('visibilitychange', onVisChange);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetKeyInputs);
+            window.removeEventListener('focus', resetKeyInputs);
+            window.removeEventListener('keyup', onNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisChange);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
+        });
+
+        // Top-Right Exit Button
+        this.add.text(W - 75, 30, '[ EXIT ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(2000).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.exitToShip());
+
+        // Floating D-Pad / Controls for Mobile
+        this.createMobileControls();
+
+        // Clear input states and refresh leaderboard on resume
+        this.events.on('resume', () => {
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
+            }
+            resetKeyInputs();
+            if (this.game && this.game.canvas) {
+                this.game.canvas.focus();
+            }
+            this.refreshLeaderboard();
+        });
+    }
+
+    createTextures() {
+        if (!this.textures.exists('hz_wall_pattern')) {
+            let g = this.add.graphics();
+            g.fillStyle(0x280505, 1);
+            g.fillRect(0, 0, 60, 60);
+            g.lineStyle(2, 0x4A0C0C, 1);
+            g.strokeRect(0, 0, 60, 60);
+            g.fillStyle(0xE83818, 1);
+            g.fillCircle(30, 30, 6);
+            g.fillStyle(0xF8B800, 1);
+            g.fillCircle(30, 30, 3);
+            g.generateTexture('hz_wall_pattern', 60, 60);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('hz_floor_mat')) {
+            let g = this.add.graphics();
+            g.fillStyle(0x7A0D0D, 1);
+            g.fillRect(0, 0, 40, 40);
+            g.lineStyle(2, 0x991515, 1);
+            g.strokeRect(0, 0, 40, 40);
+            g.fillStyle(0xF8B800, 0.4);
+            g.fillRect(18, 18, 4, 4);
+            g.generateTexture('hz_floor_mat', 40, 40);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('hz_bball')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xE65C00, 1);
+            g.fillCircle(14, 14, 14);
+            g.lineStyle(2, 0x000000, 1);
+            g.strokeCircle(14, 14, 14);
+            g.beginPath();
+            g.moveTo(0, 14); g.lineTo(28, 14);
+            g.moveTo(14, 0); g.lineTo(14, 28);
+            g.strokePath();
+            g.generateTexture('hz_bball', 28, 28);
+            g.destroy();
+        }
+    }
+
+    createExitStation(x, floorY) {
+        // Door frame
+        const door = this.add.rectangle(x, floorY - 55, 64, 110, 0x000022).setDepth(3).setInteractive({ useHandCursor: true });
+        this.add.rectangle(x, floorY - 55, 56, 102, 0x1A253A).setDepth(3);
+        this.add.text(x, floorY - 125, 'DECK 12 EXIT', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 4, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        const sign = this.add.text(x, floorY - 142, '▼ EXIT TO SHIP ▼', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
+        door.on('pointerdown', () => this.exitToShip());
+        sign.on('pointerdown', () => this.exitToShip());
+    }
+
+    createObstacleStation(x, floorY) {
+        // Giant Inflatable Arch
+        const arch = this.add.rectangle(x, floorY - 70, 130, 140, 0xD01000).setDepth(3).setStrokeStyle(4, 0xF8B800).setInteractive({ useHandCursor: true });
+        this.add.rectangle(x, floorY - 70, 96, 120, 0x110202).setDepth(3);
+        
+        this.add.text(x, floorY - 130, '★ OBSTACLE COURSE ★', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        this.add.text(x, floorY - 95, 'INCREDIBLES TIMED RUN\nBEAT DASH\'S RECORD!', {
+            fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#00FF00', align: 'center', backgroundColor: '#000', padding: 3
+        }).setOrigin(0.5).setDepth(5);
+
+        const btn = this.add.text(x, floorY - 60, '[ ENTER COURSE ]', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#D01000', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
+        btn.on('pointerdown', () => this.launchObstacleCourse());
+        arch.on('pointerdown', () => this.launchObstacleCourse());
+
+        // Inflatable cones
+        this.add.triangle(x - 65, floorY - 15, 0, 30, 15, 0, 30, 30, 0xF8B800).setDepth(4);
+        this.add.triangle(x + 65, floorY - 15, 0, 30, 15, 0, 30, 30, 0xF8B800).setDepth(4);
+    }
+
+    createLeaderboardStation(x, floorY) {
+        // CRT Display
+        this.add.rectangle(x, floorY - 80, 170, 115, 0x0A0A1E).setDepth(3).setStrokeStyle(3, 0x00FFFF);
+        this.add.text(x, floorY - 128, '★ HALL OF HEROES ★', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(5);
+
+        this.leaderboardTexts = [];
+        for (let i = 0; i < 3; i++) {
+            const txt = this.add.text(x, floorY - 105 + (i * 18), '', {
+                fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+            }).setOrigin(0.5).setDepth(5);
+            this.leaderboardTexts.push(txt);
+        }
+        this.refreshLeaderboard();
+
+        // NPC Dash stretching near the board
+        this.dashNPC = this.add.sprite(x + 40, floorY + 25, 'npc_tourist_idle').setDepth(Math.round(floorY + 25)).setTint(0xFF3333);
+        this.add.text(x + 40, floorY - 5, 'DASH', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: 2
+        }).setOrigin(0.5).setDepth(Math.round(floorY + 25) + 1);
+
+        // Speech bubble for Dash
+        this.dashBubble = this.add.text(x + 40, floorY - 25, 'TRY TO BEAT MY RECORD!', {
+            fontSize: '6px', fontFamily: '"Press Start 2P"', fill: '#000', backgroundColor: '#FFF', padding: 4
+        }).setOrigin(0.5).setDepth(3000).setVisible(false);
+    }
+
+    refreshLeaderboard() {
+        if (!this.leaderboardTexts || this.leaderboardTexts.length < 3) return;
+        const scores = getHeroZoneScores();
+        const records = [
+            `COURSE: ${scores.obstacleTime}s (${scores.obstacleHolder})`,
+            `HOOPS:  ${scores.basketballScore} PTS (${scores.basketballHolder})`,
+            `HOCKEY: ${scores.airHockeyWins} WINS`
+        ];
+        records.forEach((rec, idx) => {
+            if (this.leaderboardTexts[idx]) {
+                this.leaderboardTexts[idx].setText(rec);
+            }
+        });
+    }
+
+    createAirHockeyStation(x, floorY) {
+        const table = this.add.rectangle(x, floorY - 10, 130, 65, 0x0055AA).setDepth(Math.round(floorY - 10)).setStrokeStyle(3, 0xFFFFFF);
+        this.add.rectangle(x, floorY - 10, 116, 52, 0x0088FF).setDepth(Math.round(floorY - 10));
+        this.add.rectangle(x, floorY - 10, 2, 52, 0xFF0000).setDepth(Math.round(floorY - 10) + 1);
+        this.add.circle(x, floorY - 10, 12).setStrokeStyle(2, 0xFFFFFF).setDepth(Math.round(floorY - 10) + 1);
+
+        this.add.text(x, floorY - 60, '★ AIR HOCKEY ★', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', backgroundColor: '#000044', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        const btn = this.add.text(x, floorY - 80, '[ PLAY AIR HOCKEY ]', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#0055AA', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
+        btn.on('pointerdown', () => this.launchAirHockey());
+        table.setInteractive({ useHandCursor: true });
+        table.on('pointerdown', () => this.launchAirHockey());
+    }
+
+    createBasketballStation(x, floorY) {
+        const booth = this.add.rectangle(x, floorY - 65, 120, 130, 0x333333).setDepth(3).setStrokeStyle(3, 0xE65C00).setInteractive({ useHandCursor: true });
+        this.add.rectangle(x - 30, floorY - 95, 45, 35, 0xFFFFFF).setDepth(4).setStrokeStyle(2, 0xD01000);
+        this.add.rectangle(x + 30, floorY - 95, 45, 35, 0xFFFFFF).setDepth(4).setStrokeStyle(2, 0xD01000);
+        this.add.rectangle(x - 30, floorY - 80, 24, 4, 0xE65C00).setDepth(5);
+        this.add.rectangle(x + 30, floorY - 80, 24, 4, 0xE65C00).setDepth(5);
+
+        this.add.text(x, floorY - 135, 'BASKETBALL SHOOTOUT', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#F8B800', backgroundColor: '#000', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        const btn = this.add.text(x, floorY - 50, '[ PLAY SHOOTOUT ]', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#E65C00', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
+        btn.on('pointerdown', () => this.launchBasketball());
+        booth.on('pointerdown', () => this.launchBasketball());
+    }
+
+    createMobileControls() {
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        this.touchContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(1500);
+
+        const btnL = this.add.rectangle(45, H - 50, 45, 45, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
+        const txtL = this.add.text(45, H - 50, '◄', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
+        btnL.on('pointerdown', () => { this.touchMoveDir = -1; });
+        btnL.on('pointerup', () => { this.touchMoveDir = 0; });
+        btnL.on('pointerout', () => { this.touchMoveDir = 0; });
+
+        const btnR = this.add.rectangle(105, H - 50, 45, 45, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
+        const txtR = this.add.text(105, H - 50, '►', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
+        btnR.on('pointerdown', () => { this.touchMoveDir = 1; });
+        btnR.on('pointerup', () => { this.touchMoveDir = 0; });
+        btnR.on('pointerout', () => { this.touchMoveDir = 0; });
+
+        const btnU = this.add.rectangle(75, H - 100, 45, 40, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
+        const txtU = this.add.text(75, H - 100, '▲', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
+        btnU.on('pointerdown', () => { this.touchMoveDepth = -1; });
+        btnU.on('pointerup', () => { this.touchMoveDepth = 0; });
+        btnU.on('pointerout', () => { this.touchMoveDepth = 0; });
+
+        const btnD = this.add.rectangle(75, H - 10, 45, 40, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
+        const txtD = this.add.text(75, H - 10, '▼', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
+        btnD.on('pointerdown', () => { this.touchMoveDepth = 1; });
+        btnD.on('pointerup', () => { this.touchMoveDepth = 0; });
+        btnD.on('pointerout', () => { this.touchMoveDepth = 0; });
+
+        const btnAct = this.add.rectangle(W - 65, H - 55, 80, 50, 0xD01000, 0.8).setStrokeStyle(2, 0xF8B800).setInteractive();
+        const txtAct = this.add.text(W - 65, H - 55, 'ENTER', { fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
+        btnAct.on('pointerdown', () => this.handleStationAction());
+
+        this.touchContainer.add([btnL, txtL, btnR, txtR, btnU, txtU, btnD, txtD, btnAct, txtAct]);
+    }
+
+    tryJump() {
+        if (this.isJumping) return;
+        this.isJumping = true;
+        this.jumpV = 320;
+        this.jumpZ = 1;
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('jump');
+        }
+    }
+
+    exitToShip() {
+        if (this.isExiting) return;
+        this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(true);
+            this.gameScene.scene.wake();
+            this.gameScene.scene.resume();
+        }
+        this.scene.stop('HeroZoneScene');
+
+        if (this.gameScene && this.gameScene.player && this.gameScene.player.body) {
+            const returnGroundY = 975;
+            this.gameScene.jumpZ = 0;
+            this.gameScene.jumpV = 0;
+            this.gameScene.isJumping = false;
+            this.gameScene.currentStair = null;
+
+            this.gameScene.player.x = 2000;
+            this.gameScene.groundY = returnGroundY;
+            this.gameScene.player.y = returnGroundY;
+            this.gameScene.player.setVisible(true);
+            this.gameScene.player.setAlpha(1);
+            this.gameScene.player.setActive(true);
+            this.gameScene.player.setDepth(Math.round(returnGroundY));
+            this.gameScene.player.body.reset(2000, returnGroundY);
+            this.gameScene.player.body.setSize(22, 16);
+            this.gameScene.player.body.setOffset(5, 32);
+
+            if (this.gameScene.playerShadow) {
+                this.gameScene.playerShadow.setPosition(2000, returnGroundY + 18);
+                this.gameScene.playerShadow.setDepth(returnGroundY - 1);
+                this.gameScene.playerShadow.setVisible(true);
+            }
+        }
+        if (this.gameScene) {
+            this.gameScene.nearHeroZone = false;
+            if (this.gameScene.heroZonePromptText) {
+                this.gameScene.heroZonePromptText.setVisible(false);
+            }
+        }
+    }
+
+    launchObstacleCourse() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
+        this.scene.setVisible(false);
+        this.scene.pause('HeroZoneScene');
+        this.scene.launch('ObstacleCourseScene', { heroZone: this });
+    }
+
+    launchAirHockey() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
+        this.scene.setVisible(false);
+        this.scene.pause('HeroZoneScene');
+        this.scene.launch('AirHockeyScene', { heroZone: this });
+    }
+
+    launchBasketball() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
+        this.scene.setVisible(false);
+        this.scene.pause('HeroZoneScene');
+        this.scene.launch('BasketballShootoutScene', { heroZone: this });
+    }
+
+    handleStationAction() {
+        if (this.nearExit) {
+            this.exitToShip();
+        } else if (this.nearObstacleCourse) {
+            this.launchObstacleCourse();
+        } else if (this.nearAirHockey) {
+            this.launchAirHockey();
+        } else if (this.nearBasketball) {
+            this.launchBasketball();
+        }
+    }
+
+    update(time, delta) {
+        if (this.keysWASD.esc && this.keysWASD.esc.isDown) {
+            this.exitToShip();
+            return;
+        }
+
+        const dt = delta * 0.001;
+
+        // Player Controls (2.5D Movement)
+        const isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                       (this.keysWASD.left && this.keysWASD.left.isDown) || 
+                       this.touchMoveDir === -1;
+
+        const isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                        (this.keysWASD.right && this.keysWASD.right.isDown) || 
+                        this.touchMoveDir === 1;
+
+        const isUp = (this.cursors.up && this.cursors.up.isDown) || 
+                     (this.keysWASD.up && this.keysWASD.up.isDown) || 
+                     this.touchMoveDepth === -1;
+
+        const isDown = (this.cursors.down && this.cursors.down.isDown) || 
+                       (this.keysWASD.down && this.keysWASD.down.isDown) || 
+                       this.touchMoveDepth === 1;
+
+        let moveX = 0;
+        let moveY = 0;
+
+        if (isLeft && isRight) {
+            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.keysWASD.left ? this.keysWASD.left.timeDown : 0));
+            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.keysWASD.right ? this.keysWASD.right.timeDown : 0));
+            if (rightTime >= leftTime) {
+                moveX = 1;
+                this.player.setFlipX(false);
+            } else {
+                moveX = -1;
+                this.player.setFlipX(true);
+            }
+        } else if (isLeft) {
+            moveX = -1;
+            this.player.setFlipX(true);
+        } else if (isRight) {
+            moveX = 1;
+            this.player.setFlipX(false);
+        }
+
+        if (isUp && isDown) {
+            const upTime = Math.max((this.cursors.up ? this.cursors.up.timeDown : 0), (this.keysWASD.up ? this.keysWASD.up.timeDown : 0));
+            const downTime = Math.max((this.cursors.down ? this.cursors.down.timeDown : 0), (this.keysWASD.down ? this.keysWASD.down.timeDown : 0));
+            moveY = (downTime >= upTime) ? 1 : -1;
+        } else if (isUp) {
+            moveY = -1;
+        } else if (isDown) {
+            moveY = 1;
+        }
+
+        let vx = moveX * this.playerSpeed;
+        let vy = moveY * (this.playerSpeed * 0.6);
+        if (moveX !== 0 && moveY !== 0) {
+            vx *= 0.7071;
+            vy *= 0.7071;
+        }
+
+        // Jump Handling
+        if ((Phaser.Input.Keyboard.JustDown(this.keysWASD.space) || Phaser.Input.Keyboard.JustDown(this.cursors.space)) && !this.isJumping) {
+            this.tryJump();
+        }
+
+        if (this.isJumping) {
+            this.jumpZ += this.jumpV * dt;
+            this.jumpV -= 750 * dt;
+            if (this.jumpZ <= 0) {
+                this.jumpZ = 0;
+                this.jumpV = 0;
+                this.isJumping = false;
+            }
+        }
+
+        // Apply 2.5D coordinates
+        this.player.x += vx * dt;
+        this.player.x = Phaser.Math.Clamp(this.player.x, 70, this.roomW - 70);
+
+        this.groundY += vy * dt;
+        this.groundY = Phaser.Math.Clamp(this.groundY, this.floorY - 5, this.roomH - 25);
+
+        this.player.y = this.groundY - this.jumpZ;
+        this.player.body.reset(this.player.x, this.player.y);
+        this.player.setDepth(Math.round(this.groundY));
+        this.playerShadow.setPosition(this.player.x, this.groundY + 16);
+
+        // Walking animation
+        if (moveX !== 0 || moveY !== 0) {
+            this.player.anims.play('riley_walk', true);
+        } else {
+            this.player.anims.play('riley_idle', true);
+        }
+
+        // ----------------------------------------------------
+        // STATION PROXIMITY CHECKS
+        // ----------------------------------------------------
+        const px = this.player.x;
+        const gy = this.groundY;
+
+        this.nearExit = (px < 180 && gy < this.floorY + 50);
+        this.nearObstacleCourse = (Math.abs(px - 440) < 70 && gy < this.floorY + 55);
+        this.nearAirHockey = (Math.abs(px - 1060) < 75 && Math.abs(gy - (this.floorY + 15)) < 45);
+        this.nearBasketball = (Math.abs(px - 1380) < 75 && gy < this.floorY + 55);
+
+        // Dash NPC proximity speech bubble
+        const nearDash = (Math.abs(px - 790) < 65 && Math.abs(gy - (this.floorY + 25)) < 45);
+        if (this.dashBubble) {
+            this.dashBubble.setVisible(nearDash);
+        }
+
+        // Prompt text positioning and visibility
+        let activePrompt = '';
+        if (this.nearExit) {
+            activePrompt = '[ ENTER: EXIT TO DECK 12 ]';
+        } else if (this.nearObstacleCourse) {
+            activePrompt = '[ ENTER: START OBSTACLE COURSE ]';
+        } else if (this.nearAirHockey) {
+            activePrompt = '[ ENTER: PLAY AIR HOCKEY ]';
+        } else if (this.nearBasketball) {
+            activePrompt = '[ ENTER: PLAY BASKETBALL ]';
+        }
+
+        if (activePrompt !== '') {
+            this.promptText.setText(activePrompt);
+            this.promptText.setPosition(this.player.x, this.player.y - 45);
+            this.promptText.setVisible(true);
+
+            if (Phaser.Input.Keyboard.JustDown(this.keysWASD.enter)) {
+                this.handleStationAction();
+            }
+        } else {
+            this.promptText.setVisible(false);
+        }
+    }
+}
+
+// =========================================================================
+// STATION 1: INCREDIBLES TIMED OBSTACLE COURSE SCENE
+// =========================================================================
+
+class ObstacleCourseScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'ObstacleCourseScene' });
+    }
+
+    init(data) {
+        this.heroZone = data ? data.heroZone : null;
+        this.heroSpeed = 230;
+        this.jumpForce = -490;
+        this.timer = 0;
+        this.raceStarted = false;
+        this.raceFinished = false;
+        this.penaltyCooldown = 0;
+        this.isExiting = false;
+
+        this.completionMenuOpen = false;
+        this.menuSelectionIndex = 0;
+        this.menuReadyTime = 0;
+
+        // Mobile touch controls
+        this.touchLeft = false;
+        this.touchRight = false;
+        this.touchJump = false;
+    }
+
+    create() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.init) {
+            retroArcadeAudio.init();
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const courseW = 3800;
+        this.courseW = courseW;
+        this.courseH = H;
+
+        this.physics.world.setBounds(0, 0, courseW, H);
+        this.physics.world.gravity.y = 950;
+
+        const floorY = H - 55;
+        this.floorY = floorY;
+
+        if (!this.textures.exists('hz_wall_pattern')) {
+            let g = this.add.graphics();
+            g.fillStyle(0x280505, 1);
+            g.fillRect(0, 0, 60, 60);
+            g.lineStyle(2, 0x4A0C0C, 1);
+            g.strokeRect(0, 0, 60, 60);
+            g.fillStyle(0xE83818, 1);
+            g.fillCircle(30, 30, 6);
+            g.fillStyle(0xF8B800, 1);
+            g.fillCircle(30, 30, 3);
+            g.generateTexture('hz_wall_pattern', 60, 60);
+            g.destroy();
+        }
+
+        // 1. Background arena wall
+        this.add.rectangle(0, 0, courseW, H, 0x140505).setOrigin(0).setDepth(0);
+        this.add.tileSprite(courseW / 2, (floorY) / 2, courseW, floorY, 'hz_wall_pattern').setDepth(1).setAlpha(0.8);
+
+        // Ceiling Trusses & Arena Lighting
+        for (let tx = 150; tx < courseW; tx += 300) {
+            this.add.rectangle(tx, 20, 260, 18, 0xD01000).setDepth(2);
+            this.add.rectangle(tx, 32, 240, 5, 0xF8B800).setDepth(2);
+            this.add.circle(tx - 80, 42, 6, 0xFFFFCC).setDepth(3);
+            this.add.circle(tx + 80, 42, 6, 0xFFFFCC).setDepth(3);
+        }
+
+        // Platforms & Floors
+        this.platforms = this.physics.add.staticGroup();
+
+        // Floor segments
+        this.createFloorSegment(0, 850, floorY, 0xD01000);
+        this.createFloorSegment(950, 1600, floorY, 0x0055AA);
+        this.createFloorSegment(1720, 2400, floorY, 0xD01000);
+        this.createFloorSegment(2520, 3100, floorY, 0x0055AA);
+        this.createFloorSegment(3220, courseW, floorY, 0xD01000);
+
+        // Pit Safety Nets
+        this.pitNets = this.physics.add.staticGroup();
+        this.createPitNet(850, 950, floorY + 25);
+        this.createPitNet(1600, 1720, floorY + 25);
+        this.createPitNet(2400, 2520, floorY + 25);
+        this.createPitNet(3100, 3220, floorY + 25);
+
+        // Start Banner at x = 120
+        this.createStartBanner(150, floorY);
+
+        // Hurdles (Inflatable barriers)
+        this.hurdles = this.physics.add.group({ allowGravity: false, immovable: true });
+        [1150, 1400, 1900, 2150, 2750, 2980, 3400].forEach(hx => {
+            this.createHurdle(hx, floorY);
+        });
+
+        // Swinging Pendulums (Wrecking balls)
+        this.pendulums = this.physics.add.group({ allowGravity: false, immovable: true });
+        this.pendulumList = [];
+        this.pendulumGfx = this.add.graphics().setDepth(4);
+        [1300, 2020, 2860].forEach((px, i) => {
+            this.createPendulum(px, floorY - 170, i * 1.5);
+        });
+
+        // Climbing Wall (x = 2260)
+        this.createClimbingWall(2260, floorY - 95);
+
+        // Super Slide (x = 2650)
+        this.createSuperSlide(2650, floorY);
+
+        // Finish Line Buzzer (x = 3600)
+        this.createFinishLine(3600, floorY);
+
+        // ----------------------------------------------------
+        // CHARACTERS
+        // ----------------------------------------------------
+        // Riley
+        this.player = this.physics.add.sprite(100, floorY - 40, 'riley_idle').setDepth(15);
+        this.player.setCollideWorldBounds(true);
+        this.player.body.setSize(22, 38);
+        this.player.body.setOffset(5, 10);
+
+        this.physics.add.collider(this.player, this.platforms);
+        this.physics.add.overlap(this.player, this.hurdles, this.handleObstacleHit, null, this);
+        this.physics.add.overlap(this.player, this.pendulums, this.handleObstacleHit, null, this);
+        this.physics.add.overlap(this.player, this.pitNets, (player, net) => {
+            this.handlePitFall(net.safeX || 100);
+        }, null, this);
+
+        // Dash (Rival Racer)
+        this.dash = this.physics.add.sprite(100, floorY - 40, 'npc_tourist_idle').setDepth(14).setTint(0xFF3333);
+        this.dash.setCollideWorldBounds(true);
+        this.dash.body.setSize(22, 38);
+        this.dash.body.setOffset(5, 10);
+        this.physics.add.collider(this.dash, this.platforms);
+
+        this.dashTag = this.add.text(100, floorY - 75, 'DASH', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: { x: 3, y: 2 }
+        }).setOrigin(0.5).setDepth(16);
+
+        // Camera Follow Riley
+        this.cameras.main.setBounds(0, 0, courseW, H);
+        this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+
+        // HUD & Controls
+        this.createHUD();
+
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D,
+                Phaser.Input.Keyboard.KeyCodes.R
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keysWASD = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            r: Phaser.Input.Keyboard.KeyCodes.R
+        });
+
+        const resetCourseKeys = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.keysWASD) {
+                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+                if (this.keysWASD.esc) this.keysWASD.esc.isDown = false;
+                if (this.keysWASD.r) this.keysWASD.r.isDown = false;
+            }
+            this.touchLeft = false;
+            this.touchRight = false;
+            this.touchJump = false;
+        };
+
+        const onCourseNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.keysWASD && this.keysWASD.r) this.keysWASD.r.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetCourseKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetCourseKeys);
+        window.addEventListener('focus', resetCourseKeys);
+        window.addEventListener('keyup', onCourseNativeKeyUp);
+        const onVisCourse = () => { if (document.hidden) resetCourseKeys(); };
+        document.addEventListener('visibilitychange', onVisCourse);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetCourseKeys);
+            window.removeEventListener('focus', resetCourseKeys);
+            window.removeEventListener('keyup', onCourseNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisCourse);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
+        });
+
+        this.createTouchControls();
+    }
+
+    createFloorSegment(x1, x2, y, color) {
+        const w = x2 - x1;
+        const cx = x1 + w / 2;
+        const f = this.add.rectangle(cx, y + 25, w, 50, color).setDepth(4).setStrokeStyle(2, 0x000);
+        this.add.rectangle(cx, y + 3, w, 6, 0xF8B800).setDepth(5);
+        this.physics.add.existing(f, true);
+        this.platforms.add(f);
+    }
+
+    createPitNet(x1, x2, y) {
+        const w = x2 - x1;
+        const net = this.add.rectangle(x1 + w / 2, y, w, 14, 0xF8B800, 0.75).setDepth(3);
+        this.physics.add.existing(net, true);
+        net.safeX = x1 - 35;
+        this.pitNets.add(net);
+    }
+
+    createStartBanner(x, floorY) {
+        this.add.rectangle(x, floorY - 110, 16, 220, 0xFFFFFF).setDepth(4);
+        this.add.rectangle(x, floorY - 110, 10, 220, 0x000000).setDepth(4);
+        this.add.text(x, floorY - 195, '► START LINE ◄', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#00FF00', backgroundColor: '#000', padding: { x: 8, y: 4 }, stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5).setDepth(5);
+        this.add.text(x, floorY - 170, 'RUN RIGHT TO RACE DASH!', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5);
+    }
+
+    createHurdle(x, floorY) {
+        const hurdle = this.add.rectangle(x, floorY - 20, 24, 40, 0xD01000).setDepth(5).setStrokeStyle(3, 0xF8B800);
+        this.physics.add.existing(hurdle);
+        hurdle.body.allowGravity = false;
+        hurdle.body.immovable = true;
+        this.hurdles.add(hurdle);
+    }
+
+    createPendulum(x, anchorY, offset) {
+        this.add.circle(x, anchorY, 8, 0xF8B800).setDepth(4);
+        const ball = this.add.circle(x, anchorY + 110, 22, 0x222222).setDepth(5).setStrokeStyle(3, 0xD01000);
+        this.physics.add.existing(ball);
+        ball.body.allowGravity = false;
+        ball.body.immovable = true;
+        ball.body.setCircle(22);
+        this.pendulums.add(ball);
+
+        this.pendulumList.push({
+            ball: ball,
+            anchorX: x,
+            anchorY: anchorY,
+            length: 110,
+            angleOffset: offset
+        });
+    }
+
+    createClimbingWall(x, y) {
+        this.add.rectangle(x, y, 64, 180, 0xF8B800, 0.4).setDepth(2).setStrokeStyle(3, 0xF8B800);
+        for (let py = y - 75; py <= y + 75; py += 25) {
+            this.add.rectangle(x, py, 60, 4, 0xD01000).setDepth(3);
+        }
+        this.add.text(x, y - 105, '▲ CLIMB WALL ▲', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: { x: 4, y: 2 }
+        }).setOrigin(0.5).setDepth(5);
+
+        this.climbZone = this.add.zone(x, y, 70, 190);
+        this.physics.add.existing(this.climbZone, true);
+    }
+
+    createSuperSlide(x, floorY) {
+        this.add.rectangle(x, floorY - 25, 120, 40, 0x00AAFF, 0.75).setDepth(3);
+        this.add.text(x, floorY - 65, '► SUPER SLIDE! ►', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#00FFFF', backgroundColor: '#001133', padding: { x: 6, y: 3 }
+        }).setOrigin(0.5).setDepth(5);
+
+        this.slideZone = this.add.zone(x, floorY - 30, 120, 80);
+        this.physics.add.existing(this.slideZone, true);
+    }
+
+    createFinishLine(x, floorY) {
+        this.add.rectangle(x, floorY - 30, 40, 60, 0xF8B800).setDepth(4).setStrokeStyle(2, 0x000);
+        this.buzzerBtn = this.add.circle(x, floorY - 65, 18, 0xD01000).setDepth(5).setStrokeStyle(3, 0xFFFFFF);
+
+        this.add.text(x, floorY - 110, '★ HIT BUZZER! ★', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FF0000', backgroundColor: '#FFFFFF', padding: { x: 6, y: 4 }
+        }).setOrigin(0.5).setDepth(6);
+
+        this.buzzerZone = this.add.zone(x, floorY - 60, 60, 80);
+        this.physics.add.existing(this.buzzerZone, true);
+
+        this.add.rectangle(x + 50, floorY - 110, 16, 220, 0xFFFFFF).setDepth(3);
+        this.add.rectangle(x + 50, floorY - 110, 10, 220, 0x000000).setDepth(3);
+    }
+
+    createHUD() {
+        const W = this.scale.width;
+        this.timerBox = this.add.rectangle(110, 30, 180, 36, 0x000000, 0.85).setScrollFactor(0).setDepth(100).setStrokeStyle(2, 0xF8B800);
+        this.uiTimer = this.add.text(110, 30, 'TIME: 0.00s', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(101);
+
+        this.uiPenalty = this.add.text(W / 2, 45, '+3.00s PENALTY!', {
+            fontSize: '13px', fontFamily: '"Press Start 2P"', fill: '#FF0000', backgroundColor: '#000', padding: { x: 8, y: 4 }, stroke: '#FFF', strokeThickness: 2
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(102).setVisible(false);
+
+        // Top-Right [ RESTART ] Button
+        this.hudRestartBtn = this.add.text(W - 195, 30, '[ RESTART ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudRestartBtn.on('pointerdown', () => this.restartCourse());
+
+        // Top-Right [ EXIT ] Button
+        this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitToHeroZone());
+    }
+
+    restartCourse() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        this.scene.restart();
+    }
+
+    createTouchControls() {
+        const H = this.scale.height;
+        const W = this.scale.width;
+
+        this.touchContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(99);
+
+        const btnL = this.add.rectangle(50, H - 55, 60, 50, 0x000000, 0.6).setStrokeStyle(2, 0xFFFFFF).setInteractive();
+        const txtL = this.add.text(50, H - 55, '◄', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
+        btnL.on('pointerdown', () => { this.touchLeft = true; });
+        btnL.on('pointerup', () => { this.touchLeft = false; });
+        btnL.on('pointerout', () => { this.touchLeft = false; });
+
+        const btnR = this.add.rectangle(125, H - 55, 60, 50, 0x000000, 0.6).setStrokeStyle(2, 0xFFFFFF).setInteractive();
+        const txtR = this.add.text(125, H - 55, '►', { fontSize: '20px', fill: '#FFF' }).setOrigin(0.5);
+        btnR.on('pointerdown', () => { this.touchRight = true; });
+        btnR.on('pointerup', () => { this.touchRight = false; });
+        btnR.on('pointerout', () => { this.touchRight = false; });
+
+        const btnJ = this.add.rectangle(W - 65, H - 55, 75, 50, 0xD01000, 0.8).setStrokeStyle(2, 0xFFD700).setInteractive();
+        const txtJ = this.add.text(W - 65, H - 55, 'JUMP', { fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
+        btnJ.on('pointerdown', () => { this.touchJump = true; });
+        btnJ.on('pointerup', () => { this.touchJump = false; });
+        btnJ.on('pointerout', () => { this.touchJump = false; });
+
+        this.touchContainer.add([btnL, txtL, btnR, txtR, btnJ, txtJ]);
+    }
+
+    exitToHeroZone() {
+        if (this.isExiting) return;
+        this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        if (this.heroZone && this.heroZone.scene) {
+            this.heroZone.scene.setVisible(true);
+            this.heroZone.scene.resume();
+            if (this.heroZone.refreshLeaderboard) {
+                this.heroZone.refreshLeaderboard();
+            }
+        }
+        this.scene.stop('ObstacleCourseScene');
+    }
+
+    handleObstacleHit(player, obstacle) {
+        if (!this.raceStarted || this.raceFinished) return;
+        if (this.time.now < this.penaltyCooldown) return;
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('explosion');
+        }
+        this.timer += 3000;
+        this.penaltyCooldown = this.time.now + 1200;
+
+        this.uiPenalty.setVisible(true);
+        this.time.delayedCall(900, () => {
+            if (this.uiPenalty) this.uiPenalty.setVisible(false);
+        });
+
+        this.player.setVelocity(-180, -220);
+
+        this.tweens.add({
+            targets: this.player,
+            alpha: 0.2,
+            duration: 80,
+            yoyo: true,
+            repeat: 5,
+            onComplete: () => {
+                if (this.player) this.player.setAlpha(1);
+            }
+        });
+    }
+
+    handlePitFall(safeX) {
+        if (!this.raceStarted || this.raceFinished) return;
+        if (this.time.now < this.penaltyCooldown) return;
+        this.timer += 3000;
+        this.penaltyCooldown = this.time.now + 1500;
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('explosion');
+        }
+
+        this.uiPenalty.setVisible(true);
+        this.time.delayedCall(900, () => {
+            if (this.uiPenalty) this.uiPenalty.setVisible(false);
+        });
+
+        this.player.setPosition(safeX, this.floorY - 50);
+        this.player.setVelocity(0, -320);
+    }
+
+    update(time, delta) {
+        if (this.keysWASD.r && Phaser.Input.Keyboard.JustDown(this.keysWASD.r)) {
+            this.restartCourse();
+            return;
+        }
+
+        if (this.keysWASD.esc && Phaser.Input.Keyboard.JustDown(this.keysWASD.esc)) {
+            this.exitToHeroZone();
+            return;
+        }
+
+        if (this.completionMenuOpen) {
+            this.player.setVelocity(0, 0);
+            if (this.time.now < this.menuReadyTime) {
+                return;
+            }
+
+            const isUp = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) || 
+                         (this.keysWASD.up && Phaser.Input.Keyboard.JustDown(this.keysWASD.up));
+
+            const isDown = (this.cursors.down && Phaser.Input.Keyboard.JustDown(this.cursors.down)) || 
+                           (this.keysWASD.down && Phaser.Input.Keyboard.JustDown(this.keysWASD.down));
+
+            if (isUp) {
+                if (this.menuSelectionIndex !== 0) {
+                    this.menuSelectionIndex = 0;
+                    this.updateMenuVisuals();
+                    if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                        retroArcadeAudio.play('laser');
+                    }
+                }
+            } else if (isDown) {
+                if (this.menuSelectionIndex !== 1) {
+                    this.menuSelectionIndex = 1;
+                    this.updateMenuVisuals();
+                    if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                        retroArcadeAudio.play('laser');
+                    }
+                }
+            }
+
+            const isConfirm = (this.keysWASD.enter && Phaser.Input.Keyboard.JustDown(this.keysWASD.enter)) || 
+                              (this.keysWASD.space && Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) || 
+                              (this.cursors.space && Phaser.Input.Keyboard.JustDown(this.cursors.space));
+
+            if (isConfirm) {
+                this.confirmMenuChoice();
+            }
+            return;
+        }
+
+        // Draw and update Pendulums via Graphics lineBetween
+        if (this.pendulumGfx) {
+            this.pendulumGfx.clear();
+            this.pendulumGfx.lineStyle(3, 0xF8B800, 1);
+            this.pendulumList.forEach(p => {
+                const angle = Math.sin((time * 0.0025) + p.angleOffset) * 0.85;
+                const bx = p.anchorX + Math.sin(angle) * p.length;
+                const by = p.anchorY + Math.cos(angle) * p.length;
+                p.ball.setPosition(bx, by);
+                this.pendulumGfx.lineBetween(p.anchorX, p.anchorY, bx, by);
+            });
+        }
+
+        // Horizontal Movement with SOCD Resolution
+        const isLeft = (this.cursors.left && this.cursors.left.isDown) || 
+                       (this.keysWASD.left && this.keysWASD.left.isDown) || 
+                       this.touchLeft;
+
+        const isRight = (this.cursors.right && this.cursors.right.isDown) || 
+                        (this.keysWASD.right && this.keysWASD.right.isDown) || 
+                        this.touchRight;
+
+        const moveUp = (this.cursors.up && this.cursors.up.isDown) || 
+                       (this.keysWASD.up && this.keysWASD.up.isDown) || 
+                       this.touchJump || 
+                       (this.keysWASD.space && this.keysWASD.space.isDown) || 
+                       (this.cursors.space && this.cursors.space.isDown);
+
+        const moveDown = (this.cursors.down && this.cursors.down.isDown) || 
+                         (this.keysWASD.down && this.keysWASD.down.isDown);
+
+        let moveX = 0;
+        if (isLeft && isRight) {
+            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.keysWASD.left ? this.keysWASD.left.timeDown : 0));
+            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.keysWASD.right ? this.keysWASD.right.timeDown : 0));
+            moveX = (rightTime >= leftTime) ? 1 : -1;
+        } else if (isLeft) {
+            moveX = -1;
+        } else if (isRight) {
+            moveX = 1;
+        }
+
+        const inClimbZone = this.physics.overlap(this.player, this.climbZone);
+        if (inClimbZone) {
+            this.player.body.allowGravity = false;
+            if (moveUp) {
+                this.player.setVelocityY(-160);
+            } else if (moveDown) {
+                this.player.setVelocityY(160);
+            } else {
+                this.player.setVelocityY(0);
+            }
+        } else {
+            this.player.body.allowGravity = true;
+        }
+
+        const inSlideZone = this.physics.overlap(this.player, this.slideZone);
+        if (inSlideZone) {
+            this.player.setVelocityX(360);
+            this.player.setVelocityY(180);
+            this.player.anims.play('riley_walk', true);
+        } else {
+            if (moveX === -1) {
+                this.player.setVelocityX(-this.heroSpeed);
+                this.player.flipX = true;
+                if (!inClimbZone) this.player.anims.play('riley_walk', true);
+            } else if (moveX === 1) {
+                this.player.setVelocityX(this.heroSpeed);
+                this.player.flipX = false;
+                if (!inClimbZone) this.player.anims.play('riley_walk', true);
+            } else {
+                this.player.setVelocityX(0);
+                if (!inClimbZone) this.player.anims.play('riley_idle', true);
+            }
+        }
+
+        // Jump
+        const onFloor = (this.player.body.blocked.down || this.player.body.touching.down);
+        if (moveUp && onFloor && !inClimbZone && !inSlideZone) {
+            this.player.setVelocityY(this.jumpForce);
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('jump');
+            }
+        }
+
+        // Trigger race start
+        if (this.player.x > 180 && !this.raceStarted) {
+            this.raceStarted = true;
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('powerup');
+            }
+            const banner = this.add.text(this.scale.width / 2, this.scale.height / 2 - 50, 'RACE STARTED!\nGO GO GO!', {
+                fontSize: '16px', fontFamily: '"Press Start 2P"', fill: '#00FF00', align: 'center', backgroundColor: '#000', padding: 12, stroke: '#FFF', strokeThickness: 2
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
+            this.tweens.add({
+                targets: banner,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                alpha: 0,
+                duration: 1200,
+                onComplete: () => banner.destroy()
+            });
+        }
+
+        if (this.raceStarted && !this.raceFinished) {
+            this.timer += delta;
+            this.uiTimer.setText('TIME: ' + (this.timer / 1000).toFixed(2) + 's');
+
+            // Dash Racer AI
+            if (this.dash && this.dash.x < 3600) {
+                this.dash.setVelocityX(165);
+                this.dash.anims.play('npc_tourist_walk', true);
+                if (this.dashTag) this.dashTag.setPosition(this.dash.x, this.dash.y - 30);
+
+                const hurdlesX = [1150, 1400, 1900, 2150, 2750, 2980, 3400];
+                const pitsX = [850, 1600, 2400, 3100];
+                const nearHurdle = hurdlesX.some(hx => (this.dash.x > hx - 55 && this.dash.x < hx));
+                const nearPit = pitsX.some(px => (this.dash.x > px - 50 && this.dash.x < px));
+
+                if ((nearHurdle || nearPit) && (this.dash.body.touching.down || this.dash.body.blocked.down)) {
+                    this.dash.setVelocityY(-460);
+                }
+            }
+
+            if (this.physics.overlap(this.player, this.buzzerZone) || this.player.x >= 3590) {
+                this.completeCourse();
+            }
+        }
+    }
+
+    completeCourse() {
+        if (this.raceFinished) return;
+        this.raceFinished = true;
+        this.completionMenuOpen = true;
+        this.menuSelectionIndex = 0;
+        this.menuReadyTime = this.time.now + 600;
+        this.player.setVelocity(0, 0);
+
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
+        if (this.cursors) {
+            if (this.cursors.left) this.cursors.left.isDown = false;
+            if (this.cursors.right) this.cursors.right.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+            if (this.cursors.space) this.cursors.space.isDown = false;
+        }
+        if (this.keysWASD) {
+            if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+            if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+            if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+            if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+            if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+            if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+        }
+
+        if (this.touchContainer) {
+            this.touchContainer.setVisible(false);
+        }
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+
+        const finalTime = (this.timer / 1000).toFixed(2);
+        const rileyWon = (this.player.x >= 3580 && (!this.dash || this.dash.x < 3580));
+
+        const scores = getHeroZoneScores();
+        let isNewRecord = false;
+        if (!scores.obstacleTime || parseFloat(finalTime) < parseFloat(scores.obstacleTime)) {
+            scores.obstacleTime = finalTime;
+            scores.obstacleHolder = 'RILEY';
+            saveHeroZoneScores(scores);
+            isNewRecord = true;
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        this.modalBackdrop = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.6)
+            .setScrollFactor(0).setDepth(500);
+
+        this.modalBg = this.add.rectangle(W / 2, H / 2, 380, 240, 0x000000, 0.95)
+            .setStrokeStyle(4, 0xF8B800).setScrollFactor(0).setDepth(501);
+
+        this.modalTitle = this.add.text(W / 2, H / 2 - 85, '★ COURSE COMPLETE! ★', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.modalWinner = this.add.text(W / 2, H / 2 - 55, rileyWon ? 'RILEY DEFEATED DASH!' : 'DASH WAS FASTER!', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: rileyWon ? '#00FF00' : '#FF5555'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.modalTime = this.add.text(W / 2, H / 2 - 25, `FINAL TIME: ${finalTime}s`, {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.modalRecord = this.add.text(W / 2, H / 2 + 5, isNewRecord ? '★ NEW BEST RECORD! ★' : `BEST RECORD: ${scores.obstacleTime}s (${scores.obstacleHolder})`, {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: isNewRecord ? '#FFFF00' : '#A0D0FF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.btnRetry = this.add.text(W / 2, H / 2 + 45, '  PLAY AGAIN  ', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 12, y: 7 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.btnExit = this.add.text(W / 2, H / 2 + 85, '  RETURN TO HERO ZONE  ', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 12, y: 7 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.menuCursor = this.add.text(W / 2 - 110, H / 2 + 45, '►', {
+            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+= 6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        this.btnRetry.on('pointerover', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+        });
+        this.btnRetry.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.btnExit.on('pointerover', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+        });
+        this.btnExit.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.updateMenuVisuals();
+    }
+
+    updateMenuVisuals() {
+        if (!this.btnRetry || !this.btnExit || !this.menuCursor) return;
+        const W = this.scale.width;
+        const H = this.scale.height;
+        if (this.menuSelectionIndex === 0) {
+            this.btnRetry.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+            this.btnExit.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
+            this.menuCursor.setPosition(W / 2 - 110, H / 2 + 45);
+        } else {
+            this.btnRetry.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
+            this.btnExit.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
+            this.menuCursor.setPosition(W / 2 - 150, H / 2 + 85);
+        }
+    }
+
+    confirmMenuChoice() {
+        if (this.menuSelectionIndex === 0) {
+            this.restartCourse();
+        } else {
+            this.exitToHeroZone();
+        }
+    }
+}
+
+// =========================================================================
+// STATION 2: INCREDIBLES AIR HOCKEY SCENE
+// =========================================================================
+
+class AirHockeyScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'AirHockeyScene' });
+    }
+    
+    init(data) {
+        this.heroZone = data ? data.heroZone : null;
+        this.playerScore = 0;
+        this.aiScore = 0;
+        this.isGameOver = false;
+        this.isExiting = false;
+        this.completionMenuOpen = false;
+        this.menuSelectionIndex = 0;
+        this.menuReadyTime = 0;
+        this.scoring = false;
+    }
+
+    create() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.init) {
+            retroArcadeAudio.init();
+        }
+        const W = this.scale.width;
+        const H = this.scale.height;
+        
+        this.add.rectangle(0, 0, W, H, 0x07091B, 0.95).setOrigin(0);
+        
+        const cx = W / 2;
+        const cy = H / 2;
+        
+        const tableW = 320;
+        const tableH = 460;
+        this.add.rectangle(cx, cy, tableW + 20, tableH + 20, 0x111111).setStrokeStyle(4, 0x00FFFF);
+        this.add.rectangle(cx, cy, tableW, tableH, 0x0B1B3A);
+        
+        this.add.rectangle(cx, cy, tableW, 2, 0xFF3333);
+        this.add.circle(cx, cy, 38).setStrokeStyle(2, 0xFF3333);
+
+        this.goalTop = this.add.zone(cx, cy - tableH / 2 + 5, 110, 24);
+        this.physics.add.existing(this.goalTop, true);
+        this.add.rectangle(cx, cy - tableH / 2, 110, 10, 0x000000).setStrokeStyle(2, 0xFF5555);
+        
+        this.goalBot = this.add.zone(cx, cy + tableH / 2 - 5, 110, 24);
+        this.physics.add.existing(this.goalBot, true);
+        this.add.rectangle(cx, cy + tableH / 2, 110, 10, 0x000000).setStrokeStyle(2, 0x55FF55);
+        
+        this.physics.world.setBounds(cx - tableW / 2, cy - tableH / 2, tableW, tableH);
+        
+        if (!this.textures.exists('ah_puck')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xFF0000, 1);
+            g.fillCircle(12, 12, 12);
+            g.lineStyle(2, 0xFFFFFF, 1);
+            g.strokeCircle(12, 12, 12);
+            g.generateTexture('ah_puck', 24, 24);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('ah_mallet_player')) {
+            let g = this.add.graphics();
+            g.fillStyle(0x00FF88, 1);
+            g.fillCircle(20, 20, 20);
+            g.fillStyle(0x008844, 1);
+            g.fillCircle(20, 20, 10);
+            g.lineStyle(2, 0xFFFFFF, 1);
+            g.strokeCircle(20, 20, 20);
+            g.generateTexture('ah_mallet_player', 40, 40);
+            g.destroy();
+        }
+
+        if (!this.textures.exists('ah_mallet_ai')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xFF5555, 1);
+            g.fillCircle(20, 20, 20);
+            g.fillStyle(0x990000, 1);
+            g.fillCircle(20, 20, 10);
+            g.lineStyle(2, 0xFFFFFF, 1);
+            g.strokeCircle(20, 20, 20);
+            g.generateTexture('ah_mallet_ai', 40, 40);
+            g.destroy();
+        }
+
+        this.puck = this.physics.add.sprite(cx, cy, 'ah_puck');
+        this.puck.setBounce(1.05, 1.05);
+        this.puck.setCollideWorldBounds(true);
+        this.puck.body.setCircle(12);
+        this.puck.body.allowGravity = false;
+        this.puck.body.setMaxVelocity(600, 600);
+        
+        this.paddlePlayer = this.physics.add.sprite(cx, cy + 150, 'ah_mallet_player');
+        this.paddlePlayer.setCollideWorldBounds(true);
+        this.paddlePlayer.body.setCircle(20);
+        this.paddlePlayer.body.allowGravity = false;
+        this.paddlePlayer.body.immovable = true;
+        
+        this.paddleAI = this.physics.add.sprite(cx, cy - 150, 'ah_mallet_ai');
+        this.paddleAI.setCollideWorldBounds(true);
+        this.paddleAI.body.setCircle(20);
+        this.paddleAI.body.allowGravity = false;
+        this.paddleAI.body.immovable = true;
+        
+        this.physics.add.collider(this.puck, this.paddlePlayer, () => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        });
+        this.physics.add.collider(this.puck, this.paddleAI, () => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        });
+        
+        this.scoreText = this.add.text(cx, 35, 'RILEY 0  -  0 AI', {
+            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5);
+
+        this.add.text(cx, 65, 'BEST OF 7 SERIES (FIRST TO 4 WINS)', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
+        }).setOrigin(0.5);
+
+        // Top-Right [ RESTART ] Button
+        this.hudRestartBtn = this.add.text(W - 195, 35, '[ RESTART ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        this.hudRestartBtn.on('pointerdown', () => this.restartAirHockey());
+
+        // Top-Right [ EXIT ] Button
+        this.hudExitBtn = this.add.text(W - 75, 35, '[ EXIT ]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitAirHockey());
+
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.R
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.wasd = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            right: Phaser.Input.Keyboard.KeyCodes.D,
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            r: Phaser.Input.Keyboard.KeyCodes.R
+        });
+
+        const resetHockeyKeys = () => {
+            if (this.cursors) {
+                if (this.cursors.left) this.cursors.left.isDown = false;
+                if (this.cursors.right) this.cursors.right.isDown = false;
+                if (this.cursors.up) this.cursors.up.isDown = false;
+                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.space) this.cursors.space.isDown = false;
+            }
+            if (this.wasd) {
+                if (this.wasd.left) this.wasd.left.isDown = false;
+                if (this.wasd.right) this.wasd.right.isDown = false;
+                if (this.wasd.up) this.wasd.up.isDown = false;
+                if (this.wasd.down) this.wasd.down.isDown = false;
+                if (this.wasd.space) this.wasd.space.isDown = false;
+                if (this.wasd.enter) this.wasd.enter.isDown = false;
+                if (this.wasd.esc) this.wasd.esc.isDown = false;
+                if (this.wasd.r) this.wasd.r.isDown = false;
+            }
+        };
+
+        const onHockeyNativeKeyUp = (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.wasd && this.wasd.r) this.wasd.r.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.wasd && this.wasd.enter) this.wasd.enter.isDown = false;
+            }
+            if (e.code === 'Space') {
+                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
+                if (this.wasd && this.wasd.space) this.wasd.space.isDown = false;
+            }
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
+                if (this.wasd && this.wasd.up) this.wasd.up.isDown = false;
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
+                if (this.wasd && this.wasd.left) this.wasd.left.isDown = false;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
+                if (this.wasd && this.wasd.right) this.wasd.right.isDown = false;
+            }
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
+                if (this.wasd && this.wasd.down) this.wasd.down.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetHockeyKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetHockeyKeys);
+        window.addEventListener('focus', resetHockeyKeys);
+        window.addEventListener('keyup', onHockeyNativeKeyUp);
+        const onVisHockey = () => { if (document.hidden) resetHockeyKeys(); };
+        document.addEventListener('visibilitychange', onVisHockey);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetHockeyKeys);
+            window.removeEventListener('focus', resetHockeyKeys);
+            window.removeEventListener('keyup', onHockeyNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisHockey);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
+        });
+
+        this.input.on('pointermove', (pointer) => {
+            if (pointer.isDown || !this.sys.game.device.os.desktop) {
+                const targetX = Phaser.Math.Clamp(pointer.x, cx - tableW / 2 + 25, cx + tableW / 2 - 25);
+                const targetY = Phaser.Math.Clamp(pointer.y, cy + 20, cy + tableH / 2 - 25);
+                this.paddlePlayer.setPosition(targetX, targetY);
+            }
+        });
+
+        this.tableBounds = { cx, cy, tableW, tableH };
+        this.resetPuck();
+    }
+    
+    resetPuck() {
+        const { cx, cy } = this.tableBounds;
+        this.puck.setPosition(cx, cy);
+        this.puck.setVisible(true);
+        const vx = (Math.random() - 0.5) * 350;
+        const vy = (Math.random() > 0.5 ? 220 : -220);
+        this.puck.setVelocity(vx, vy);
+    }
+
+    restartAirHockey() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        this.scene.restart();
+    }
+
+    exitAirHockey() {
+        if (this.isExiting) return;
+        this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        if (this.heroZone && this.heroZone.scene) {
+            this.heroZone.scene.setVisible(true);
+            this.heroZone.scene.resume();
+            if (this.heroZone.refreshLeaderboard) {
+                this.heroZone.refreshLeaderboard();
+            }
+        }
+        this.scene.stop('AirHockeyScene');
+    }
+    
+    update(time, delta) {
+        if (this.wasd.r && Phaser.Input.Keyboard.JustDown(this.wasd.r)) {
+            this.restartAirHockey();
+            return;
+        }
+
+        if (this.wasd.esc && Phaser.Input.Keyboard.JustDown(this.wasd.esc)) {
+            this.exitAirHockey();
+            return;
+        }
+
+        if (this.completionMenuOpen) {
+            if (this.time.now < this.menuReadyTime) return;
+
+            const isUp = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) || 
+                         (this.wasd.up && Phaser.Input.Keyboard.JustDown(this.wasd.up));
+
+            const isDown = (this.cursors.down && Phaser.Input.Keyboard.JustDown(this.cursors.down)) || 
+                           (this.wasd.down && Phaser.Input.Keyboard.JustDown(this.wasd.down));
+
+            if (isUp) {
+                this.menuSelectionIndex = 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            } else if (isDown) {
+                this.menuSelectionIndex = 1;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            }
+
+            const isConfirm = (this.wasd.enter && Phaser.Input.Keyboard.JustDown(this.wasd.enter)) || 
+                              (this.wasd.space && Phaser.Input.Keyboard.JustDown(this.wasd.space)) || 
+                              (this.cursors.space && Phaser.Input.Keyboard.JustDown(this.cursors.space));
+
+            if (isConfirm) {
+                this.confirmMenuChoice();
+            }
+            return;
+        }
+
+        if (this.isGameOver) return;
+        
+        const { cx, cy, tableW, tableH } = this.tableBounds;
+
+        const speed = 380;
+        let vx = 0;
+        let vy = 0;
+
+        const isLeft = (this.cursors.left && this.cursors.left.isDown) || (this.wasd.left && this.wasd.left.isDown);
+        const isRight = (this.cursors.right && this.cursors.right.isDown) || (this.wasd.right && this.wasd.right.isDown);
+        const isUp = (this.cursors.up && this.cursors.up.isDown) || (this.wasd.up && this.wasd.up.isDown);
+        const isDown = (this.cursors.down && this.cursors.down.isDown) || (this.wasd.down && this.wasd.down.isDown);
+
+        if (isLeft && isRight) {
+            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.wasd.left ? this.wasd.left.timeDown : 0));
+            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.wasd.right ? this.wasd.right.timeDown : 0));
+            vx = (rightTime >= leftTime) ? speed : -speed;
+        } else if (isLeft) {
+            vx = -speed;
+        } else if (isRight) {
+            vx = speed;
+        }
+
+        if (isUp && isDown) {
+            const upTime = Math.max((this.cursors.up ? this.cursors.up.timeDown : 0), (this.wasd.up ? this.wasd.up.timeDown : 0));
+            const downTime = Math.max((this.cursors.down ? this.cursors.down.timeDown : 0), (this.wasd.down ? this.wasd.down.timeDown : 0));
+            vy = (downTime >= upTime) ? speed : -speed;
+        } else if (isUp) {
+            vy = -speed;
+        } else if (isDown) {
+            vy = speed;
+        }
+        
+        if (vx !== 0 || vy !== 0) {
+            this.paddlePlayer.x = Phaser.Math.Clamp(this.paddlePlayer.x + (vx * delta * 0.001), cx - tableW / 2 + 25, cx + tableW / 2 - 25);
+            this.paddlePlayer.y = Phaser.Math.Clamp(this.paddlePlayer.y + (vy * delta * 0.001), cy + 20, cy + tableH / 2 - 25);
+        }
+        
+        const aiSpeed = 240;
+        if (this.puck.y < cy) {
+            if (this.paddleAI.x < this.puck.x - 12) {
+                this.paddleAI.setVelocityX(aiSpeed);
+            } else if (this.paddleAI.x > this.puck.x + 12) {
+                this.paddleAI.setVelocityX(-aiSpeed);
+            } else {
+                this.paddleAI.setVelocityX(0);
+            }
+
+            if (this.paddleAI.y < this.puck.y - 30) {
+                this.paddleAI.setVelocityY(aiSpeed * 0.6);
+            } else {
+                this.paddleAI.setVelocityY(-aiSpeed * 0.6);
+            }
+        } else {
+            if (this.paddleAI.x < cx - 15) {
+                this.paddleAI.setVelocityX(aiSpeed * 0.7);
+            } else if (this.paddleAI.x > cx + 15) {
+                this.paddleAI.setVelocityX(-aiSpeed * 0.7);
+            } else {
+                this.paddleAI.setVelocityX(0);
+            }
+            if (this.paddleAI.y > cy - 140) {
+                this.paddleAI.setVelocityY(-aiSpeed * 0.5);
+            } else {
+                this.paddleAI.setVelocityY(0);
+            }
+        }
+
+        this.paddleAI.y = Phaser.Math.Clamp(this.paddleAI.y, cy - tableH / 2 + 25, cy - 20);
+        
+        if (!this.scoring && !this.isGameOver) {
+            if (this.physics.overlap(this.puck, this.goalTop)) {
+                this.handleGoal('RILEY SCORED!', 'player');
+            } else if (this.physics.overlap(this.puck, this.goalBot)) {
+                this.handleGoal('AI SCORED!', 'ai');
+            }
+        }
+    }
+    
+    handleGoal(msg, scorer) {
+        if (this.scoring || this.isGameOver) return;
+        this.scoring = true;
+
+        if (scorer === 'player') {
+            this.playerScore += 1;
+        } else {
+            this.aiScore += 1;
+        }
+
+        // Freeze and hide puck immediately to prevent multi-overlap score corruption
+        this.puck.setVelocity(0, 0);
+        this.puck.setVisible(false);
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        this.scoreText.setText(`RILEY ${this.playerScore}  -  ${this.aiScore} AI`);
+        
+        const goalText = this.add.text(this.scale.width / 2, this.scale.height / 2, msg, {
+            fontSize: '14px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: 8
+        }).setOrigin(0.5);
+        
+        this.time.delayedCall(1000, () => {
+            goalText.destroy();
+            // Best of 7: First player to 4 goals wins
+            if (this.playerScore >= 4 || this.aiScore >= 4) {
+                this.finishGame();
+            } else {
+                this.resetPuck();
+                this.scoring = false;
+            }
+        });
+    }
+
+    finishGame() {
+        this.isGameOver = true;
+        this.completionMenuOpen = true;
+        this.menuSelectionIndex = 0;
+        this.menuReadyTime = this.time.now + 600;
+        this.puck.setVelocity(0, 0);
+        this.puck.setVisible(false);
+
+        // Reset key states to prevent accidental confirmation
+        if (this.cursors) {
+            if (this.cursors.space) this.cursors.space.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+        }
+        if (this.wasd) {
+            if (this.wasd.space) this.wasd.space.isDown = false;
+            if (this.wasd.enter) this.wasd.enter.isDown = false;
+            if (this.wasd.up) this.wasd.up.isDown = false;
+            if (this.wasd.down) this.wasd.down.isDown = false;
+        }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+        }
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+
+        const win = (this.playerScore >= 4);
+        if (win) {
+            const scores = getHeroZoneScores();
+            scores.airHockeyWins = (scores.airHockeyWins || 0) + 1;
+            saveHeroZoneScores(scores);
+        }
+
+        const cx = this.scale.width / 2;
+        const cy = this.scale.height / 2;
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        this.modalBackdrop = this.add.rectangle(cx, cy, W, H, 0x000000, 0.6).setScrollFactor(0).setDepth(500);
+        this.modalBg = this.add.rectangle(cx, cy, 340, 220, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800).setScrollFactor(0).setDepth(501);
+        this.modalTitle = this.add.text(cx, cy - 65, win ? '★ RILEY WINS SERIES! ★' : 'AI WINS SERIES!', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: win ? '#00FF00' : '#FF5555'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.modalScore = this.add.text(cx, cy - 35, `FINAL: RILEY ${this.playerScore} - ${this.aiScore} AI`, {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.modalSubtitle = this.add.text(cx, cy - 12, win ? 'BEST OF 7 CHAMPION!' : 'BEST OF 7 SERIES OVER', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.btnAgain = this.add.text(cx, cy + 25, '  PLAY AGAIN  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.btnExitModal = this.add.text(cx, cy + 65, '  RETURN TO HERO ZONE  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.menuCursor = this.add.text(cx - 95, cy + 25, '►', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+= 6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        this.btnAgain.on('pointerover', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+        });
+        this.btnAgain.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.btnExitModal.on('pointerover', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+        });
+        this.btnExitModal.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.updateMenuVisuals();
+    }
+
+    updateMenuVisuals() {
+        if (!this.btnAgain || !this.btnExitModal || !this.menuCursor) return;
+        const cx = this.scale.width / 2;
+        const cy = this.scale.height / 2;
+        if (this.menuSelectionIndex === 0) {
+            this.btnAgain.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+            this.btnExitModal.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
+            this.menuCursor.setPosition(cx - 95, cy + 25);
+        } else {
+            this.btnAgain.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
+            this.btnExitModal.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
+            this.menuCursor.setPosition(cx - 135, cy + 65);
+        }
+    }
+
+    confirmMenuChoice() {
+        if (this.menuSelectionIndex === 0) {
+            this.restartAirHockey();
+        } else {
+            this.exitAirHockey();
+        }
+    }
+}
+
+// =========================================================================
+// STATION 3: BASKETBALL SHOOTOUT SCENE
+// =========================================================================
+
+class BasketballShootoutScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'BasketballShootoutScene' });
+    }
+
+    init(data) {
+        this.heroZone = data ? data.heroZone : null;
+        this.score = 0;
+        this.timeLeft = 45;
+        this.streak = 0;
+        this.bestStreak = 0;
+        this.isGameOver = false;
+        this.isExiting = false;
+        this.completionMenuOpen = false;
+        this.menuSelectionIndex = 0;
+        this.menuReadyTime = 0;
+
+        this.isCharging = false;
+        this.chargeTime = 0;
+        this.chargeDir = 1;
+        this.canShoot = true;
+    }
+
+    create() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.init) {
+            retroArcadeAudio.init();
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        this.physics.world.setBounds(0, 0, W, H);
+        this.physics.world.gravity.y = 850;
+
+        if (!this.textures.exists('hz_bball')) {
+            let g = this.add.graphics();
+            g.fillStyle(0xE65C00, 1);
+            g.fillCircle(14, 14, 14);
+            g.lineStyle(2, 0x000000, 1);
+            g.strokeCircle(14, 14, 14);
+            g.beginPath();
+            g.moveTo(0, 14); g.lineTo(28, 14);
+            g.moveTo(14, 0); g.lineTo(14, 28);
+            g.strokePath();
+            g.generateTexture('hz_bball', 28, 28);
+            g.destroy();
+        }
+
+        // 1. Arcade Background & Booth Framing
+        this.add.rectangle(0, 0, W, H, 0x110202).setOrigin(0).setDepth(0);
+        this.add.tileSprite(W / 2, H / 2, W, H, 'hz_wall_pattern').setDepth(1).setAlpha(0.65);
+
+        // Floor
+        const floorY = H - 50;
+        this.floorY = floorY;
+        this.add.rectangle(W / 2, floorY + 25, W, 50, 0x331010).setDepth(2);
+        this.add.rectangle(W / 2, floorY, W, 4, 0xF8B800).setDepth(3);
+
+        // Centered Pop-A-Shot Booth
+        const cx = Math.round(W / 2);
+        const boothW = Math.min(520, Math.round(W * 0.88));
+        this.boothW = boothW;
+
+        // Pop-A-Shot Cage / Frame
+        this.add.rectangle(cx, H / 2, boothW, H - 40, 0x000000, 0.45).setDepth(2).setStrokeStyle(3, 0xE65C00);
+
+        // Shooter and Hoop positions
+        this.shooterX = Math.round(cx - boothW / 2 + 70);
+        this.shooterY = floorY - 20;
+
+        const hoopX = Math.round(cx + boothW / 2 - 75);
+        const hoopY = Math.max(130, Math.round(floorY - 200));
+        this.hoopX = hoopX;
+        this.hoopY = hoopY;
+
+        // Ball return ramp
+        const ramp = this.add.graphics().setDepth(3);
+        ramp.fillStyle(0x222222, 1);
+        ramp.beginPath();
+        ramp.moveTo(hoopX + 48, floorY - 60);
+        ramp.lineTo(this.shooterX + 30, floorY);
+        ramp.lineTo(hoopX + 48, floorY);
+        ramp.closePath();
+        ramp.fillPath();
+
+        // 2. Backboard & Hoop
+        // Support Post
+        this.add.rectangle(hoopX + 58, hoopY + 80, 14, floorY - (hoopY + 80) + 40, 0x444444).setDepth(3);
+
+        // Backboard
+        this.backboard = this.add.rectangle(hoopX + 48, hoopY - 30, 14, 90, 0xFFFFFF).setDepth(4).setStrokeStyle(3, 0xD01000);
+        this.physics.add.existing(this.backboard, true);
+
+        // Backboard Inner Box
+        this.add.rectangle(hoopX + 42, hoopY - 20, 4, 34, 0xD01000).setDepth(5);
+
+        // Rim
+        this.rimFront = this.add.circle(hoopX - 18, hoopY, 4, 0xE65C00).setDepth(6);
+        this.physics.add.existing(this.rimFront, true);
+        this.rimBack = this.add.circle(hoopX + 38, hoopY, 4, 0xE65C00).setDepth(6);
+        this.physics.add.existing(this.rimBack, true);
+
+        // Net graphics
+        this.netGfx = this.add.graphics().setDepth(5);
+        this.drawNet(hoopX, hoopY, 1);
+
+        // Hoop Scoring Sensor Zone (centered between rimFront at hoopX - 18 and rimBack at hoopX + 38)
+        this.hoopSensor = this.add.zone(hoopX + 10, hoopY + 8, 40, 12);
+        this.physics.add.existing(this.hoopSensor, true);
+
+        // 3. Player Riley at Shooting Line
+        this.player = this.add.sprite(this.shooterX, this.shooterY, 'riley_idle').setDepth(10);
+        this.playerShadow = this.add.ellipse(this.shooterX, floorY, 26, 8, 0x000000, 0.5).setDepth(9);
+
+        // Held ball
+        this.heldBall = this.add.sprite(this.shooterX + 16, this.shooterY - 14, 'hz_bball').setDepth(11);
+
+        // Active basketballs group
+        this.balls = this.physics.add.group();
+        this.physics.add.collider(this.balls, this.backboard, (objA, objB) => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        }, (objA, objB) => {
+            const ball = (objA === this.backboard) ? objB : objA;
+            if (ball && ball.scored) return false;
+            return true;
+        }, this);
+
+        this.physics.add.collider(this.balls, this.rimFront, (objA, objB) => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        }, (objA, objB) => {
+            const ball = (objA === this.rimFront) ? objB : objA;
+            const rim = (objA === this.rimFront) ? objA : objB;
+            // Allow descending ball through the hoop opening without bouncing on top of rim
+            if (ball && ball.body && ball.body.velocity.y > 0 && ball.x >= rim.x - 4) {
+                return false;
+            }
+            return true;
+        }, this);
+
+        this.physics.add.collider(this.balls, this.rimBack, (objA, objB) => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        }, (objA, objB) => {
+            const ball = (objA === this.rimBack) ? objB : objA;
+            const rim = (objA === this.rimBack) ? objA : objB;
+            // Allow descending ball through the hoop opening
+            if (ball && ball.body && (ball.scored || (ball.body.velocity.y > 0 && ball.x <= rim.x + 4))) {
+                return false;
+            }
+            return true;
+        }, this);
+
+        // Overlap sensor for scoring
+        this.physics.add.overlap(this.balls, this.hoopSensor, (objA, objB) => {
+            const ball = (objA === this.hoopSensor) ? objB : objA;
+            if (ball && ball.body) {
+                this.handleBasket(ball);
+            }
+        }, null, this);
+
+        // 4. Power Meter UI
+        this.powerMeterBg = this.add.rectangle(this.shooterX, this.shooterY - 50, 80, 12, 0x000000, 0.8).setDepth(15).setStrokeStyle(2, 0xFFFFFF);
+        this.powerMeterFill = this.add.rectangle(this.shooterX - 38, this.shooterY - 50, 0, 8, 0x00FF00).setDepth(16).setOrigin(0, 0.5);
+        // Sweet spot marker (centered around 73% power)
+        this.add.rectangle(this.shooterX + 17, this.shooterY - 50, 12, 10, 0xFFD700, 0.6).setDepth(17);
+
+        // 5. Retro LED Scoreboard
+        this.add.rectangle(W / 2, 40, 420, 45, 0x000000, 0.9).setDepth(20).setStrokeStyle(3, 0xF8B800);
+        this.scoreDisplay = this.add.text(W / 2 - 110, 40, 'SCORE: 00', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#00FF00'
+        }).setOrigin(0.5).setDepth(21);
+
+        this.timeDisplay = this.add.text(W / 2 + 100, 40, 'TIME: 45', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FF5555'
+        }).setOrigin(0.5).setDepth(21);
+
+        this.streakDisplay = this.add.text(W / 2, 70, '', {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
+        }).setOrigin(0.5).setDepth(21);
+
+        // Top-Right [ RESTART ] Button
+        this.hudRestartBtn = this.add.text(W - 195, 30, '[ RESTART ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudRestartBtn.on('pointerdown', () => this.restartShootout());
+
+        // Top-Right [ EXIT ] Button
+        this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 6 }
+        }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+        this.hudExitBtn.on('pointerdown', () => this.exitShootout());
+
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            this.input.keyboard.addCapture([
+                Phaser.Input.Keyboard.KeyCodes.UP,
+                Phaser.Input.Keyboard.KeyCodes.DOWN,
+                Phaser.Input.Keyboard.KeyCodes.LEFT,
+                Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                Phaser.Input.Keyboard.KeyCodes.SPACE,
+                Phaser.Input.Keyboard.KeyCodes.ENTER,
+                Phaser.Input.Keyboard.KeyCodes.ESC,
+                Phaser.Input.Keyboard.KeyCodes.W,
+                Phaser.Input.Keyboard.KeyCodes.A,
+                Phaser.Input.Keyboard.KeyCodes.S,
+                Phaser.Input.Keyboard.KeyCodes.D,
+                Phaser.Input.Keyboard.KeyCodes.R
+            ]);
+        }
+
+        if (this.game && this.game.canvas) {
+            this.game.canvas.setAttribute('tabindex', '0');
+            this.game.canvas.focus();
+            this.game.canvas.addEventListener('click', () => {
+                if (this.game && this.game.canvas) this.game.canvas.focus();
+            });
+        }
+
+        // Keyboard Controls
+        this.keys = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.UP,
+            down: Phaser.Input.Keyboard.KeyCodes.DOWN,
+            left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+            right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+            w: Phaser.Input.Keyboard.KeyCodes.W,
+            s: Phaser.Input.Keyboard.KeyCodes.S,
+            a: Phaser.Input.Keyboard.KeyCodes.A,
+            d: Phaser.Input.Keyboard.KeyCodes.D,
+            space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+            enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            esc: Phaser.Input.Keyboard.KeyCodes.ESC,
+            r: Phaser.Input.Keyboard.KeyCodes.R
+        });
+
+        const resetHoopKeys = () => {
+            if (this.keys) {
+                if (this.keys.space) this.keys.space.isDown = false;
+                if (this.keys.enter) this.keys.enter.isDown = false;
+                if (this.keys.up) this.keys.up.isDown = false;
+                if (this.keys.down) this.keys.down.isDown = false;
+                if (this.keys.left) this.keys.left.isDown = false;
+                if (this.keys.right) this.keys.right.isDown = false;
+                if (this.keys.w) this.keys.w.isDown = false;
+                if (this.keys.s) this.keys.s.isDown = false;
+                if (this.keys.a) this.keys.a.isDown = false;
+                if (this.keys.d) this.keys.d.isDown = false;
+                if (this.keys.esc) this.keys.esc.isDown = false;
+                if (this.keys.r) this.keys.r.isDown = false;
+            }
+            if (this.isCharging) {
+                this.releaseShot();
+            }
+        };
+
+        const onHoopNativeKeyUp = (e) => {
+            if (e.code === 'Space') {
+                if (this.keys && this.keys.space) this.keys.space.isDown = false;
+                if (this.isCharging) {
+                    this.releaseShot();
+                }
+            }
+            if (e.key === 'r' || e.key === 'R') {
+                if (this.keys && this.keys.r) this.keys.r.isDown = false;
+            }
+            if (e.key === 'Enter') {
+                if (this.keys && this.keys.enter) this.keys.enter.isDown = false;
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetHoopKeys();
+            }
+        };
+
+        window.addEventListener('blur', resetHoopKeys);
+        window.addEventListener('focus', resetHoopKeys);
+        window.addEventListener('keyup', onHoopNativeKeyUp);
+        const onVisHoop = () => { if (document.hidden) resetHoopKeys(); };
+        document.addEventListener('visibilitychange', onVisHoop);
+
+        this._cleanWindowListeners = () => {
+            window.removeEventListener('blur', resetHoopKeys);
+            window.removeEventListener('focus', resetHoopKeys);
+            window.removeEventListener('keyup', onHoopNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisHoop);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
+        });
+
+        // Mobile Shoot Button
+        const shootBtn = this.add.rectangle(W / 2, H - 45, 160, 50, 0xE65C00, 0.85).setDepth(100).setStrokeStyle(3, 0xF8B800).setInteractive();
+        this.add.text(W / 2, H - 45, 'SHOOT [HOLD]', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
+        }).setOrigin(0.5).setDepth(101);
+
+        shootBtn.on('pointerdown', () => this.startCharge());
+        shootBtn.on('pointerup', () => this.releaseShot());
+        shootBtn.on('pointerout', () => { if (this.isCharging) this.releaseShot(); });
+
+        // Timer Event
+        this.gameTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.tickTimer,
+            callbackScope: this,
+            loop: true
+        });
+    }
+
+    drawNet(hoopX, hoopY, scaleY) {
+        this.netGfx.clear();
+        this.netGfx.lineStyle(2, 0xFFFFFF, 0.85);
+        this.netGfx.beginPath();
+        this.netGfx.moveTo(hoopX - 18, hoopY + 2);
+        this.netGfx.lineTo(hoopX - 6, hoopY + 26 * scaleY);
+        this.netGfx.lineTo(hoopX + 24, hoopY + 26 * scaleY);
+        this.netGfx.lineTo(hoopX + 36, hoopY + 2);
+        this.netGfx.strokePath();
+
+        // Cross-hatching
+        this.netGfx.lineBetween(hoopX - 10, hoopY + 12 * scaleY, hoopX + 30, hoopY + 12 * scaleY);
+        this.netGfx.lineBetween(hoopX - 4, hoopY + 20 * scaleY, hoopX + 24, hoopY + 20 * scaleY);
+    }
+
+    startCharge() {
+        if (!this.canShoot || this.isGameOver) return;
+        this.isCharging = true;
+        this.chargeTime = 0;
+        this.chargeDir = 1;
+    }
+
+    releaseShot() {
+        if (!this.isCharging || this.isGameOver) return;
+        this.isCharging = false;
+        this.canShoot = false;
+        if (this.heldBall) this.heldBall.setVisible(false);
+
+        // Power calculation (0..1)
+        const powerFraction = Phaser.Math.Clamp(this.chargeTime / 750, 0.05, 1.0);
+
+        // Kinematic calculation to reach the hoop with an arc
+        const startX = this.shooterX + 16;
+        const startY = this.shooterY - 14;
+        const targetX = this.hoopX + 10;
+        const targetY = this.hoopY;
+
+        const dX = targetX - startX;
+        const dY = targetY - startY; // negative since targetY is higher than startY
+        const g = this.physics.world.gravity.y;
+
+        // Desired apex rise above hoop for a high arc
+        const apexRise = 100;
+        const h_rise = -dY + apexRise; // total vertical rise from start to apex
+        const idealVy = -Math.sqrt(2 * g * h_rise);
+        const t_up = -idealVy / g;
+        const t_down = Math.sqrt(2 * apexRise / g);
+        const totalTime = t_up + t_down;
+        const idealVx = dX / totalTime;
+
+        // Sweet spot is centered at 0.73 (marker at 68% - 78%)
+        // When powerFraction is 0.73, powerRatio is 1.0 (exact swish into the basket)
+        // Under 0.73 -> falls short or hits front rim
+        // Over 0.73 -> goes too far, hits backboard or back rim
+        const sweetSpot = 0.73;
+        const powerRatio = 0.55 + (powerFraction / sweetSpot) * 0.45;
+
+        const vx = idealVx * powerRatio;
+        const vy = idealVy * Math.sqrt(powerRatio);
+
+        const ball = this.balls.create(startX, startY, 'hz_bball');
+        ball.setCircle(14);
+        ball.setBounce(0.68, 0.68);
+        ball.setCollideWorldBounds(true);
+        ball.setVelocity(vx, vy);
+        ball.scored = false;
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('shoot');
+        }
+
+        // Reset power meter
+        this.powerMeterFill.width = 0;
+
+        // Respawn next ball after 0.45s
+        this.time.delayedCall(450, () => {
+            if (!this.isGameOver) {
+                this.canShoot = true;
+                if (this.heldBall) this.heldBall.setVisible(true);
+            }
+        });
+
+        // Clean up ball after 4 seconds
+        this.time.delayedCall(4000, () => {
+            if (ball && ball.active) {
+                ball.destroy();
+            }
+        });
+    }
+
+    handleBasket(ball) {
+        if (ball.scored || ball.body.velocity.y <= 0) return;
+        ball.scored = true;
+
+        const isClean = (Math.abs(ball.x - (this.hoopX + 10)) < 20);
+        const pts = isClean ? 3 : 2;
+        this.streak++;
+        if (this.streak > this.bestStreak) this.bestStreak = this.streak;
+
+        const bonus = (this.streak >= 3) ? 1 : 0;
+        const totalPts = pts + bonus;
+        this.score += totalPts;
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+
+        this.scoreDisplay.setText(`SCORE: ${String(this.score).padStart(2, '0')}`);
+        if (this.streak >= 2) {
+            this.streakDisplay.setText(`🔥 ${this.streak} STREAK! 🔥`);
+        }
+
+        // Net swish animation
+        this.tweens.addCounter({
+            from: 1,
+            to: 1.4,
+            duration: 100,
+            yoyo: true,
+            onUpdate: (tween) => {
+                this.drawNet(this.hoopX, this.hoopY, tween.getValue());
+            }
+        });
+
+        // Floating score popup
+        const msg = isClean ? `★ SWISH! +${totalPts} ★` : `+${totalPts} PTS!`;
+        const pop = this.add.text(this.hoopX + 10, this.hoopY - 25, msg, {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: isClean ? '#FFFF00' : '#00FF00', backgroundColor: '#000', padding: 3
+        }).setOrigin(0.5).setDepth(30);
+
+        this.tweens.add({
+            targets: pop,
+            y: this.hoopY - 55,
+            alpha: 0,
+            duration: 900,
+            onComplete: () => pop.destroy()
+        });
+    }
+
+    tickTimer() {
+        if (this.isGameOver) return;
+        this.timeLeft--;
+        this.timeDisplay.setText(`TIME: ${String(this.timeLeft).padStart(2, '0')}`);
+
+        if (this.timeLeft <= 0) {
+            this.finishShootout();
+        }
+    }
+
+    restartShootout() {
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('powerup');
+        }
+        if (this.gameTimer) {
+            this.gameTimer.remove();
+        }
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        this.scene.restart();
+    }
+
+    finishShootout() {
+        this.isGameOver = true;
+        this.completionMenuOpen = true;
+        this.menuSelectionIndex = 0;
+        this.menuReadyTime = this.time.now + 600;
+        this.isCharging = false;
+        if (this.gameTimer) this.gameTimer.remove();
+
+        // Reset key states to prevent accidental confirmation
+        if (this.keys) {
+            if (this.keys.space) this.keys.space.isDown = false;
+            if (this.keys.enter) this.keys.enter.isDown = false;
+            if (this.keys.up) this.keys.up.isDown = false;
+            if (this.keys.down) this.keys.down.isDown = false;
+        }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+        }
+
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('explosion');
+        }
+
+        const scores = getHeroZoneScores();
+        let isNewRecord = false;
+        if (this.score > (scores.basketballScore || 0)) {
+            scores.basketballScore = this.score;
+            scores.basketballHolder = 'RILEY';
+            saveHeroZoneScores(scores);
+            isNewRecord = true;
+        }
+
+        const W = this.scale.width;
+        const H = this.scale.height;
+
+        this.modalBackdrop = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.6).setScrollFactor(0).setDepth(500);
+        this.modalBg = this.add.rectangle(W / 2, H / 2, 340, 230, 0x000000, 0.95).setStrokeStyle(4, 0xF8B800).setScrollFactor(0).setDepth(501);
+        this.modalTitle = this.add.text(W / 2, H / 2 - 75, '★ TIME\'S UP! ★', {
+            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FF5555'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        const scoreTxt = this.add.text(W / 2, H / 2 - 45, `FINAL SCORE: ${this.score} PTS`, {
+            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#00FF00'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        const streakTxt = this.add.text(W / 2, H / 2 - 20, `BEST STREAK: ${this.bestStreak}`, {
+            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        const recordTxt = this.add.text(W / 2, H / 2 + 10, isNewRecord ? '★ NEW HIGH SCORE! ★' : `RECORD: ${scores.basketballScore} PTS (${scores.basketballHolder})`, {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: isNewRecord ? '#FFD700' : '#A0D0FF'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.btnAgain = this.add.text(W / 2, H / 2 + 48, '  PLAY AGAIN  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.btnExitModal = this.add.text(W / 2, H / 2 + 85, '  RETURN TO HERO ZONE  ', {
+            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 10, y: 6 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
+
+        this.menuCursor = this.add.text(W / 2 - 105, H / 2 + 48, '►', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
+
+        this.tweens.add({
+            targets: this.menuCursor,
+            x: '+= 6',
+            duration: 350,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        this.btnAgain.on('pointerover', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+        });
+        this.btnAgain.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.btnExitModal.on('pointerover', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+        });
+        this.btnExitModal.on('pointerdown', () => this.confirmMenuChoice());
+
+        this.updateMenuVisuals();
+    }
+
+    updateMenuVisuals() {
+        if (!this.btnAgain || !this.btnExitModal || !this.menuCursor) return;
+        const W = this.scale.width;
+        const H = this.scale.height;
+        if (this.menuSelectionIndex === 0) {
+            this.btnAgain.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
+            this.btnExitModal.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
+            this.menuCursor.setPosition(W / 2 - 105, H / 2 + 48);
+        } else {
+            this.btnAgain.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
+            this.btnExitModal.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
+            this.menuCursor.setPosition(W / 2 - 145, H / 2 + 85);
+        }
+    }
+
+    confirmMenuChoice() {
+        if (this.menuSelectionIndex === 0) {
+            this.restartShootout();
+        } else {
+            this.exitShootout();
+        }
+    }
+
+    exitShootout() {
+        if (this.isExiting) return;
+        this.isExiting = true;
+        if (this._cleanWindowListeners) {
+            this._cleanWindowListeners();
+        }
+        if (this.gameTimer) this.gameTimer.remove();
+        if (this.heroZone && this.heroZone.scene) {
+            this.heroZone.scene.setVisible(true);
+            this.heroZone.scene.resume();
+            if (this.heroZone.refreshLeaderboard) {
+                this.heroZone.refreshLeaderboard();
+            }
+        }
+        this.scene.stop('BasketballShootoutScene');
+    }
+
+    update(time, delta) {
+        if (this.keys.r && Phaser.Input.Keyboard.JustDown(this.keys.r)) {
+            this.restartShootout();
+            return;
+        }
+
+        if (this.keys.esc && Phaser.Input.Keyboard.JustDown(this.keys.esc)) {
+            this.exitShootout();
+            return;
+        }
+
+        if (this.completionMenuOpen) {
+            if (this.time.now < this.menuReadyTime) return;
+
+            const isUp = (this.keys.up && Phaser.Input.Keyboard.JustDown(this.keys.up)) || 
+                         (this.keys.w && Phaser.Input.Keyboard.JustDown(this.keys.w));
+
+            const isDown = (this.keys.down && Phaser.Input.Keyboard.JustDown(this.keys.down)) || 
+                           (this.keys.s && Phaser.Input.Keyboard.JustDown(this.keys.s));
+
+            if (isUp) {
+                this.menuSelectionIndex = 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            } else if (isDown) {
+                this.menuSelectionIndex = 1;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            }
+
+            const isConfirm = (this.keys.enter && Phaser.Input.Keyboard.JustDown(this.keys.enter)) || 
+                              (this.keys.space && Phaser.Input.Keyboard.JustDown(this.keys.space));
+
+            if (isConfirm) {
+                this.confirmMenuChoice();
+            }
+            return;
+        }
+
+        if (this.isGameOver) return;
+
+        // Spacebar shooting controls
+        if (Phaser.Input.Keyboard.JustDown(this.keys.space)) {
+            this.startCharge();
+        } else if (this.keys.space.isDown && this.isCharging) {
+            // Charging
+            this.chargeTime += delta * 1.2 * this.chargeDir;
+            if (this.chargeTime >= 750) {
+                this.chargeTime = 750;
+                this.chargeDir = -1;
+            } else if (this.chargeTime <= 0) {
+                this.chargeTime = 0;
+                this.chargeDir = 1;
+            }
+            this.powerMeterFill.width = (this.chargeTime / 750) * 76;
+        } else if (Phaser.Input.Keyboard.JustUp(this.keys.space) && this.isCharging) {
+            this.releaseShot();
+        }
+    }
+}
+
 config.scene = [
     BootScene,
     TitleScene,
@@ -9482,6 +12336,10 @@ config.scene = [
     ElevatorMenuScene,
     BoutiqueScene,
     EdgeClubScene,
+    HeroZoneScene,
+    ObstacleCourseScene,
+    AirHockeyScene,
+    BasketballShootoutScene,
     ArcadeShooterScene
 ];
 window.game = new Phaser.Game(config);
