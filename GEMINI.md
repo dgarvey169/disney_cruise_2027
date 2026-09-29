@@ -76,9 +76,36 @@
     - #43: Midship Elevators and UI Floor Selection Menu (Completed)
     - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI)
     - #45: Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
-    - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
+    - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course - Completed)
     - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet - Completed)
   - Storyboard documented in detail in `Issue_12_Storyboard.md`.
+
+- **Riley's Hero Zone (Issue #46 - Completed)**:
+  - **Deck 12 Venue Entrance**: Interactive entrance doorway at Deck 12 (`x = 1750`) with marquee signage and prompt `[ ENTER: HERO ZONE ]` / `[ TAP TO ENTER HERO ZONE ]`. Entering automatically sets active character to Riley and opens `HeroZoneScene`.
+  - **Hero Zone Lounge (`HeroZoneScene`)**:
+    - Authentic 2.5D sports/entertainment arena with retro floorboards (`hz_floor`), banner-decorated walls (`hz_wall_pattern`), and dynamic depth-sorted Riley movement (`groundY = 480..540`).
+    - **Station-Based Mini-Game Hub**:
+      - Station 1 (`x = 420`): Incredibles Timed Obstacle Course (`ObstacleCourseScene`).
+      - Station 2 (`x = 760`): Retro Air Hockey Table (`AirHockeyScene`).
+      - Station 3 (`x = 1100`): Pop-A-Shot Basketball Shootout (`BasketballShootoutScene`).
+      - Station 4 (`x = 1420`): "Hall of Heroes" CRT dynamic records display.
+      - Station 5 (`x = 120`): Deck 12 Exit door returning cleanly to the cruise ship.
+    - **SOCD Input Priority & DOM Safety Teardown**:
+      - Implemented Last-Input-Priority (SOCD) for keyboard movement (`A`/`D` and `W`/`S`) to eliminate stuck movement keys.
+      - Attached native `blur`, `focus`, and `visibilitychange` listeners to flush key states when switching windows.
+  - **Station 1: Incredibles Timed Obstacle Course (`ObstacleCourseScene`)**:
+    - 3800px side-scrolling obstacle run with dynamic hurdle barriers, swinging wrecking ball pendulums, climbing wall challenge, speed slide ramp, and finish line buzzer.
+    - Added rival racer Dash with authentic 8-bit AI running mechanics.
+    - Fixed scrolled-camera hit-testing by replacing containers with standalone GameObjects (`setScrollFactor(0)`).
+    - 600ms input debounce window on race completion with strict vertical menu navigation (`Up`/`W` and `Down`/`S`), preventing held jump/sprint keys from auto-confirming exit.
+    - Instant hotkeys: `R` to restart run, `ESC` to exit to Hero Zone, plus on-screen HUD `[ RESTART ]` and `[ EXIT ]` buttons.
+  - **Station 2: Retro Air Hockey Table (`AirHockeyScene`)**:
+    - Authentic top-down air hockey rink with dynamic mallet collisions and reactive AI opponent.
+    - Persistent **Best of 7 series** (first player to 4 goals wins) with 1-point atomic goal handling, temporary puck freeze/hide to prevent multi-frame overlap triggers, automated puck center respawn, and series championship announcement (**★ RILEY WINS SERIES! ★**).
+  - **Station 3: Basketball Shootout ("Pop-A-Shot" / `BasketballShootoutScene`)**:
+    - Centered arcade booth geometry (`boothW = Math.min(520, Math.round(W * 0.88))`) with calibrated shooting distance across all desktop and mobile screen resolutions.
+    - Dynamic kinematic projectile physics ($idealVx$, $idealVy$, $apexRise = 100$) mapped to charging power meter.
+    - Defensive identity discrimination and `processCallback` rim guards allowing downward-falling basketballs to enter the hoop unimpeded, achieving authentic 3-point swishes on sweet spot releases (68%–78% power).
 
 - **Riley's Edge Tween Club Arcade (Issue #47 - Completed)**:
   - **Elevator Navigation**: Added `Deck 5 (Edge Tween Club)` destination in `ElevatorMenuScene`. Selecting it automatically sets active character to Riley and launches `EdgeClubScene`.
