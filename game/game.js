@@ -10327,6 +10327,7 @@ class ObstacleCourseScene extends Phaser.Scene {
 
         this.completionMenuOpen = false;
         this.menuSelectionIndex = 0;
+        this.menuReadyTime = 0;
 
         // Mobile touch controls
         this.touchLeft = false;
@@ -10796,21 +10797,31 @@ class ObstacleCourseScene extends Phaser.Scene {
 
         if (this.completionMenuOpen) {
             this.player.setVelocity(0, 0);
+            if (this.time.now < this.menuReadyTime) {
+                return;
+            }
+
             const isUp = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) || 
-                         (this.keysWASD.up && Phaser.Input.Keyboard.JustDown(this.keysWASD.up)) ||
-                         (this.cursors.left && Phaser.Input.Keyboard.JustDown(this.cursors.left)) || 
-                         (this.keysWASD.left && Phaser.Input.Keyboard.JustDown(this.keysWASD.left));
+                         (this.keysWASD.up && Phaser.Input.Keyboard.JustDown(this.keysWASD.up));
 
             const isDown = (this.cursors.down && Phaser.Input.Keyboard.JustDown(this.cursors.down)) || 
-                           (this.keysWASD.down && Phaser.Input.Keyboard.JustDown(this.keysWASD.down)) ||
-                           (this.cursors.right && Phaser.Input.Keyboard.JustDown(this.cursors.right)) || 
-                           (this.keysWASD.right && Phaser.Input.Keyboard.JustDown(this.keysWASD.right));
+                           (this.keysWASD.down && Phaser.Input.Keyboard.JustDown(this.keysWASD.down));
 
-            if (isUp || isDown) {
-                this.menuSelectionIndex = (this.menuSelectionIndex === 0) ? 1 : 0;
-                this.updateMenuVisuals();
-                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
-                    retroArcadeAudio.play('laser');
+            if (isUp) {
+                if (this.menuSelectionIndex !== 0) {
+                    this.menuSelectionIndex = 0;
+                    this.updateMenuVisuals();
+                    if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                        retroArcadeAudio.play('laser');
+                    }
+                }
+            } else if (isDown) {
+                if (this.menuSelectionIndex !== 1) {
+                    this.menuSelectionIndex = 1;
+                    this.updateMenuVisuals();
+                    if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                        retroArcadeAudio.play('laser');
+                    }
                 }
             }
 
@@ -10959,7 +10970,25 @@ class ObstacleCourseScene extends Phaser.Scene {
         this.raceFinished = true;
         this.completionMenuOpen = true;
         this.menuSelectionIndex = 0;
+        this.menuReadyTime = this.time.now + 600;
         this.player.setVelocity(0, 0);
+
+        if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
+        if (this.cursors) {
+            if (this.cursors.left) this.cursors.left.isDown = false;
+            if (this.cursors.right) this.cursors.right.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+            if (this.cursors.space) this.cursors.space.isDown = false;
+        }
+        if (this.keysWASD) {
+            if (this.keysWASD.left) this.keysWASD.left.isDown = false;
+            if (this.keysWASD.right) this.keysWASD.right.isDown = false;
+            if (this.keysWASD.up) this.keysWASD.up.isDown = false;
+            if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+            if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+            if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+        }
 
         if (this.touchContainer) {
             this.touchContainer.setVisible(false);
@@ -11083,6 +11112,8 @@ class AirHockeyScene extends Phaser.Scene {
         this.isExiting = false;
         this.completionMenuOpen = false;
         this.menuSelectionIndex = 0;
+        this.menuReadyTime = 0;
+        this.scoring = false;
     }
 
     create() {
@@ -11183,7 +11214,7 @@ class AirHockeyScene extends Phaser.Scene {
             fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
         }).setOrigin(0.5);
 
-        this.add.text(cx, 65, 'FIRST TO 3 GOALS WINS!', {
+        this.add.text(cx, 65, 'BEST OF 7 SERIES (FIRST TO 4 WINS)', {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
         }).setOrigin(0.5);
 
@@ -11321,6 +11352,7 @@ class AirHockeyScene extends Phaser.Scene {
     resetPuck() {
         const { cx, cy } = this.tableBounds;
         this.puck.setPosition(cx, cy);
+        this.puck.setVisible(true);
         const vx = (Math.random() - 0.5) * 350;
         const vy = (Math.random() > 0.5 ? 220 : -220);
         this.puck.setVelocity(vx, vy);
@@ -11364,18 +11396,22 @@ class AirHockeyScene extends Phaser.Scene {
         }
 
         if (this.completionMenuOpen) {
+            if (this.time.now < this.menuReadyTime) return;
+
             const isUp = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) || 
-                         (this.wasd.up && Phaser.Input.Keyboard.JustDown(this.wasd.up)) ||
-                         (this.cursors.left && Phaser.Input.Keyboard.JustDown(this.cursors.left)) || 
-                         (this.wasd.left && Phaser.Input.Keyboard.JustDown(this.wasd.left));
+                         (this.wasd.up && Phaser.Input.Keyboard.JustDown(this.wasd.up));
 
             const isDown = (this.cursors.down && Phaser.Input.Keyboard.JustDown(this.cursors.down)) || 
-                           (this.wasd.down && Phaser.Input.Keyboard.JustDown(this.wasd.down)) ||
-                           (this.cursors.right && Phaser.Input.Keyboard.JustDown(this.cursors.right)) || 
-                           (this.wasd.right && Phaser.Input.Keyboard.JustDown(this.wasd.right));
+                           (this.wasd.down && Phaser.Input.Keyboard.JustDown(this.wasd.down));
 
-            if (isUp || isDown) {
-                this.menuSelectionIndex = (this.menuSelectionIndex === 0) ? 1 : 0;
+            if (isUp) {
+                this.menuSelectionIndex = 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            } else if (isDown) {
+                this.menuSelectionIndex = 1;
                 this.updateMenuVisuals();
                 if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
                     retroArcadeAudio.play('laser');
@@ -11462,16 +11498,29 @@ class AirHockeyScene extends Phaser.Scene {
 
         this.paddleAI.y = Phaser.Math.Clamp(this.paddleAI.y, cy - tableH / 2 + 25, cy - 20);
         
-        if (this.physics.overlap(this.puck, this.goalTop)) {
-            this.playerScore++;
-            this.handleGoal('RILEY SCORED!');
-        } else if (this.physics.overlap(this.puck, this.goalBot)) {
-            this.aiScore++;
-            this.handleGoal('AI SCORED!');
+        if (!this.scoring && !this.isGameOver) {
+            if (this.physics.overlap(this.puck, this.goalTop)) {
+                this.handleGoal('RILEY SCORED!', 'player');
+            } else if (this.physics.overlap(this.puck, this.goalBot)) {
+                this.handleGoal('AI SCORED!', 'ai');
+            }
         }
     }
     
-    handleGoal(msg) {
+    handleGoal(msg, scorer) {
+        if (this.scoring || this.isGameOver) return;
+        this.scoring = true;
+
+        if (scorer === 'player') {
+            this.playerScore += 1;
+        } else {
+            this.aiScore += 1;
+        }
+
+        // Freeze and hide puck immediately to prevent multi-overlap score corruption
+        this.puck.setVelocity(0, 0);
+        this.puck.setVisible(false);
+
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
@@ -11481,12 +11530,14 @@ class AirHockeyScene extends Phaser.Scene {
             fontSize: '14px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: 8
         }).setOrigin(0.5);
         
-        this.time.delayedCall(800, () => {
+        this.time.delayedCall(1000, () => {
             goalText.destroy();
-            if (this.playerScore >= 3 || this.aiScore >= 3) {
+            // Best of 7: First player to 4 goals wins
+            if (this.playerScore >= 4 || this.aiScore >= 4) {
                 this.finishGame();
             } else {
                 this.resetPuck();
+                this.scoring = false;
             }
         });
     }
@@ -11495,12 +11546,31 @@ class AirHockeyScene extends Phaser.Scene {
         this.isGameOver = true;
         this.completionMenuOpen = true;
         this.menuSelectionIndex = 0;
+        this.menuReadyTime = this.time.now + 600;
         this.puck.setVelocity(0, 0);
+        this.puck.setVisible(false);
+
+        // Reset key states to prevent accidental confirmation
+        if (this.cursors) {
+            if (this.cursors.space) this.cursors.space.isDown = false;
+            if (this.cursors.up) this.cursors.up.isDown = false;
+            if (this.cursors.down) this.cursors.down.isDown = false;
+        }
+        if (this.wasd) {
+            if (this.wasd.space) this.wasd.space.isDown = false;
+            if (this.wasd.enter) this.wasd.enter.isDown = false;
+            if (this.wasd.up) this.wasd.up.isDown = false;
+            if (this.wasd.down) this.wasd.down.isDown = false;
+        }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+        }
+
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
 
-        const win = (this.playerScore >= 3);
+        const win = (this.playerScore >= 4);
         if (win) {
             const scores = getHeroZoneScores();
             scores.airHockeyWins = (scores.airHockeyWins || 0) + 1;
@@ -11513,24 +11583,28 @@ class AirHockeyScene extends Phaser.Scene {
         const H = this.scale.height;
 
         this.modalBackdrop = this.add.rectangle(cx, cy, W, H, 0x000000, 0.6).setScrollFactor(0).setDepth(500);
-        this.modalBg = this.add.rectangle(cx, cy, 320, 210, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800).setScrollFactor(0).setDepth(501);
-        this.modalTitle = this.add.text(cx, cy - 60, win ? '★ YOU WIN! ★' : 'AI WINS!', {
-            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: win ? '#00FF00' : '#FF5555'
+        this.modalBg = this.add.rectangle(cx, cy, 340, 220, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800).setScrollFactor(0).setDepth(501);
+        this.modalTitle = this.add.text(cx, cy - 65, win ? '★ RILEY WINS SERIES! ★' : 'AI WINS SERIES!', {
+            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: win ? '#00FF00' : '#FF5555'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        this.modalScore = this.add.text(cx, cy - 30, `FINAL: RILEY ${this.playerScore} - ${this.aiScore} AI`, {
+        this.modalScore = this.add.text(cx, cy - 35, `FINAL: RILEY ${this.playerScore} - ${this.aiScore} AI`, {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        this.btnAgain = this.add.text(cx, cy + 15, '  PLAY AGAIN  ', {
+        this.modalSubtitle = this.add.text(cx, cy - 12, win ? 'BEST OF 7 CHAMPION!' : 'BEST OF 7 SERIES OVER', {
+            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
+
+        this.btnAgain = this.add.text(cx, cy + 25, '  PLAY AGAIN  ', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 10, y: 6 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        this.btnExitModal = this.add.text(cx, cy + 55, '  RETURN TO HERO ZONE  ', {
+        this.btnExitModal = this.add.text(cx, cy + 65, '  RETURN TO HERO ZONE  ', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#660000', padding: { x: 10, y: 6 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-        this.menuCursor = this.add.text(cx - 95, cy + 15, '►', {
+        this.menuCursor = this.add.text(cx - 95, cy + 25, '►', {
             fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(504);
 
@@ -11565,11 +11639,11 @@ class AirHockeyScene extends Phaser.Scene {
         if (this.menuSelectionIndex === 0) {
             this.btnAgain.setStyle({ fill: '#000000', backgroundColor: '#FFD700' });
             this.btnExitModal.setStyle({ fill: '#FFFFFF', backgroundColor: '#660000' });
-            this.menuCursor.setPosition(cx - 95, cy + 15);
+            this.menuCursor.setPosition(cx - 95, cy + 25);
         } else {
             this.btnAgain.setStyle({ fill: '#FFFFFF', backgroundColor: '#005500' });
             this.btnExitModal.setStyle({ fill: '#000000', backgroundColor: '#FF5555' });
-            this.menuCursor.setPosition(cx - 135, cy + 55);
+            this.menuCursor.setPosition(cx - 135, cy + 65);
         }
     }
 
@@ -11601,6 +11675,7 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.isExiting = false;
         this.completionMenuOpen = false;
         this.menuSelectionIndex = 0;
+        this.menuReadyTime = 0;
 
         this.isCharging = false;
         this.chargeTime = 0;
@@ -11643,37 +11718,46 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.add.rectangle(W / 2, floorY + 25, W, 50, 0x331010).setDepth(2);
         this.add.rectangle(W / 2, floorY, W, 4, 0xF8B800).setDepth(3);
 
+        // Centered Pop-A-Shot Booth
+        const cx = Math.round(W / 2);
+        const boothW = Math.min(520, Math.round(W * 0.88));
+        this.boothW = boothW;
+
         // Pop-A-Shot Cage / Frame
-        this.add.rectangle(W - 220, H / 2, 280, H - 40, 0x000000, 0.4).setDepth(2).setStrokeStyle(3, 0xE65C00);
+        this.add.rectangle(cx, H / 2, boothW, H - 40, 0x000000, 0.45).setDepth(2).setStrokeStyle(3, 0xE65C00);
+
+        // Shooter and Hoop positions
+        this.shooterX = Math.round(cx - boothW / 2 + 70);
+        this.shooterY = floorY - 20;
+
+        const hoopX = Math.round(cx + boothW / 2 - 75);
+        const hoopY = Math.max(130, Math.round(floorY - 200));
+        this.hoopX = hoopX;
+        this.hoopY = hoopY;
 
         // Ball return ramp
         const ramp = this.add.graphics().setDepth(3);
         ramp.fillStyle(0x222222, 1);
         ramp.beginPath();
-        ramp.moveTo(W - 80, floorY - 60);
-        ramp.lineTo(W - 350, floorY);
-        ramp.lineTo(W - 80, floorY);
+        ramp.moveTo(hoopX + 48, floorY - 60);
+        ramp.lineTo(this.shooterX + 30, floorY);
+        ramp.lineTo(hoopX + 48, floorY);
         ramp.closePath();
         ramp.fillPath();
 
-        // 2. Backboard & Hoop at (x = 720, y = 200)
-        const hoopX = Math.round(W * 0.76);
-        const hoopY = Math.round(H * 0.38);
-        this.hoopX = hoopX;
-        this.hoopY = hoopY;
-
+        // 2. Backboard & Hoop
         // Support Post
-        this.add.rectangle(hoopX + 65, hoopY + 80, 14, 220, 0x444444).setDepth(3);
+        this.add.rectangle(hoopX + 58, hoopY + 80, 14, floorY - (hoopY + 80) + 40, 0x444444).setDepth(3);
 
         // Backboard
-        this.backboard = this.add.rectangle(hoopX + 50, hoopY - 30, 14, 90, 0xFFFFFF).setDepth(4).setStrokeStyle(3, 0xD01000);
+        this.backboard = this.add.rectangle(hoopX + 48, hoopY - 30, 14, 90, 0xFFFFFF).setDepth(4).setStrokeStyle(3, 0xD01000);
         this.physics.add.existing(this.backboard, true);
 
         // Backboard Inner Box
-        this.add.rectangle(hoopX + 44, hoopY - 20, 4, 34, 0xD01000).setDepth(5);
+        this.add.rectangle(hoopX + 42, hoopY - 20, 4, 34, 0xD01000).setDepth(5);
 
         // Rim
-        this.rimFront = this.add.circle(hoopX - 22, hoopY, 4, 0xE65C00).setDepth(6);
+        this.rimFront = this.add.circle(hoopX - 18, hoopY, 4, 0xE65C00).setDepth(6);
         this.physics.add.existing(this.rimFront, true);
         this.rimBack = this.add.circle(hoopX + 38, hoopY, 4, 0xE65C00).setDepth(6);
         this.physics.add.existing(this.rimBack, true);
@@ -11682,14 +11766,11 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.netGfx = this.add.graphics().setDepth(5);
         this.drawNet(hoopX, hoopY, 1);
 
-        // Hoop Scoring Sensor Zone
-        this.hoopSensor = this.add.zone(hoopX + 8, hoopY + 8, 44, 12);
+        // Hoop Scoring Sensor Zone (centered between rimFront at hoopX - 18 and rimBack at hoopX + 38)
+        this.hoopSensor = this.add.zone(hoopX + 10, hoopY + 8, 40, 12);
         this.physics.add.existing(this.hoopSensor, true);
 
         // 3. Player Riley at Shooting Line
-        this.shooterX = Math.round(W * 0.22);
-        this.shooterY = floorY - 20;
-
         this.player = this.add.sprite(this.shooterX, this.shooterY, 'riley_idle').setDepth(10);
         this.playerShadow = this.add.ellipse(this.shooterX, floorY, 26, 8, 0x000000, 0.5).setDepth(9);
 
@@ -11698,24 +11779,57 @@ class BasketballShootoutScene extends Phaser.Scene {
 
         // Active basketballs group
         this.balls = this.physics.add.group();
-        this.physics.add.collider(this.balls, this.backboard, () => {
+        this.physics.add.collider(this.balls, this.backboard, (objA, objB) => {
             if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
                 retroArcadeAudio.play('shoot');
             }
-        });
-        this.physics.add.collider(this.balls, this.rimFront);
-        this.physics.add.collider(this.balls, this.rimBack);
+        }, (objA, objB) => {
+            const ball = (objA === this.backboard) ? objB : objA;
+            if (ball && ball.scored) return false;
+            return true;
+        }, this);
+
+        this.physics.add.collider(this.balls, this.rimFront, (objA, objB) => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        }, (objA, objB) => {
+            const ball = (objA === this.rimFront) ? objB : objA;
+            const rim = (objA === this.rimFront) ? objA : objB;
+            // Allow descending ball through the hoop opening without bouncing on top of rim
+            if (ball && ball.body && ball.body.velocity.y > 0 && ball.x >= rim.x - 4) {
+                return false;
+            }
+            return true;
+        }, this);
+
+        this.physics.add.collider(this.balls, this.rimBack, (objA, objB) => {
+            if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                retroArcadeAudio.play('shoot');
+            }
+        }, (objA, objB) => {
+            const ball = (objA === this.rimBack) ? objB : objA;
+            const rim = (objA === this.rimBack) ? objA : objB;
+            // Allow descending ball through the hoop opening
+            if (ball && ball.body && (ball.scored || (ball.body.velocity.y > 0 && ball.x <= rim.x + 4))) {
+                return false;
+            }
+            return true;
+        }, this);
 
         // Overlap sensor for scoring
-        this.physics.add.overlap(this.balls, this.hoopSensor, (ball, sensor) => {
-            this.handleBasket(ball);
+        this.physics.add.overlap(this.balls, this.hoopSensor, (objA, objB) => {
+            const ball = (objA === this.hoopSensor) ? objB : objA;
+            if (ball && ball.body) {
+                this.handleBasket(ball);
+            }
         }, null, this);
 
         // 4. Power Meter UI
         this.powerMeterBg = this.add.rectangle(this.shooterX, this.shooterY - 50, 80, 12, 0x000000, 0.8).setDepth(15).setStrokeStyle(2, 0xFFFFFF);
         this.powerMeterFill = this.add.rectangle(this.shooterX - 38, this.shooterY - 50, 0, 8, 0x00FF00).setDepth(16).setOrigin(0, 0.5);
-        // Sweet spot marker (65% to 80%)
-        this.add.rectangle(this.shooterX + 14, this.shooterY - 50, 14, 10, 0xFFD700, 0.5).setDepth(17);
+        // Sweet spot marker (centered around 73% power)
+        this.add.rectangle(this.shooterX + 17, this.shooterY - 50, 12, 10, 0xFFD700, 0.6).setDepth(17);
 
         // 5. Retro LED Scoreboard
         this.add.rectangle(W / 2, 40, 420, 45, 0x000000, 0.9).setDepth(20).setStrokeStyle(3, 0xF8B800);
@@ -11888,14 +12002,38 @@ class BasketballShootoutScene extends Phaser.Scene {
         if (this.heldBall) this.heldBall.setVisible(false);
 
         // Power calculation (0..1)
-        const powerFraction = Phaser.Math.Clamp(this.chargeTime / 750, 0.1, 1.0);
+        const powerFraction = Phaser.Math.Clamp(this.chargeTime / 750, 0.05, 1.0);
 
-        // Calculate velocity
-        // Sweet spot fraction around 0.68 - 0.78
-        const vx = 320 + (powerFraction * 260);
-        const vy = -(480 + (powerFraction * 320));
+        // Kinematic calculation to reach the hoop with an arc
+        const startX = this.shooterX + 16;
+        const startY = this.shooterY - 14;
+        const targetX = this.hoopX + 10;
+        const targetY = this.hoopY;
 
-        const ball = this.balls.create(this.shooterX + 16, this.shooterY - 14, 'hz_bball');
+        const dX = targetX - startX;
+        const dY = targetY - startY; // negative since targetY is higher than startY
+        const g = this.physics.world.gravity.y;
+
+        // Desired apex rise above hoop for a high arc
+        const apexRise = 100;
+        const h_rise = -dY + apexRise; // total vertical rise from start to apex
+        const idealVy = -Math.sqrt(2 * g * h_rise);
+        const t_up = -idealVy / g;
+        const t_down = Math.sqrt(2 * apexRise / g);
+        const totalTime = t_up + t_down;
+        const idealVx = dX / totalTime;
+
+        // Sweet spot is centered at 0.73 (marker at 68% - 78%)
+        // When powerFraction is 0.73, powerRatio is 1.0 (exact swish into the basket)
+        // Under 0.73 -> falls short or hits front rim
+        // Over 0.73 -> goes too far, hits backboard or back rim
+        const sweetSpot = 0.73;
+        const powerRatio = 0.55 + (powerFraction / sweetSpot) * 0.45;
+
+        const vx = idealVx * powerRatio;
+        const vy = idealVy * Math.sqrt(powerRatio);
+
+        const ball = this.balls.create(startX, startY, 'hz_bball');
         ball.setCircle(14);
         ball.setBounce(0.68, 0.68);
         ball.setCollideWorldBounds(true);
@@ -11929,7 +12067,7 @@ class BasketballShootoutScene extends Phaser.Scene {
         if (ball.scored || ball.body.velocity.y <= 0) return;
         ball.scored = true;
 
-        const isClean = (Math.abs(ball.x - (this.hoopX + 8)) < 14);
+        const isClean = (Math.abs(ball.x - (this.hoopX + 10)) < 20);
         const pts = isClean ? 3 : 2;
         this.streak++;
         if (this.streak > this.bestStreak) this.bestStreak = this.streak;
@@ -11960,7 +12098,7 @@ class BasketballShootoutScene extends Phaser.Scene {
 
         // Floating score popup
         const msg = isClean ? `★ SWISH! +${totalPts} ★` : `+${totalPts} PTS!`;
-        const pop = this.add.text(this.hoopX + 8, this.hoopY - 25, msg, {
+        const pop = this.add.text(this.hoopX + 10, this.hoopY - 25, msg, {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: isClean ? '#FFFF00' : '#00FF00', backgroundColor: '#000', padding: 3
         }).setOrigin(0.5).setDepth(30);
 
@@ -12000,8 +12138,21 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.isGameOver = true;
         this.completionMenuOpen = true;
         this.menuSelectionIndex = 0;
+        this.menuReadyTime = this.time.now + 600;
         this.isCharging = false;
         if (this.gameTimer) this.gameTimer.remove();
+
+        // Reset key states to prevent accidental confirmation
+        if (this.keys) {
+            if (this.keys.space) this.keys.space.isDown = false;
+            if (this.keys.enter) this.keys.enter.isDown = false;
+            if (this.keys.up) this.keys.up.isDown = false;
+            if (this.keys.down) this.keys.down.isDown = false;
+        }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+        }
+
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('explosion');
         }
@@ -12124,18 +12275,22 @@ class BasketballShootoutScene extends Phaser.Scene {
         }
 
         if (this.completionMenuOpen) {
+            if (this.time.now < this.menuReadyTime) return;
+
             const isUp = (this.keys.up && Phaser.Input.Keyboard.JustDown(this.keys.up)) || 
-                         (this.keys.w && Phaser.Input.Keyboard.JustDown(this.keys.w)) ||
-                         (this.keys.left && Phaser.Input.Keyboard.JustDown(this.keys.left)) || 
-                         (this.keys.a && Phaser.Input.Keyboard.JustDown(this.keys.a));
+                         (this.keys.w && Phaser.Input.Keyboard.JustDown(this.keys.w));
 
             const isDown = (this.keys.down && Phaser.Input.Keyboard.JustDown(this.keys.down)) || 
-                           (this.keys.s && Phaser.Input.Keyboard.JustDown(this.keys.s)) ||
-                           (this.keys.right && Phaser.Input.Keyboard.JustDown(this.keys.right)) || 
-                           (this.keys.d && Phaser.Input.Keyboard.JustDown(this.keys.d));
+                           (this.keys.s && Phaser.Input.Keyboard.JustDown(this.keys.s));
 
-            if (isUp || isDown) {
-                this.menuSelectionIndex = (this.menuSelectionIndex === 0) ? 1 : 0;
+            if (isUp) {
+                this.menuSelectionIndex = 0;
+                this.updateMenuVisuals();
+                if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+                    retroArcadeAudio.play('laser');
+                }
+            } else if (isDown) {
+                this.menuSelectionIndex = 1;
                 this.updateMenuVisuals();
                 if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
                     retroArcadeAudio.play('laser');
