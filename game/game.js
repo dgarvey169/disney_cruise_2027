@@ -5888,18 +5888,6 @@ class GameScene extends Phaser.Scene {
         }
         this.nearHeroZone = false;
 
-        // Switch to Riley for Hero Zone
-        this.selectedCharacter = 'riley';
-        this.characterName = 'Riley';
-        if (this.hudPlayerIcon) this.hudPlayerIcon.setTexture('riley_idle');
-        if (this.hudPlayerName) this.hudPlayerName.setText('RILEY');
-        if (this.layoutHUD) this.layoutHUD(this.scale.width, this.scale.height);
-        if (this.player) {
-            this.player.setTexture('riley_idle');
-            this.player.body.setSize(22, 16);
-            this.player.body.setOffset(5, 32);
-        }
-
         this.scene.pause('GameScene');
         this.scene.setVisible(false);
         this.scene.sleep('GameScene');
@@ -5955,10 +5943,14 @@ class ElevatorMenuScene extends Phaser.Scene {
 
         const floors = [
             { label: 'Deck 12 (Quiet Cove)', type: 'deck', y: 975 },
-            { label: 'Deck 11 (Pools & Spa)', type: 'deck', y: 1255 },
-            { label: 'Deck 5  (Edge Tween Club)', type: 'edge' },
-            { label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' }
+            { label: 'Deck 11 (Pools & Spa)', type: 'deck', y: 1255 }
         ];
+
+        if (this.gameScene.selectedCharacter === 'riley') {
+            floors.push({ label: 'Deck 5  (Edge Tween Club)', type: 'edge' });
+        } else if (this.gameScene.selectedCharacter === 'amelia') {
+            floors.push({ label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' });
+        }
 
         this.menuItems = [];
         let startY = cy - 70;
@@ -9726,10 +9718,11 @@ class HeroZoneScene extends Phaser.Scene {
         this.createBasketballStation(1380, floorY);
 
         // ----------------------------------------------------
-        // 2.5D PLAYER (Riley)
+        // 2.5D PLAYER
         // ----------------------------------------------------
         const spawnX = (data && data.fromStation) ? data.fromStation : (this.fromStation || 180);
-        this.player = this.physics.add.sprite(spawnX, this.groundY, 'riley_idle').setDepth(Math.round(this.groundY));
+        const charId = this.gameScene ? this.gameScene.selectedCharacter : 'riley';
+        this.player = this.physics.add.sprite(spawnX, this.groundY, charId + '_idle').setDepth(Math.round(this.groundY));
         this.player.body.allowGravity = false;
         this.player.body.setSize(22, 16);
         this.player.body.setOffset(5, 32);
@@ -10257,10 +10250,11 @@ class HeroZoneScene extends Phaser.Scene {
         this.playerShadow.setPosition(this.player.x, this.groundY + 16);
 
         // Walking animation
+        const charId = this.gameScene ? this.gameScene.selectedCharacter : 'riley';
         if (moveX !== 0 || moveY !== 0) {
-            this.player.anims.play('riley_walk', true);
+            this.player.anims.play(charId + '_walk', true);
         } else {
-            this.player.anims.play('riley_idle', true);
+            this.player.anims.play(charId + '_idle', true);
         }
 
         // ----------------------------------------------------
@@ -10424,8 +10418,9 @@ class ObstacleCourseScene extends Phaser.Scene {
         // ----------------------------------------------------
         // CHARACTERS
         // ----------------------------------------------------
-        // Riley
-        this.player = this.physics.add.sprite(100, floorY - 40, 'riley_idle').setDepth(15);
+        // PLAYER
+        const charId = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.selectedCharacter : 'riley';
+        this.player = this.physics.add.sprite(100, floorY - 40, charId + '_idle').setDepth(15);
         this.player.setCollideWorldBounds(true);
         this.player.body.setSize(22, 38);
         this.player.body.setOffset(5, 10);
@@ -10892,22 +10887,23 @@ class ObstacleCourseScene extends Phaser.Scene {
         }
 
         const inSlideZone = this.physics.overlap(this.player, this.slideZone);
+        const charId = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.selectedCharacter : 'riley';
         if (inSlideZone) {
             this.player.setVelocityX(360);
             this.player.setVelocityY(180);
-            this.player.anims.play('riley_walk', true);
+            this.player.anims.play(charId + '_walk', true);
         } else {
             if (moveX === -1) {
                 this.player.setVelocityX(-this.heroSpeed);
                 this.player.flipX = true;
-                if (!inClimbZone) this.player.anims.play('riley_walk', true);
+                if (!inClimbZone) this.player.anims.play(charId + '_walk', true);
             } else if (moveX === 1) {
                 this.player.setVelocityX(this.heroSpeed);
                 this.player.flipX = false;
-                if (!inClimbZone) this.player.anims.play('riley_walk', true);
+                if (!inClimbZone) this.player.anims.play(charId + '_walk', true);
             } else {
                 this.player.setVelocityX(0);
-                if (!inClimbZone) this.player.anims.play('riley_idle', true);
+                if (!inClimbZone) this.player.anims.play(charId + '_idle', true);
             }
         }
 
@@ -11005,7 +11001,8 @@ class ObstacleCourseScene extends Phaser.Scene {
         let isNewRecord = false;
         if (!scores.obstacleTime || parseFloat(finalTime) < parseFloat(scores.obstacleTime)) {
             scores.obstacleTime = finalTime;
-            scores.obstacleHolder = 'RILEY';
+            const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+            scores.obstacleHolder = charName.toUpperCase();
             saveHeroZoneScores(scores);
             isNewRecord = true;
         }
@@ -11023,7 +11020,8 @@ class ObstacleCourseScene extends Phaser.Scene {
             fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        this.modalWinner = this.add.text(W / 2, H / 2 - 55, rileyWon ? 'RILEY DEFEATED DASH!' : 'DASH WAS FASTER!', {
+        const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+        this.modalWinner = this.add.text(W / 2, H / 2 - 55, rileyWon ? `${charName.toUpperCase()} DEFEATED DASH!` : 'DASH WAS FASTER!', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: rileyWon ? '#00FF00' : '#FF5555'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
@@ -11209,8 +11207,9 @@ class AirHockeyScene extends Phaser.Scene {
                 retroArcadeAudio.play('shoot');
             }
         });
-        
-        this.scoreText = this.add.text(cx, 35, 'RILEY 0  -  0 AI', {
+        const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+        const uName = charName.toUpperCase();
+        this.scoreText = this.add.text(cx, 35, `${uName} 0  -  0 AI`, {
             fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
         }).setOrigin(0.5);
 
@@ -11498,9 +11497,11 @@ class AirHockeyScene extends Phaser.Scene {
 
         this.paddleAI.y = Phaser.Math.Clamp(this.paddleAI.y, cy - tableH / 2 + 25, cy - 20);
         
+        const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+        const uName = charName.toUpperCase();
         if (!this.scoring && !this.isGameOver) {
             if (this.physics.overlap(this.puck, this.goalTop)) {
-                this.handleGoal('RILEY SCORED!', 'player');
+                this.handleGoal(`${uName} SCORED!`, 'player');
             } else if (this.physics.overlap(this.puck, this.goalBot)) {
                 this.handleGoal('AI SCORED!', 'ai');
             }
@@ -11524,7 +11525,10 @@ class AirHockeyScene extends Phaser.Scene {
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
-        this.scoreText.setText(`RILEY ${this.playerScore}  -  ${this.aiScore} AI`);
+        
+        const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+        const uName = charName.toUpperCase();
+        this.scoreText.setText(`${uName} ${this.playerScore}  -  ${this.aiScore} AI`);
         
         const goalText = this.add.text(this.scale.width / 2, this.scale.height / 2, msg, {
             fontSize: '14px', fontFamily: '"Press Start 2P"', fill: '#FFFF00', backgroundColor: '#000', padding: 8
@@ -11584,11 +11588,13 @@ class AirHockeyScene extends Phaser.Scene {
 
         this.modalBackdrop = this.add.rectangle(cx, cy, W, H, 0x000000, 0.6).setScrollFactor(0).setDepth(500);
         this.modalBg = this.add.rectangle(cx, cy, 340, 220, 0x000000, 0.95).setStrokeStyle(3, 0xF8B800).setScrollFactor(0).setDepth(501);
-        this.modalTitle = this.add.text(cx, cy - 65, win ? '★ RILEY WINS SERIES! ★' : 'AI WINS SERIES!', {
+        const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+        const uName = charName.toUpperCase();
+        this.modalTitle = this.add.text(cx, cy - 65, win ? `★ ${uName} WINS SERIES! ★` : 'AI WINS SERIES!', {
             fontSize: '11px', fontFamily: '"Press Start 2P"', fill: win ? '#00FF00' : '#FF5555'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
-        this.modalScore = this.add.text(cx, cy - 35, `FINAL: RILEY ${this.playerScore} - ${this.aiScore} AI`, {
+        this.modalScore = this.add.text(cx, cy - 35, `FINAL: ${uName} ${this.playerScore} - ${this.aiScore} AI`, {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(502);
 
@@ -11770,8 +11776,9 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.hoopSensor = this.add.zone(hoopX + 10, hoopY + 8, 40, 12);
         this.physics.add.existing(this.hoopSensor, true);
 
-        // 3. Player Riley at Shooting Line
-        this.player = this.add.sprite(this.shooterX, this.shooterY, 'riley_idle').setDepth(10);
+        // 3. Player at Shooting Line
+        const charId = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.selectedCharacter : 'riley';
+        this.player = this.add.sprite(this.shooterX, this.shooterY, charId + '_idle').setDepth(10);
         this.playerShadow = this.add.ellipse(this.shooterX, floorY, 26, 8, 0x000000, 0.5).setDepth(9);
 
         // Held ball
@@ -12161,7 +12168,8 @@ class BasketballShootoutScene extends Phaser.Scene {
         let isNewRecord = false;
         if (this.score > (scores.basketballScore || 0)) {
             scores.basketballScore = this.score;
-            scores.basketballHolder = 'RILEY';
+            const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
+            scores.basketballHolder = charName.toUpperCase();
             saveHeroZoneScores(scores);
             isNewRecord = true;
         }
