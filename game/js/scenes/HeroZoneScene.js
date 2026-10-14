@@ -49,8 +49,7 @@ class HeroZoneScene extends Phaser.Scene {
         this.nearBasketball = false;
 
         // Mobile touch controls state
-        this.touchMoveDir = 0;
-        this.touchMoveDepth = 0;
+        this.mobileInput = { left: false, right: false, up: false, down: false, jump: false };
     }
 
     create(data) {
@@ -205,8 +204,11 @@ class HeroZoneScene extends Phaser.Scene {
                 if (this.keysWASD.space) this.keysWASD.space.isDown = false;
                 if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
             }
-            this.touchMoveDir = 0;
-            this.touchMoveDepth = 0;
+            if (this.resetJoystick) {
+                this.resetJoystick();
+            } else {
+                this.mobileInput = { left: false, right: false, up: false, down: false, jump: false };
+            }
         };
 
         const onNativeKeyUp = (e) => {
@@ -260,8 +262,11 @@ class HeroZoneScene extends Phaser.Scene {
             fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 8, y: 6 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(2000).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.exitToShip());
 
-        // Floating D-Pad / Controls for Mobile
-        this.createMobileControls();
+        // Floating Joystick & Touch-to-Jump for Mobile
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
+            this.createMobileControls();
+        }
 
         // Clear input states and refresh leaderboard on resume
         this.events.on('resume', () => {
@@ -272,6 +277,7 @@ class HeroZoneScene extends Phaser.Scene {
             if (this.game && this.game.canvas) {
                 this.game.canvas.focus();
             }
+            if (this.resetJoystick) this.resetJoystick();
             this.refreshLeaderboard();
         });
     }
@@ -320,7 +326,7 @@ class HeroZoneScene extends Phaser.Scene {
 
     createExitStation(x, floorY) {
         // Door frame
-        const door = this.add.rectangle(x, floorY - 55, 64, 110, 0x000022).setDepth(3).setInteractive({ useHandCursor: true });
+        const door = this.add.rectangle(x, floorY - 55, 64, 110, 0x000022).setDepth(3);
         this.add.rectangle(x, floorY - 55, 56, 102, 0x1A253A).setDepth(3);
         this.add.text(x, floorY - 125, 'DECK 12 EXIT', {
             fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000000', padding: { x: 4, y: 3 }
@@ -329,13 +335,12 @@ class HeroZoneScene extends Phaser.Scene {
         const sign = this.add.text(x, floorY - 142, '▼ EXIT TO SHIP ▼', {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 4, y: 2 }
         }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
-        door.on('pointerdown', () => this.exitToShip());
         sign.on('pointerdown', () => this.exitToShip());
     }
 
     createObstacleStation(x, floorY) {
         // Giant Inflatable Arch
-        const arch = this.add.rectangle(x, floorY - 70, 130, 140, 0xD01000).setDepth(3).setStrokeStyle(4, 0xF8B800).setInteractive({ useHandCursor: true });
+        const arch = this.add.rectangle(x, floorY - 70, 130, 140, 0xD01000).setDepth(3).setStrokeStyle(4, 0xF8B800);
         this.add.rectangle(x, floorY - 70, 96, 120, 0x110202).setDepth(3);
         
         this.add.text(x, floorY - 130, '★ OBSTACLE COURSE ★', {
@@ -350,7 +355,6 @@ class HeroZoneScene extends Phaser.Scene {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#D01000', padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
         btn.on('pointerdown', () => this.launchObstacleCourse());
-        arch.on('pointerdown', () => this.launchObstacleCourse());
 
         // Inflatable cones
         this.add.triangle(x - 65, floorY - 15, 0, 30, 15, 0, 30, 30, 0xF8B800).setDepth(4);
@@ -414,12 +418,10 @@ class HeroZoneScene extends Phaser.Scene {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#0055AA', padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
         btn.on('pointerdown', () => this.launchAirHockey());
-        table.setInteractive({ useHandCursor: true });
-        table.on('pointerdown', () => this.launchAirHockey());
     }
 
     createBasketballStation(x, floorY) {
-        const booth = this.add.rectangle(x, floorY - 65, 120, 130, 0x333333).setDepth(3).setStrokeStyle(3, 0xE65C00).setInteractive({ useHandCursor: true });
+        const booth = this.add.rectangle(x, floorY - 65, 120, 130, 0x333333).setDepth(3).setStrokeStyle(3, 0xE65C00);
         this.add.rectangle(x - 30, floorY - 95, 45, 35, 0xFFFFFF).setDepth(4).setStrokeStyle(2, 0xD01000);
         this.add.rectangle(x + 30, floorY - 95, 45, 35, 0xFFFFFF).setDepth(4).setStrokeStyle(2, 0xD01000);
         this.add.rectangle(x - 30, floorY - 80, 24, 4, 0xE65C00).setDepth(5);
@@ -433,44 +435,99 @@ class HeroZoneScene extends Phaser.Scene {
             fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#E65C00', padding: { x: 6, y: 3 }
         }).setOrigin(0.5).setDepth(5).setInteractive({ useHandCursor: true });
         btn.on('pointerdown', () => this.launchBasketball());
-        booth.on('pointerdown', () => this.launchBasketball());
     }
 
     createMobileControls() {
-        const W = this.scale.width;
-        const H = this.scale.height;
+        this.input.addPointer(3); // Multi-touch support
 
-        this.touchContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(1500);
+        // --- Floating Joystick ---
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        this.joyBase = this.add.graphics().setScrollFactor(0).setDepth(2500).setAlpha(0.5);
+        this.joyKnob = this.add.graphics().setScrollFactor(0).setDepth(2501).setAlpha(0.7);
 
-        const btnL = this.add.rectangle(45, H - 50, 45, 45, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
-        const txtL = this.add.text(45, H - 50, '◄', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
-        btnL.on('pointerdown', () => { this.touchMoveDir = -1; });
-        btnL.on('pointerup', () => { this.touchMoveDir = 0; });
-        btnL.on('pointerout', () => { this.touchMoveDir = 0; });
+        this.joyBase.fillStyle(0xffffff, 1);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(3, 0x888888, 1);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        const btnR = this.add.rectangle(105, H - 50, 45, 45, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
-        const txtR = this.add.text(105, H - 50, '►', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
-        btnR.on('pointerdown', () => { this.touchMoveDir = 1; });
-        btnR.on('pointerup', () => { this.touchMoveDir = 0; });
-        btnR.on('pointerout', () => { this.touchMoveDir = 0; });
+        this.joyKnob.fillStyle(0x4488ff, 1);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
 
-        const btnU = this.add.rectangle(75, H - 100, 45, 40, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
-        const txtU = this.add.text(75, H - 100, '▲', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
-        btnU.on('pointerdown', () => { this.touchMoveDepth = -1; });
-        btnU.on('pointerup', () => { this.touchMoveDepth = 0; });
-        btnU.on('pointerout', () => { this.touchMoveDepth = 0; });
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
 
-        const btnD = this.add.rectangle(75, H - 10, 45, 40, 0x000, 0.6).setStrokeStyle(2, 0xFFF).setInteractive();
-        const txtD = this.add.text(75, H - 10, '▼', { fontSize: '18px', fill: '#FFF' }).setOrigin(0.5);
-        btnD.on('pointerdown', () => { this.touchMoveDepth = 1; });
-        btnD.on('pointerup', () => { this.touchMoveDepth = 0; });
-        btnD.on('pointerout', () => { this.touchMoveDepth = 0; });
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
 
-        const btnAct = this.add.rectangle(W - 65, H - 55, 80, 50, 0xD01000, 0.8).setStrokeStyle(2, 0xF8B800).setInteractive();
-        const txtAct = this.add.text(W - 65, H - 55, 'ENTER', { fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFF' }).setOrigin(0.5);
-        btnAct.on('pointerdown', () => this.handleStationAction());
+        this.resetJoystick = () => {
+            this.joyPointer = null;
+            if (this.joyBase && this.joyBase.active) this.joyBase.setVisible(false);
+            if (this.joyKnob && this.joyKnob.active) this.joyKnob.setVisible(false);
+            this.mobileInput.left = false;
+            this.mobileInput.right = false;
+            this.mobileInput.up = false;
+            this.mobileInput.down = false;
+            this.mobileInput.jump = false;
+        };
 
-        this.touchContainer.add([btnL, txtL, btnR, txtR, btnU, txtU, btnD, txtD, btnAct, txtAct]);
+        const onPointerDown = (ptr) => {
+            // Ignore touches on top header / exit button area
+            if (ptr.y < 60 && ptr.x > this.scale.width - 140) return;
+
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                // Left side: spawn joystick at touch point
+                if (this.joyPointer === null) {
+                    this.joyPointer = ptr;
+                    this.joyOrigin.x = ptr.x;
+                    this.joyOrigin.y = ptr.y;
+                    this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                // Right side / second finger: jump
+                this.mobileInput.jump = true;
+                this.time.delayedCall(120, () => { this.mobileInput.jump = false; });
+            }
+        };
+
+        const onPointerMove = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                const dx = ptr.x - this.joyOrigin.x;
+                const dy = ptr.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                // Set directional input based on deflection (4-way 2.5D movement)
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            }
+        };
+
+        const onPointerUp = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                this.resetJoystick();
+            }
+        };
+
+        this.input.on('pointerdown', onPointerDown);
+        this.input.on('pointermove', onPointerMove);
+        this.input.on('pointerup', onPointerUp);
+
+        this.events.once('shutdown', () => {
+            this.input.off('pointerdown', onPointerDown);
+            this.input.off('pointermove', onPointerMove);
+            this.input.off('pointerup', onPointerUp);
+            if (this.joyBase) this.joyBase.destroy();
+            if (this.joyKnob) this.joyKnob.destroy();
+        });
     }
 
     tryJump() {
@@ -486,6 +543,7 @@ class HeroZoneScene extends Phaser.Scene {
     exitToShip() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this.resetJoystick) this.resetJoystick();
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
         }
@@ -529,6 +587,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     launchObstacleCourse() {
+        if (this.resetJoystick) this.resetJoystick();
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
@@ -539,6 +598,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     launchAirHockey() {
+        if (this.resetJoystick) this.resetJoystick();
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
@@ -549,6 +609,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     launchBasketball() {
+        if (this.resetJoystick) this.resetJoystick();
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
@@ -559,6 +620,7 @@ class HeroZoneScene extends Phaser.Scene {
     }
 
     handleStationAction() {
+        if (this.resetJoystick) this.resetJoystick();
         if (this.nearExit) {
             this.exitToShip();
         } else if (this.nearObstacleCourse) {
@@ -578,22 +640,46 @@ class HeroZoneScene extends Phaser.Scene {
 
         const dt = delta * 0.001;
 
+        // Update continuous joystick polling
+        if (this.joyPointer) {
+            if (this.joyPointer.isDown) {
+                const JOY_RADIUS = 60;
+                const dx = this.joyPointer.x - this.joyOrigin.x;
+                const dy = this.joyPointer.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                if (this.joyKnob && this.joyKnob.active) {
+                    this.joyKnob.setPosition(kx, ky);
+                }
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            } else {
+                this.resetJoystick();
+            }
+        }
+
         // Player Controls (2.5D Movement)
         const isLeft = (this.cursors.left && this.cursors.left.isDown) || 
                        (this.keysWASD.left && this.keysWASD.left.isDown) || 
-                       this.touchMoveDir === -1;
+                       this.mobileInput.left;
 
         const isRight = (this.cursors.right && this.cursors.right.isDown) || 
                         (this.keysWASD.right && this.keysWASD.right.isDown) || 
-                        this.touchMoveDir === 1;
+                        this.mobileInput.right;
 
         const isUp = (this.cursors.up && this.cursors.up.isDown) || 
                      (this.keysWASD.up && this.keysWASD.up.isDown) || 
-                     this.touchMoveDepth === -1;
+                     this.mobileInput.up;
 
         const isDown = (this.cursors.down && this.cursors.down.isDown) || 
                        (this.keysWASD.down && this.keysWASD.down.isDown) || 
-                       this.touchMoveDepth === 1;
+                       this.mobileInput.down;
 
         let moveX = 0;
         let moveY = 0;
@@ -634,7 +720,11 @@ class HeroZoneScene extends Phaser.Scene {
         }
 
         // Jump Handling
-        if ((Phaser.Input.Keyboard.JustDown(this.keysWASD.space) || Phaser.Input.Keyboard.JustDown(this.cursors.space)) && !this.isJumping) {
+        const isJump = (Phaser.Input.Keyboard.JustDown(this.keysWASD.space) || 
+                        Phaser.Input.Keyboard.JustDown(this.cursors.space) || 
+                        this.mobileInput.jump);
+        if (isJump && !this.isJumping) {
+            this.mobileInput.jump = false;
             this.tryJump();
         }
 
@@ -686,15 +776,16 @@ class HeroZoneScene extends Phaser.Scene {
         }
 
         // Prompt text positioning and visibility
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
         let activePrompt = '';
         if (this.nearExit) {
-            activePrompt = '[ ENTER: EXIT TO DECK 12 ]';
+            activePrompt = isTouch ? '[ TAP TO EXIT TO DECK 12 ]' : '[ ENTER: EXIT TO DECK 12 ]';
         } else if (this.nearObstacleCourse) {
-            activePrompt = '[ ENTER: START OBSTACLE COURSE ]';
+            activePrompt = isTouch ? '[ TAP TO START OBSTACLE COURSE ]' : '[ ENTER: START OBSTACLE COURSE ]';
         } else if (this.nearAirHockey) {
-            activePrompt = '[ ENTER: PLAY AIR HOCKEY ]';
+            activePrompt = isTouch ? '[ TAP TO PLAY AIR HOCKEY ]' : '[ ENTER: PLAY AIR HOCKEY ]';
         } else if (this.nearBasketball) {
-            activePrompt = '[ ENTER: PLAY BASKETBALL ]';
+            activePrompt = isTouch ? '[ TAP TO PLAY BASKETBALL ]' : '[ ENTER: PLAY BASKETBALL ]';
         }
 
         if (activePrompt !== '') {
