@@ -51,6 +51,36 @@
 </head>
 <body>
     <div id="game-container"></div>
-    <script src="game.js?v=6.14"></script>
+    <script>
+        // Bump ASSET_VERSION whenever ANY file under js/ changes (cache-buster for all scripts).
+        const ASSET_VERSION = '7.0';
+        // Load order matters: helpers before the scenes that use them; main.js MUST be last.
+        // async = false guarantees dynamically inserted scripts execute in insertion order.
+        [
+            'js/lib/config.js',
+            'js/lib/amelia-outfit.js',
+            'js/scenes/BootScene.js',
+            'js/lib/edge-arcade-textures.js',
+            'js/scenes/TitleScene.js',
+            'js/scenes/CharacterSelectScene.js',
+            'js/scenes/GameScene.js',
+            'js/scenes/ElevatorMenuScene.js',
+            'js/lib/boutique-icons.js',
+            'js/scenes/BoutiqueScene.js',
+            'js/lib/arcade-audio.js',
+            'js/scenes/EdgeClubScene.js',
+            'js/scenes/ArcadeShooterScene.js',
+            'js/scenes/HeroZoneScene.js',
+            'js/scenes/ObstacleCourseScene.js',
+            'js/scenes/AirHockeyScene.js',
+            'js/scenes/BasketballShootoutScene.js',
+            'js/main.js'
+        ].forEach(src => {
+            const s = document.createElement('script');
+            s.src = `${src}?v=${ASSET_VERSION}`;
+            s.async = false;
+            document.body.appendChild(s);
+        });
+    </script>
 </body>
 </html>

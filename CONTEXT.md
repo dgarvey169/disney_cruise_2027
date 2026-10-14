@@ -44,12 +44,12 @@
 - `presentation.html`: Budget presentation separating base costs from optional add-ons. Magic Bands and Photography packages removed.
 - `README.md`: Project summary and quick links.
 - `Itineraries/`: Raw source PDFs.
-- `game/index.html` + `game/game.js`: The 8-bit Disney Destiny Adventure game (see Section 5).
+- `game/index.html` + `game/js/`: The 8-bit Disney Destiny Adventure game (see Section 5). Code is split into per-scene classic scripts (`js/scenes/*.js`), shared helpers (`js/lib/*.js`), and `js/main.js` (bootstrap, loads last), loaded in order by an inline loader in `index.html` with a single `ASSET_VERSION` cache-buster (Issue #58).
 - `game/GDD.md`: Game Design Document.
 
 ---
 
-## 5. Game State (game/game.js)
+## 5. Game State (game/js/)
 The game is a Phaser 3 browser-based platformer. All changes are on the `main` branch.
 
 ### Completed Features
