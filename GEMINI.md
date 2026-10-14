@@ -12,7 +12,12 @@
 # Game Architecture & Physics Memory
 
 - **Browser Cache Invalidation**:
-  - Always bump the asset cache-buster version query parameter (e.g., `game.js?v=X.X`) in `game/index.html` whenever updating `game.js`. Mobile and desktop browsers aggressively cache game scripts, which otherwise hides fixes during user testing.
+  - Always bump `ASSET_VERSION` in `game/index.html` whenever ANY file under `game/js/` changes. The loader appends `?v=ASSET_VERSION` to every script. Mobile and desktop browsers aggressively cache game scripts, which otherwise hides fixes during user testing.
+- **Code Layout (Issue #58 - split of the former monolithic `game/game.js`)**:
+  - All game code lives in classic (non-module) scripts under `game/js/`, sharing one global scope. They are loaded **in order** by the inline loader in `game/index.html` (`async = false` preserves execution order).
+  - `js/lib/` = shared helpers (`config.js`, `amelia-outfit.js`, `edge-arcade-textures.js`, `boutique-icons.js`, `arcade-audio.js`). `js/scenes/` = one file per Phaser scene (`<Name>Scene.js`). `js/main.js` registers `config.scene = [...]` and creates `new Phaser.Game(config)` — it MUST load last.
+  - **Adding a new scene**: create `js/scenes/<Name>Scene.js`, add it to the loader list in `index.html` **before** `js/main.js`, and add the class to `config.scene` in `js/main.js`.
+  - **Load-order rule**: cross-file references are fine inside functions/methods (resolved at runtime). Anything evaluated at top level (e.g., `new SomeClass()`, `class X extends Y`) requires its dependency to load in an earlier file. Top-level names must be unique across all files (shared global scope).
 - **GitHub Pages Branch Management**:
   - During PR testing, GitHub Pages can be pointed to the fix branch (`gh api --method PUT repos/:owner/:repo/pages -F "source[branch]=<branch>" -F "source[path]=/"`) so users can test on live mobile and desktop.
   - When the PR is merged into `main`, immediately restore GitHub Pages to build from `main` and trigger a build (`gh api -X POST repos/:owner/:repo/pages/builds`).
