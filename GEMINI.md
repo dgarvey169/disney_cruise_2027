@@ -170,8 +170,9 @@
     - Mouse/touch hover seamlessly synchronizes with the cursor position.
   - **Physics Transition**: Teleportation cleanly resets `jumpZ = 0`, sets `groundY = targetGroundY`, and invokes `player.body.reset(1250, targetGroundY)` to guarantee zero physics vibration.
 
-- **AquaMouse Redesign & Overhaul (Issue #39)**:
-  - Overhaul of the AquaMouse water coaster aesthetics and ride mechanics. Address raft/tube depth ordering relative to Deck 13 floor planes and slide curves.
+- **AquaMouse Redesign & Overhaul (Issue #39 - Completed, PR #52)**:
+  - Overhaul of the AquaMouse water coaster aesthetics: tube rendered with depth-sorted translucent 8-bit sprites, and player/raft depth dynamically reordered during the ride tween to preserve the 3/4 isometric perspective relative to Deck 13 floor planes and slide curves.
+  - Ride mechanics/logistics (gameplay changes) were not part of PR #52; track any further changes as a new issue.
 
 - **Full-Width Decks 12 & 13 and Superstructure Continuity (Issue #40 - Completed)**:
   - Eliminated staggered deck overhangs and open-water gaps behind stairwells by extending Deck 12 left to `x = 0` and Deck 13 across the full width (`x = 0..2400`).

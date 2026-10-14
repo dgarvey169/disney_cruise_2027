@@ -92,6 +92,6 @@ The game is a Phaser 3 browser-based platformer. All changes are on the `main` b
   - **Issue #45:** Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
   - **Issue #46:** Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
   - **Issue #47:** Riley's Edge Tween Club Arcade (Completed)
-- **AquaMouse Redesign & Overhaul:** Tracked in Issue #39.
+- **AquaMouse Redesign & Overhaul:** Completed in Issue #39 (PR #52) — visual/depth-ordering overhaul only.
 - **Theaters (Pending):** Movie theater and grand Walt Disney Theatre.
 
