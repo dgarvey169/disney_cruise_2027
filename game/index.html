@@ -53,12 +53,13 @@
     <div id="game-container"></div>
     <script>
         // Bump ASSET_VERSION whenever ANY file under js/ changes (cache-buster for all scripts).
-        const ASSET_VERSION = '7.2';
+        const ASSET_VERSION = '8.0';
         // Load order matters: helpers before the scenes that use them; main.js MUST be last.
         // async = false guarantees dynamically inserted scripts execute in insertion order.
         [
             'js/lib/config.js',
             'js/lib/amelia-outfit.js',
+            'js/lib/oceaneer-club-data.js',
             'js/scenes/BootScene.js',
             'js/lib/edge-arcade-textures.js',
             'js/scenes/TitleScene.js',
@@ -74,6 +75,12 @@
             'js/scenes/ObstacleCourseScene.js',
             'js/scenes/AirHockeyScene.js',
             'js/scenes/BasketballShootoutScene.js',
+            'js/scenes/OceaneerClubScene.js',
+            'js/scenes/RalphSlideWingScene.js',
+            'js/scenes/ImagineeringLabWingScene.js',
+            'js/scenes/MarvelAcademyWingScene.js',
+            'js/scenes/StarWarsCargoWingScene.js',
+            'js/scenes/FairytaleHallWingScene.js',
             'js/main.js'
         ].forEach(src => {
             const s = document.createElement('script');
