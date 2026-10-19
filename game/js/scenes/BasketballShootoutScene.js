@@ -175,30 +175,57 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.add.rectangle(this.shooterX + 17, this.shooterY - 50, 12, 10, 0xFFD700, 0.6).setDepth(17);
 
         // 5. Retro LED Scoreboard
-        this.add.rectangle(W / 2, 40, 420, 45, 0x000000, 0.9).setDepth(20).setStrokeStyle(3, 0xF8B800);
-        this.scoreDisplay = this.add.text(W / 2 - 110, 40, 'SCORE: 00', {
-            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#00FF00'
-        }).setOrigin(0.5).setDepth(21);
+        if (W >= 620) {
+            this.add.rectangle(W / 2, 28, 300, 38, 0x000000, 0.9).setDepth(20).setStrokeStyle(3, 0xF8B800);
+            this.scoreDisplay = this.add.text(W / 2 - 80, 28, 'SCORE: 00', {
+                fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#00FF00'
+            }).setOrigin(0.5).setDepth(21);
 
-        this.timeDisplay = this.add.text(W / 2 + 100, 40, 'TIME: 45', {
-            fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FF5555'
-        }).setOrigin(0.5).setDepth(21);
+            this.timeDisplay = this.add.text(W / 2 + 80, 28, 'TIME: 45', {
+                fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FF5555'
+            }).setOrigin(0.5).setDepth(21);
 
-        this.streakDisplay = this.add.text(W / 2, 70, '', {
-            fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
-        }).setOrigin(0.5).setDepth(21);
+            this.streakDisplay = this.add.text(W / 2, 56, '', {
+                fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
+            }).setOrigin(0.5).setDepth(21);
 
-        // Top-Right [ RESTART ] Button
-        this.hudRestartBtn = this.add.text(W - 195, 30, '[ RESTART ]', {
-            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 6 }
-        }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
-        this.hudRestartBtn.on('pointerdown', () => this.restartShootout());
+            // Top-Left [ RESTART ] Button
+            this.hudRestartBtn = this.add.text(70, 28, '[ RESTART ]', {
+                fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 6 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudRestartBtn.on('pointerdown', () => this.restartShootout());
 
-        // Top-Right [ EXIT ] Button
-        this.hudExitBtn = this.add.text(W - 75, 30, '[ EXIT ]', {
-            fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 6 }
-        }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
-        this.hudExitBtn.on('pointerdown', () => this.exitShootout());
+            // Top-Right [ EXIT ] Button
+            this.hudExitBtn = this.add.text(W - 55, 28, '[ EXIT ]', {
+                fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 6 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudExitBtn.on('pointerdown', () => this.exitShootout());
+        } else {
+            const boardW = Math.min(320, W - 20);
+            this.add.rectangle(W / 2, 26, boardW, 36, 0x000000, 0.9).setDepth(20).setStrokeStyle(3, 0xF8B800);
+            this.scoreDisplay = this.add.text(W / 2 - 75, 26, 'SCORE: 00', {
+                fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#00FF00'
+            }).setOrigin(0.5).setDepth(21);
+
+            this.timeDisplay = this.add.text(W / 2 + 75, 26, 'TIME: 45', {
+                fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FF5555'
+            }).setOrigin(0.5).setDepth(21);
+
+            // Row below for action buttons
+            this.hudRestartBtn = this.add.text(W / 2 - 70, 64, '[ RESTART ]', {
+                fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 7, y: 5 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudRestartBtn.on('pointerdown', () => this.restartShootout());
+
+            this.hudExitBtn = this.add.text(W / 2 + 70, 64, '[ EXIT ]', {
+                fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 7, y: 5 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudExitBtn.on('pointerdown', () => this.exitShootout());
+
+            this.streakDisplay = this.add.text(W / 2, 90, '', {
+                fontSize: '8px', fontFamily: '"Press Start 2P"', fill: '#FFFF00'
+            }).setOrigin(0.5).setDepth(21);
+        }
 
         if (this.input && this.input.keyboard) {
             this.input.keyboard.resetKeys();
@@ -293,19 +320,25 @@ class BasketballShootoutScene extends Phaser.Scene {
             document.removeEventListener('visibilitychange', onVisHoop);
         };
 
+        const onScenePointerUp = () => {
+            if (this.isCharging) this.releaseShot();
+        };
+        this.input.on('pointerup', onScenePointerUp);
+
         this.events.once('shutdown', () => {
+            this.input.off('pointerup', onScenePointerUp);
             if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
         // Mobile Shoot Button
-        const shootBtn = this.add.rectangle(W / 2, H - 45, 160, 50, 0xE65C00, 0.85).setDepth(100).setStrokeStyle(3, 0xF8B800).setInteractive();
-        this.add.text(W / 2, H - 45, 'SHOOT [HOLD]', {
+        this.shootBtn = this.add.rectangle(W / 2, H - 45, 160, 50, 0xE65C00, 0.85).setDepth(100).setStrokeStyle(3, 0xF8B800).setInteractive();
+        this.shootBtnText = this.add.text(W / 2, H - 45, 'SHOOT [HOLD]', {
             fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF'
         }).setOrigin(0.5).setDepth(101);
 
-        shootBtn.on('pointerdown', () => this.startCharge());
-        shootBtn.on('pointerup', () => this.releaseShot());
-        shootBtn.on('pointerout', () => { if (this.isCharging) this.releaseShot(); });
+        this.shootBtn.on('pointerdown', () => this.startCharge());
+        this.shootBtn.on('pointerup', () => this.releaseShot());
+        this.shootBtn.on('pointerout', () => { if (this.isCharging) this.releaseShot(); });
 
         // Timer Event
         this.gameTimer = this.time.addEvent({
@@ -474,7 +507,7 @@ class BasketballShootoutScene extends Phaser.Scene {
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
         }
-        this.scene.restart();
+        this.scene.restart({ heroZone: this.heroZone });
     }
 
     finishShootout() {
@@ -484,6 +517,9 @@ class BasketballShootoutScene extends Phaser.Scene {
         this.menuReadyTime = this.time.now + 600;
         this.isCharging = false;
         if (this.gameTimer) this.gameTimer.remove();
+
+        if (this.shootBtn) this.shootBtn.setVisible(false);
+        if (this.shootBtnText) this.shootBtnText.setVisible(false);
 
         // Reset key states to prevent accidental confirmation
         if (this.keys) {
@@ -556,13 +592,21 @@ class BasketballShootoutScene extends Phaser.Scene {
             this.menuSelectionIndex = 0;
             this.updateMenuVisuals();
         });
-        this.btnAgain.on('pointerdown', () => this.confirmMenuChoice());
+        this.btnAgain.on('pointerdown', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+            this.confirmMenuChoice();
+        });
 
         this.btnExitModal.on('pointerover', () => {
             this.menuSelectionIndex = 1;
             this.updateMenuVisuals();
         });
-        this.btnExitModal.on('pointerdown', () => this.confirmMenuChoice());
+        this.btnExitModal.on('pointerdown', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+            this.confirmMenuChoice();
+        });
 
         this.updateMenuVisuals();
     }
@@ -655,7 +699,11 @@ class BasketballShootoutScene extends Phaser.Scene {
         // Spacebar shooting controls
         if (Phaser.Input.Keyboard.JustDown(this.keys.space)) {
             this.startCharge();
-        } else if (this.keys.space.isDown && this.isCharging) {
+        } else if (Phaser.Input.Keyboard.JustUp(this.keys.space) && this.isCharging) {
+            this.releaseShot();
+        }
+
+        if (this.isCharging) {
             // Charging
             this.chargeTime += delta * 1.2 * this.chargeDir;
             if (this.chargeTime >= 750) {
@@ -666,8 +714,6 @@ class BasketballShootoutScene extends Phaser.Scene {
                 this.chargeDir = 1;
             }
             this.powerMeterFill.width = (this.chargeTime / 750) * 76;
-        } else if (Phaser.Input.Keyboard.JustUp(this.keys.space) && this.isCharging) {
-            this.releaseShot();
         }
     }
 }

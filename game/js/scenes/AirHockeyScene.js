@@ -29,10 +29,11 @@ class AirHockeyScene extends Phaser.Scene {
         this.add.rectangle(0, 0, W, H, 0x07091B, 0.95).setOrigin(0);
         
         const cx = W / 2;
-        const cy = H / 2;
+        const headerH = W < 620 ? 90 : 65;
+        const tableW = Math.min(320, W - 20);
+        const tableH = Math.min(440, H - headerH - 24);
+        const cy = Math.round(headerH + (H - headerH) / 2);
         
-        const tableW = 320;
-        const tableH = 460;
         this.add.rectangle(cx, cy, tableW + 20, tableH + 20, 0x111111).setStrokeStyle(4, 0x00FFFF);
         this.add.rectangle(cx, cy, tableW, tableH, 0x0B1B3A);
         
@@ -90,13 +91,14 @@ class AirHockeyScene extends Phaser.Scene {
         this.puck.body.allowGravity = false;
         this.puck.body.setMaxVelocity(600, 600);
         
-        this.paddlePlayer = this.physics.add.sprite(cx, cy + 150, 'ah_mallet_player');
+        const paddleOffsetY = Math.min(150, Math.round(tableH * 0.32));
+        this.paddlePlayer = this.physics.add.sprite(cx, cy + paddleOffsetY, 'ah_mallet_player');
         this.paddlePlayer.setCollideWorldBounds(true);
         this.paddlePlayer.body.setCircle(20);
         this.paddlePlayer.body.allowGravity = false;
         this.paddlePlayer.body.immovable = true;
         
-        this.paddleAI = this.physics.add.sprite(cx, cy - 150, 'ah_mallet_ai');
+        this.paddleAI = this.physics.add.sprite(cx, cy - paddleOffsetY, 'ah_mallet_ai');
         this.paddleAI.setCollideWorldBounds(true);
         this.paddleAI.body.setCircle(20);
         this.paddleAI.body.allowGravity = false;
@@ -114,25 +116,47 @@ class AirHockeyScene extends Phaser.Scene {
         });
         const charName = this.heroZone && this.heroZone.gameScene ? this.heroZone.gameScene.characterName : 'Riley';
         const uName = charName.toUpperCase();
-        this.scoreText = this.add.text(cx, 35, `${uName} 0  -  0 AI`, {
-            fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
-        }).setOrigin(0.5);
 
-        this.add.text(cx, 65, 'BEST OF 7 SERIES (FIRST TO 4 WINS)', {
-            fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
-        }).setOrigin(0.5);
+        if (W >= 620) {
+            this.scoreText = this.add.text(cx, 24, `${uName} 0  -  0 AI`, {
+                fontSize: '12px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 10, y: 6 }
+            }).setOrigin(0.5).setDepth(21);
 
-        // Top-Right [ RESTART ] Button
-        this.hudRestartBtn = this.add.text(W - 195, 35, '[ RESTART ]', {
-            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        this.hudRestartBtn.on('pointerdown', () => this.restartAirHockey());
+            this.add.text(cx, 48, 'BEST OF 7 SERIES (FIRST TO 4 WINS)', {
+                fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
+            }).setOrigin(0.5).setDepth(21);
 
-        // Top-Right [ EXIT ] Button
-        this.hudExitBtn = this.add.text(W - 75, 35, '[ EXIT ]', {
-            fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        this.hudExitBtn.on('pointerdown', () => this.exitAirHockey());
+            // Top-Left [ RESTART ] Button
+            this.hudRestartBtn = this.add.text(70, 26, '[ RESTART ]', {
+                fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 8, y: 5 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudRestartBtn.on('pointerdown', () => this.restartAirHockey());
+
+            // Top-Right [ EXIT ] Button
+            this.hudExitBtn = this.add.text(W - 55, 26, '[ EXIT ]', {
+                fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 8, y: 5 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudExitBtn.on('pointerdown', () => this.exitAirHockey());
+        } else {
+            this.scoreText = this.add.text(cx, 22, `${uName} 0  -  0 AI`, {
+                fontSize: '10px', fontFamily: '"Press Start 2P"', fill: '#FFD700', backgroundColor: '#000', padding: { x: 8, y: 5 }
+            }).setOrigin(0.5).setDepth(21);
+
+            this.add.text(cx, 44, 'BEST OF 7 SERIES (FIRST TO 4 WINS)', {
+                fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#A0D0FF'
+            }).setOrigin(0.5).setDepth(21);
+
+            // Row below for action buttons
+            this.hudRestartBtn = this.add.text(cx - 70, 68, '[ RESTART ]', {
+                fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#000000', backgroundColor: '#FFD700', padding: { x: 7, y: 5 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudRestartBtn.on('pointerdown', () => this.restartAirHockey());
+
+            this.hudExitBtn = this.add.text(cx + 70, 68, '[ EXIT ]', {
+                fontSize: '9px', fontFamily: '"Press Start 2P"', fill: '#FFFFFF', backgroundColor: '#B80000', padding: { x: 7, y: 5 }
+            }).setOrigin(0.5).setDepth(100).setInteractive({ useHandCursor: true });
+            this.hudExitBtn.on('pointerdown', () => this.exitAirHockey());
+        }
 
         if (this.input && this.input.keyboard) {
             this.input.keyboard.resetKeys();
@@ -269,7 +293,7 @@ class AirHockeyScene extends Phaser.Scene {
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
         }
-        this.scene.restart();
+        this.scene.restart({ heroZone: this.heroZone });
     }
 
     exitAirHockey() {
@@ -532,13 +556,21 @@ class AirHockeyScene extends Phaser.Scene {
             this.menuSelectionIndex = 0;
             this.updateMenuVisuals();
         });
-        this.btnAgain.on('pointerdown', () => this.confirmMenuChoice());
+        this.btnAgain.on('pointerdown', () => {
+            this.menuSelectionIndex = 0;
+            this.updateMenuVisuals();
+            this.confirmMenuChoice();
+        });
 
         this.btnExitModal.on('pointerover', () => {
             this.menuSelectionIndex = 1;
             this.updateMenuVisuals();
         });
-        this.btnExitModal.on('pointerdown', () => this.confirmMenuChoice());
+        this.btnExitModal.on('pointerdown', () => {
+            this.menuSelectionIndex = 1;
+            this.updateMenuVisuals();
+            this.confirmMenuChoice();
+        });
 
         this.updateMenuVisuals();
     }

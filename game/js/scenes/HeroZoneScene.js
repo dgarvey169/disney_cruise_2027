@@ -3,7 +3,7 @@
 // =========================================================================
 
 // =========================================================================
-// RILEY'S HERO ZONE - 2.5D LOUNGE & STATION-BASED MINI-GAMES (ISSUE #46)
+// HERO ZONE - 2.5D LOUNGE & STATION-BASED MINI-GAMES (ISSUE #46)
 // =========================================================================
 
 // High Scores storage
@@ -103,8 +103,8 @@ class HeroZoneScene extends Phaser.Scene {
         }
 
         // Top Marquee Banner
-        this.add.rectangle(roomW / 2, 45, 480, 36, 0x000000, 0.85).setDepth(5).setStrokeStyle(2, 0xF8B800);
-        this.add.text(roomW / 2, 45, '★ RILEY\'S HERO ZONE ARENA ★', {
+        this.add.rectangle(roomW / 2, 45, 380, 36, 0x000000, 0.85).setDepth(5).setStrokeStyle(2, 0xF8B800);
+        this.add.text(roomW / 2, 45, '★ HERO ZONE ARENA ★', {
             fontSize: '11px', fontFamily: '"Press Start 2P"', fill: '#FFD700', stroke: '#000', strokeThickness: 2
         }).setOrigin(0.5).setDepth(6);
 
