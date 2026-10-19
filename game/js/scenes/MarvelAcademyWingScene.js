@@ -386,9 +386,8 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         // 10. Desktop Keyboard Controls & Native Blur/Focus safety
         this.setupKeyboardInput();
 
-        // 11. Mobile Touch Controls (Virtual Joystick + Action buttons)
-        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
-        if (isTouch) {
+        // 11. Mobile Touch Controls strictly for non-desktop devices
+        if (!this.sys.game.device.os.desktop) {
             this.createMobileTouchControls();
         }
 
@@ -1103,25 +1102,61 @@ class MarvelAcademyWingScene extends Phaser.Scene {
 
         // Direct DOM safety release: guarantees keys are cleared even if OS drops keyup
         const resetKeyInputs = () => {
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
+                if (this.input.keyboard.manager) {
+                    this.input.keyboard.manager.queue = [];
+                }
+            }
             if (this.cursors) {
-                if (this.cursors.left) this.cursors.left.isDown = false;
-                if (this.cursors.right) this.cursors.right.isDown = false;
-                if (this.cursors.up) this.cursors.up.isDown = false;
-                if (this.cursors.down) this.cursors.down.isDown = false;
-                if (this.cursors.space) this.cursors.space.isDown = false;
+                if (this.cursors.left) this.cursors.left.reset();
+                if (this.cursors.right) this.cursors.right.reset();
+                if (this.cursors.up) this.cursors.up.reset();
+                if (this.cursors.down) this.cursors.down.reset();
+                if (this.cursors.space) this.cursors.space.reset();
             }
             if (this.keysWASD) {
-                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
-                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
-                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
-                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
-                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
-                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+                if (this.keysWASD.left) this.keysWASD.left.reset();
+                if (this.keysWASD.right) this.keysWASD.right.reset();
+                if (this.keysWASD.up) this.keysWASD.up.reset();
+                if (this.keysWASD.down) this.keysWASD.down.reset();
+                if (this.keysWASD.space) this.keysWASD.space.reset();
+                if (this.keysWASD.enter) this.keysWASD.enter.reset();
             }
             this.mobileInput = { left: false, right: false, up: false, down: false };
         };
+        this.resetKeyInputs = resetKeyInputs;
 
         const onNativeKeyUp = (e) => {
+            if (this.input && this.input.keyboard && this.input.keyboard.manager) {
+                this.input.keyboard.manager.queue = [];
+            }
+            if (e.code === 'Space' || e.key === ' ') {
+                if (this.cursors && this.cursors.space) this.cursors.space.reset();
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.reset();
+            }
+            if (e.code === 'Enter' || e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.reset();
+            }
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.reset();
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.reset();
+            }
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.reset();
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.reset();
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD' || e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.reset();
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.reset();
+            }
+            if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.reset();
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.reset();
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeyInputs();
+            }
             if (e.key === 'Escape') {
                 if (this.isModalOpen) {
                     this.closeModals();
@@ -1145,6 +1180,8 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             window.removeEventListener('keyup', onNativeKeyUp);
             document.removeEventListener('visibilitychange', onVisChange);
         };
+
+        resetKeyInputs();
     }
 
     createMobileTouchControls() {

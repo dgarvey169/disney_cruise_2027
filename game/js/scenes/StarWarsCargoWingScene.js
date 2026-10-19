@@ -1137,43 +1137,90 @@ class StarWarsCargoWingScene extends Phaser.Scene {
 
         // Window event safety cleanups
         const resetKeys = () => {
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
+                if (this.input.keyboard.manager) {
+                    this.input.keyboard.manager.queue = [];
+                }
+            }
             if (this.cursors) {
-                if (this.cursors.left) this.cursors.left.isDown = false;
-                if (this.cursors.right) this.cursors.right.isDown = false;
-                if (this.cursors.up) this.cursors.up.isDown = false;
-                if (this.cursors.down) this.cursors.down.isDown = false;
-                if (this.cursors.space) this.cursors.space.isDown = false;
+                if (this.cursors.left) this.cursors.left.reset();
+                if (this.cursors.right) this.cursors.right.reset();
+                if (this.cursors.up) this.cursors.up.reset();
+                if (this.cursors.down) this.cursors.down.reset();
+                if (this.cursors.space) this.cursors.space.reset();
             }
             if (this.keysWASD) {
-                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
-                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
-                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
-                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
-                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
+                if (this.keysWASD.left) this.keysWASD.left.reset();
+                if (this.keysWASD.right) this.keysWASD.right.reset();
+                if (this.keysWASD.up) this.keysWASD.up.reset();
+                if (this.keysWASD.down) this.keysWASD.down.reset();
+                if (this.keysWASD.space) this.keysWASD.space.reset();
+                if (this.keysWASD.enter) this.keysWASD.enter.reset();
             }
             this.mobileInput = { left: false, right: false, up: false, down: false, jump: false, action: false };
+        };
+        this.resetKeyInputs = resetKeys;
+
+        const onNativeKeyUp = (e) => {
+            if (this.input && this.input.keyboard && this.input.keyboard.manager) {
+                this.input.keyboard.manager.queue = [];
+            }
+            if (e.code === 'Space' || e.key === ' ') {
+                if (this.cursors && this.cursors.space) this.cursors.space.reset();
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.reset();
+            }
+            if (e.code === 'Enter' || e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.reset();
+            }
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.reset();
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.reset();
+            }
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.reset();
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.reset();
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD' || e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.reset();
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.reset();
+            }
+            if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.reset();
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.reset();
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeys();
+            }
         };
 
         window.addEventListener('blur', resetKeys);
         window.addEventListener('focus', resetKeys);
-        this.events.once('shutdown', () => {
+        window.addEventListener('keyup', onNativeKeyUp);
+        const onVisChange = () => { if (document.hidden) resetKeys(); };
+        document.addEventListener('visibilitychange', onVisChange);
+
+        this._cleanWindowListeners = () => {
             window.removeEventListener('blur', resetKeys);
             window.removeEventListener('focus', resetKeys);
+            window.removeEventListener('keyup', onNativeKeyUp);
+            document.removeEventListener('visibilitychange', onVisChange);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
         });
 
-        // Mobile On-Screen Touch Controls
-        this.createMobileTouchControls(W, H);
+        resetKeys();
+
+        // Mobile On-Screen Touch Controls strictly for non-desktop devices
+        if (!this.sys.game.device.os.desktop) {
+            this.createMobileTouchControls(W, H);
+        }
     }
 
     createMobileTouchControls(W, H) {
         this.mobileControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(2000);
-
-        // Only display if touch is supported or mobile viewport
-        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
-        if (!isTouch && W > 800) {
-            this.mobileControlsContainer.setVisible(false);
-            return;
-        }
 
         const btnY = H - 50;
 
@@ -2376,10 +2423,10 @@ class StarWarsCargoWingScene extends Phaser.Scene {
             this.tryJump();
         }
 
-        if (left) {
+        if (left && !right) {
             vx = -this.playerSpeed;
             this.player.setFlipX(true);
-        } else if (right) {
+        } else if (right && !left) {
             vx = this.playerSpeed;
             this.player.setFlipX(false);
         }
@@ -2388,9 +2435,9 @@ class StarWarsCargoWingScene extends Phaser.Scene {
         const minY = this.floorY + 20;
         const maxY = this.floorY + this.floorH - 20;
 
-        if (up && this.groundY > minY) {
+        if (up && !down && this.groundY > minY) {
             vy = -this.playerSpeed * 0.55;
-        } else if (down && this.groundY < maxY) {
+        } else if (down && !up && this.groundY < maxY) {
             vy = this.playerSpeed * 0.55;
         }
 
@@ -2408,9 +2455,12 @@ class StarWarsCargoWingScene extends Phaser.Scene {
             }
         }
 
-        // Apply movement velocity and visual depth
-        this.player.body.setVelocityX(vx);
+        // Apply decoupled 2.5D movement and body.reset
+        this.player.x = Phaser.Math.Clamp(this.player.x + vx * dt, 60, this.roomW - 60);
         this.player.y = this.groundY - this.jumpZ;
+        if (this.player.body) {
+            this.player.body.reset(this.player.x, this.player.y);
+        }
         this.player.setDepth(Math.round(this.groundY));
 
         // Update Foot Shadow
@@ -2490,6 +2540,7 @@ class StarWarsCargoWingScene extends Phaser.Scene {
 
     handleStationAction() {
         if (!this.nearStation) return;
+        if (this.resetKeyInputs) this.resetKeyInputs();
 
         switch (this.nearStation) {
             case 'exit':
@@ -2591,6 +2642,8 @@ class StarWarsCargoWingScene extends Phaser.Scene {
     returnToHub() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this.resetKeyInputs) this.resetKeyInputs();
+        if (this._cleanWindowListeners) this._cleanWindowListeners();
 
         if (this.oceaneerHub && this.oceaneerHub.scene) {
             this.oceaneerHub.scene.setVisible(true);

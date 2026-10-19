@@ -241,6 +241,15 @@ class ElevatorMenuScene extends Phaser.Scene {
 
     travelToOceaneer() {
         // Oceaneer Club is available to ALL characters (preserves selectedCharacter)
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            if (this.input.keyboard.manager) {
+                this.input.keyboard.manager.queue = [];
+            }
+        }
+        if (this.gameScene && this.gameScene.input && this.gameScene.input.keyboard) {
+            this.gameScene.input.keyboard.resetKeys();
+        }
         if (this.gameScene && this.gameScene.scene) {
             this.gameScene.scene.setVisible(false);
             this.gameScene.scene.sleep();

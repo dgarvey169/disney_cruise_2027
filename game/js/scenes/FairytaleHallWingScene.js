@@ -102,7 +102,9 @@ class FairytaleHallWingScene extends Phaser.Scene {
         // 7. Standalone Standout Fixed UI (HUD, Tabs, Exit Button)
         this.createTopNavigationUI();
         this.createBottomStatusHUD();
-        this.createMobileControls();
+        if (!this.sys.game.device.os.desktop) {
+            this.createMobileControls();
+        }
 
         // 8. Keyboard Controls & Listeners
         this.setupKeyboardControls();
@@ -1976,34 +1978,84 @@ class FairytaleHallWingScene extends Phaser.Scene {
 
         // DOM input safety resets to prevent stuck keys
         const resetKeys = () => {
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
+                if (this.input.keyboard.manager) {
+                    this.input.keyboard.manager.queue = [];
+                }
+            }
             if (this.cursors) {
-                if (this.cursors.left) this.cursors.left.isDown = false;
-                if (this.cursors.right) this.cursors.right.isDown = false;
-                if (this.cursors.up) this.cursors.up.isDown = false;
-                if (this.cursors.down) this.cursors.down.isDown = false;
+                if (this.cursors.left) this.cursors.left.reset();
+                if (this.cursors.right) this.cursors.right.reset();
+                if (this.cursors.up) this.cursors.up.reset();
+                if (this.cursors.down) this.cursors.down.reset();
+                if (this.cursors.space) this.cursors.space.reset();
             }
             if (this.keysWASD) {
-                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
-                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
-                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
-                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
+                if (this.keysWASD.left) this.keysWASD.left.reset();
+                if (this.keysWASD.right) this.keysWASD.right.reset();
+                if (this.keysWASD.up) this.keysWASD.up.reset();
+                if (this.keysWASD.down) this.keysWASD.down.reset();
+                if (this.keysWASD.space) this.keysWASD.space.reset();
+                if (this.keysWASD.enter) this.keysWASD.enter.reset();
             }
             this.mobileInput = { left: false, right: false, up: false, down: false, jump: false, action: false };
+        };
+        this.resetKeyInputs = resetKeys;
+
+        const onNativeKeyUp = (e) => {
+            if (this.input && this.input.keyboard && this.input.keyboard.manager) {
+                this.input.keyboard.manager.queue = [];
+            }
+            if (e.code === 'Space' || e.key === ' ') {
+                if (this.cursors && this.cursors.space) this.cursors.space.reset();
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.reset();
+            }
+            if (e.code === 'Enter' || e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.reset();
+            }
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.reset();
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.reset();
+            }
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.reset();
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.reset();
+            }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD' || e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.reset();
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.reset();
+            }
+            if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.reset();
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.reset();
+            }
+            if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
+                resetKeys();
+            }
         };
 
         window.addEventListener('blur', resetKeys);
         window.addEventListener('focus', resetKeys);
+        window.addEventListener('keyup', onNativeKeyUp);
         const onVisChange = () => { if (document.hidden) resetKeys(); };
         document.addEventListener('visibilitychange', onVisChange);
 
-        this.events.once('shutdown', () => {
+        this._cleanWindowListeners = () => {
             window.removeEventListener('blur', resetKeys);
             window.removeEventListener('focus', resetKeys);
+            window.removeEventListener('keyup', onNativeKeyUp);
             document.removeEventListener('visibilitychange', onVisChange);
+        };
+
+        this.events.once('shutdown', () => {
+            if (this._cleanWindowListeners) this._cleanWindowListeners();
             if (this.snowgieCountdownEvent) this.snowgieCountdownEvent.remove();
             if (this.snowgieSpawnEvent) this.snowgieSpawnEvent.remove();
             if (this.speechDismissTimer) this.speechDismissTimer.remove();
         });
+
+        resetKeys();
     }
 
     tryJump() {
@@ -2023,13 +2075,14 @@ class FairytaleHallWingScene extends Phaser.Scene {
         const dt = delta * 0.001;
 
         // Keyboard & mobile input checks
-        const moveLeft = (this.cursors && this.cursors.left.isDown) || (this.keysWASD && this.keysWASD.left.isDown) || this.mobileInput.left;
-        const moveRight = (this.cursors && this.cursors.right.isDown) || (this.keysWASD && this.keysWASD.right.isDown) || this.mobileInput.right;
-        const moveUp = (this.cursors && this.cursors.up.isDown) || (this.keysWASD && this.keysWASD.up.isDown) || this.mobileInput.up;
-        const moveDown = (this.cursors && this.cursors.down.isDown) || (this.keysWASD && this.keysWASD.down.isDown) || this.mobileInput.down;
-        const jumpPressed = (this.cursors && this.cursors.space.isDown) || (this.keysWASD && this.keysWASD.space.isDown) || this.mobileInput.jump;
+        const moveLeft = Boolean((this.cursors && this.cursors.left && this.cursors.left.isDown) || (this.keysWASD && this.keysWASD.left && this.keysWASD.left.isDown) || this.mobileInput.left);
+        const moveRight = Boolean((this.cursors && this.cursors.right && this.cursors.right.isDown) || (this.keysWASD && this.keysWASD.right && this.keysWASD.right.isDown) || this.mobileInput.right);
+        const moveUp = Boolean((this.cursors && this.cursors.up && this.cursors.up.isDown) || (this.keysWASD && this.keysWASD.up && this.keysWASD.up.isDown) || this.mobileInput.up);
+        const moveDown = Boolean((this.cursors && this.cursors.down && this.cursors.down.isDown) || (this.keysWASD && this.keysWASD.down && this.keysWASD.down.isDown) || this.mobileInput.down);
+        const jumpPressed = Boolean((this.cursors && this.cursors.space && Phaser.Input.Keyboard.JustDown(this.cursors.space)) || (this.keysWASD && this.keysWASD.space && Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) || this.mobileInput.jump);
 
         if (jumpPressed) {
+            this.mobileInput.jump = false;
             this.tryJump();
             // In Sommerhus mini-game: tag nearest active Snowgie
             if (this.snowgieGameActive && this.activeSnowgies.length > 0) {
@@ -2039,10 +2092,10 @@ class FairytaleHallWingScene extends Phaser.Scene {
 
         // Horizontal movement
         let vx = 0;
-        if (moveLeft) {
+        if (moveLeft && !moveRight) {
             vx = -this.playerSpeed;
             this.player.setFlipX(true);
-        } else if (moveRight) {
+        } else if (moveRight && !moveLeft) {
             vx = this.playerSpeed;
             this.player.setFlipX(false);
         }
@@ -2050,8 +2103,8 @@ class FairytaleHallWingScene extends Phaser.Scene {
 
         // Slight vertical depth movement in 2.5D floor zone
         let vy = 0;
-        if (moveUp) vy = -this.playerSpeed * 0.45;
-        else if (moveDown) vy = this.playerSpeed * 0.45;
+        if (moveUp && !moveDown) vy = -this.playerSpeed * 0.45;
+        else if (moveDown && !moveUp) vy = this.playerSpeed * 0.45;
 
         const minY = this.floorY + 15;
         const maxY = this.roomH - 22;
@@ -2069,6 +2122,9 @@ class FairytaleHallWingScene extends Phaser.Scene {
         }
 
         this.player.y = this.playerGroundY - this.jumpZ;
+        if (this.player.body) {
+            this.player.body.reset(this.player.x, this.player.y);
+        }
         this.player.setDepth(Math.round(this.playerGroundY));
 
         // Player Shadow position
@@ -2104,6 +2160,8 @@ class FairytaleHallWingScene extends Phaser.Scene {
     returnToHub() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this.resetKeyInputs) this.resetKeyInputs();
+        if (this._cleanWindowListeners) this._cleanWindowListeners();
 
         if (this.snowgieCountdownEvent) this.snowgieCountdownEvent.remove();
         if (this.snowgieSpawnEvent) this.snowgieSpawnEvent.remove();

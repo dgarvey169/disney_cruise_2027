@@ -187,20 +187,26 @@ class OceaneerClubScene extends Phaser.Scene {
         });
 
         const resetKeyInputs = () => {
+            if (this.input && this.input.keyboard) {
+                this.input.keyboard.resetKeys();
+                if (this.input.keyboard.manager) {
+                    this.input.keyboard.manager.queue = [];
+                }
+            }
             if (this.cursors) {
-                if (this.cursors.left) this.cursors.left.isDown = false;
-                if (this.cursors.right) this.cursors.right.isDown = false;
-                if (this.cursors.up) this.cursors.up.isDown = false;
-                if (this.cursors.down) this.cursors.down.isDown = false;
-                if (this.cursors.space) this.cursors.space.isDown = false;
+                if (this.cursors.left) this.cursors.left.reset();
+                if (this.cursors.right) this.cursors.right.reset();
+                if (this.cursors.up) this.cursors.up.reset();
+                if (this.cursors.down) this.cursors.down.reset();
+                if (this.cursors.space) this.cursors.space.reset();
             }
             if (this.keysWASD) {
-                if (this.keysWASD.left) this.keysWASD.left.isDown = false;
-                if (this.keysWASD.right) this.keysWASD.right.isDown = false;
-                if (this.keysWASD.up) this.keysWASD.up.isDown = false;
-                if (this.keysWASD.down) this.keysWASD.down.isDown = false;
-                if (this.keysWASD.space) this.keysWASD.space.isDown = false;
-                if (this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+                if (this.keysWASD.left) this.keysWASD.left.reset();
+                if (this.keysWASD.right) this.keysWASD.right.reset();
+                if (this.keysWASD.up) this.keysWASD.up.reset();
+                if (this.keysWASD.down) this.keysWASD.down.reset();
+                if (this.keysWASD.space) this.keysWASD.space.reset();
+                if (this.keysWASD.enter) this.keysWASD.enter.reset();
             }
             if (this.resetJoystick) {
                 this.resetJoystick();
@@ -208,30 +214,34 @@ class OceaneerClubScene extends Phaser.Scene {
                 this.mobileInput = { left: false, right: false, up: false, down: false, jump: false };
             }
         };
+        this.resetKeyInputs = resetKeyInputs;
 
         const onNativeKeyUp = (e) => {
-            if (e.code === 'Space') {
-                if (this.cursors && this.cursors.space) this.cursors.space.isDown = false;
-                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.isDown = false;
+            if (this.input && this.input.keyboard && this.input.keyboard.manager) {
+                this.input.keyboard.manager.queue = [];
             }
-            if (e.key === 'Enter') {
-                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.isDown = false;
+            if (e.code === 'Space' || e.key === ' ') {
+                if (this.cursors && this.cursors.space) this.cursors.space.reset();
+                if (this.keysWASD && this.keysWASD.space) this.keysWASD.space.reset();
             }
-            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
-                if (this.cursors && this.cursors.up) this.cursors.up.isDown = false;
-                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.isDown = false;
+            if (e.code === 'Enter' || e.key === 'Enter') {
+                if (this.keysWASD && this.keysWASD.enter) this.keysWASD.enter.reset();
             }
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-                if (this.cursors && this.cursors.left) this.cursors.left.isDown = false;
-                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.isDown = false;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                if (this.cursors && this.cursors.up) this.cursors.up.reset();
+                if (this.keysWASD && this.keysWASD.up) this.keysWASD.up.reset();
             }
-            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-                if (this.cursors && this.cursors.right) this.cursors.right.isDown = false;
-                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.isDown = false;
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                if (this.cursors && this.cursors.left) this.cursors.left.reset();
+                if (this.keysWASD && this.keysWASD.left) this.keysWASD.left.reset();
             }
-            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
-                if (this.cursors && this.cursors.down) this.cursors.down.isDown = false;
-                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.isDown = false;
+            if (e.code === 'ArrowRight' || e.code === 'KeyD' || e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                if (this.cursors && this.cursors.right) this.cursors.right.reset();
+                if (this.keysWASD && this.keysWASD.right) this.keysWASD.right.reset();
+            }
+            if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                if (this.cursors && this.cursors.down) this.cursors.down.reset();
+                if (this.keysWASD && this.keysWASD.down) this.keysWASD.down.reset();
             }
             if (['Alt', 'Meta', 'Control', 'Shift'].includes(e.key)) {
                 resetKeyInputs();
@@ -265,17 +275,16 @@ class OceaneerClubScene extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(2000).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.exitToShip());
 
-        // Floating Joystick & Touch Controls for Mobile
-        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
-        if (isTouch) {
+        // Floating Joystick & Touch Controls strictly for non-desktop devices
+        if (!this.sys.game.device.os.desktop) {
             this.createMobileControls();
         }
 
+        // Clear any residual inputs on scene start
+        resetKeyInputs();
+
         // Resume handler when returning from any of the 5 themed wings
         this.events.on('resume', () => {
-            if (this.input && this.input.keyboard) {
-                this.input.keyboard.resetKeys();
-            }
             resetKeyInputs();
             if (this.game && this.game.canvas) {
                 this.game.canvas.focus();
@@ -580,12 +589,10 @@ class OceaneerClubScene extends Phaser.Scene {
     }
 
     launchWing(wingKey, stationX) {
+        if (this.resetKeyInputs) this.resetKeyInputs();
         if (this.resetJoystick) this.resetJoystick();
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
-        }
-        if (this.input && this.input.keyboard) {
-            this.input.keyboard.resetKeys();
         }
         if (stationX) {
             this.player.x = stationX;
@@ -601,6 +608,7 @@ class OceaneerClubScene extends Phaser.Scene {
     exitToShip() {
         if (this.isExiting) return;
         this.isExiting = true;
+        if (this.resetKeyInputs) this.resetKeyInputs();
         if (this.resetJoystick) this.resetJoystick();
         if (this._cleanWindowListeners) {
             this._cleanWindowListeners();
@@ -640,6 +648,7 @@ class OceaneerClubScene extends Phaser.Scene {
     }
 
     handleStationAction() {
+        if (this.resetKeyInputs) this.resetKeyInputs();
         if (this.resetJoystick) this.resetJoystick();
         if (this.nearExit) {
             this.exitToShip();
@@ -687,47 +696,33 @@ class OceaneerClubScene extends Phaser.Scene {
             }
         }
 
-        const isLeft = (this.cursors.left && this.cursors.left.isDown) ||
+        const isLeft = Boolean((this.cursors.left && this.cursors.left.isDown) ||
                        (this.keysWASD.left && this.keysWASD.left.isDown) ||
-                       this.mobileInput.left;
-        const isRight = (this.cursors.right && this.cursors.right.isDown) ||
+                       this.mobileInput.left);
+        const isRight = Boolean((this.cursors.right && this.cursors.right.isDown) ||
                         (this.keysWASD.right && this.keysWASD.right.isDown) ||
-                        this.mobileInput.right;
-        const isUp = (this.cursors.up && this.cursors.up.isDown) ||
+                        this.mobileInput.right);
+        const isUp = Boolean((this.cursors.up && this.cursors.up.isDown) ||
                      (this.keysWASD.up && this.keysWASD.up.isDown) ||
-                     this.mobileInput.up;
-        const isDown = (this.cursors.down && this.cursors.down.isDown) ||
+                     this.mobileInput.up);
+        const isDown = Boolean((this.cursors.down && this.cursors.down.isDown) ||
                        (this.keysWASD.down && this.keysWASD.down.isDown) ||
-                       this.mobileInput.down;
+                       this.mobileInput.down);
 
         let moveX = 0;
         let moveY = 0;
 
-        if (isLeft && isRight) {
-            const leftTime = Math.max((this.cursors.left ? this.cursors.left.timeDown : 0), (this.keysWASD.left ? this.keysWASD.left.timeDown : 0));
-            const rightTime = Math.max((this.cursors.right ? this.cursors.right.timeDown : 0), (this.keysWASD.right ? this.keysWASD.right.timeDown : 0));
-            if (rightTime >= leftTime) {
-                moveX = 1;
-                this.player.setFlipX(false);
-            } else {
-                moveX = -1;
-                this.player.setFlipX(true);
-            }
-        } else if (isLeft) {
+        if (isLeft && !isRight) {
             moveX = -1;
             this.player.setFlipX(true);
-        } else if (isRight) {
+        } else if (isRight && !isLeft) {
             moveX = 1;
             this.player.setFlipX(false);
         }
 
-        if (isUp && isDown) {
-            const upTime = Math.max((this.cursors.up ? this.cursors.up.timeDown : 0), (this.keysWASD.up ? this.keysWASD.up.timeDown : 0));
-            const downTime = Math.max((this.cursors.down ? this.cursors.down.timeDown : 0), (this.keysWASD.down ? this.keysWASD.down.timeDown : 0));
-            moveY = (downTime >= upTime) ? 1 : -1;
-        } else if (isUp) {
+        if (isUp && !isDown) {
             moveY = -1;
-        } else if (isDown) {
+        } else if (isDown && !isUp) {
             moveY = 1;
         }
 
@@ -790,7 +785,7 @@ class OceaneerClubScene extends Phaser.Scene {
             this.counselorBubble.setVisible(nearCounselor);
         }
 
-        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        const isTouch = !this.sys.game.device.os.desktop;
         let activePrompt = '';
         if (this.nearExit) {
             activePrompt = isTouch ? '[ TAP TO EXIT TO SHIP ]' : '[ ENTER: EXIT TO SHIP ]';
