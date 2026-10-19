@@ -10,14 +10,14 @@ class ElevatorMenuScene extends Phaser.Scene {
         const cy = this.scale.height / 2;
 
         this.add.rectangle(cx, cy, this.scale.width, this.scale.height, 0x000000, 0.7);
-        this.add.rectangle(cx, cy, 380, 340, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
+        this.add.rectangle(cx, cy, 380, 376, 0x0000AA).setStrokeStyle(4, 0xFFFFFF);
         
-        this.add.text(cx, cy - 135, 'MIDSHIP ELEVATOR', {
+        this.add.text(cx, cy - 150, 'MIDSHIP ELEVATOR', {
             fontSize: '14px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace',
             stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5);
 
-        this.add.text(cx, cy - 110, 'SELECT DESTINATION', {
+        this.add.text(cx, cy - 124, 'SELECT DESTINATION', {
             fontSize: '9px', fill: '#A0D0FF', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
@@ -32,11 +32,14 @@ class ElevatorMenuScene extends Phaser.Scene {
             floors.push({ label: 'Deck 4  (Bibbidi Bobbidi)', type: 'boutique' });
         }
 
+        // Oceaneer Club (Deck 2) is available for ALL characters!
+        floors.push({ label: 'Deck 2  (Oceaneer Club)', type: 'oceaneer' });
+
         this.menuItems = [];
-        let startY = cy - 70;
+        let startY = cy - 84;
 
         floors.forEach((floor, index) => {
-            let btn = this.add.text(cx, startY + (index * 36), floor.label, {
+            let btn = this.add.text(cx, startY + (index * 34), floor.label, {
                 fontSize: '9px', fill: '#FFFFFF', backgroundColor: '#000000', padding: { x: 14, y: 7 },
                 fontFamily: '"Press Start 2P", monospace'
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -49,6 +52,8 @@ class ElevatorMenuScene extends Phaser.Scene {
                         this.travelToBoutique();
                     } else if (floor.type === 'edge') {
                         this.travelToEdge();
+                    } else if (floor.type === 'oceaneer') {
+                        this.travelToOceaneer();
                     } else {
                         this.travelToFloor(floor.y);
                     }
@@ -61,7 +66,7 @@ class ElevatorMenuScene extends Phaser.Scene {
         });
 
         // Cancel option
-        let cancelBtn = this.add.text(cx, startY + (floors.length * 36) + 6, '[ CANCEL ]', {
+        let cancelBtn = this.add.text(cx, startY + (floors.length * 34) + 6, '[ CANCEL ]', {
             fontSize: '9px', fill: '#FF5555', backgroundColor: '#000000', padding: { x: 14, y: 6 },
             fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
@@ -77,7 +82,7 @@ class ElevatorMenuScene extends Phaser.Scene {
         cancelBtn.on('pointerdown', () => cancelItem.action());
 
         // Navigation hint
-        this.add.text(cx, cy + 142, '▲/▼: SELECT   ENTER: TRAVEL', {
+        this.add.text(cx, cy + 158, '▲/▼: SELECT   ENTER: TRAVEL', {
             fontSize: '8px', fill: '#FFD700', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5);
 
@@ -233,5 +238,16 @@ class ElevatorMenuScene extends Phaser.Scene {
         this.scene.stop();
         this.scene.launch('EdgeClubScene', { gameScene: this.gameScene });
     }
+
+    travelToOceaneer() {
+        // Oceaneer Club is available to ALL characters (preserves selectedCharacter)
+        if (this.gameScene && this.gameScene.scene) {
+            this.gameScene.scene.setVisible(false);
+            this.gameScene.scene.sleep();
+        }
+        this.scene.stop();
+        this.scene.launch('OceaneerClubScene', { gameScene: this.gameScene });
+    }
 }
+
 
