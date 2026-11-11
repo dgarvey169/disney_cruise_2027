@@ -1040,6 +1040,7 @@ class StarWarsCargoWingScene extends Phaser.Scene {
             padding: { x: 6, y: 4 }
         });
         this.hudContainer.add(this.careStatusText);
+        this.hudContainer.list.forEach(c => { if (c && c.setScrollFactor) c.setScrollFactor(0); });
         this.updateCareStatusHUD();
     }
 
@@ -1213,60 +1214,104 @@ class StarWarsCargoWingScene extends Phaser.Scene {
 
         resetKeys();
 
-        // Mobile On-Screen Touch Controls strictly for non-desktop devices
-        if (!this.sys.game.device.os.desktop) {
+        // Mobile On-Screen Touch Controls strictly for non-desktop / touch devices
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.createMobileTouchControls(W, H);
         }
     }
 
     createMobileTouchControls(W, H) {
-        this.mobileControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(2000);
+        this.input.addPointer(3);
 
-        const btnY = H - 50;
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        this.joyBase = this.add.graphics().setScrollFactor(0).setDepth(2500).setAlpha(0.5);
+        this.joyKnob = this.add.graphics().setScrollFactor(0).setDepth(2501).setAlpha(0.7);
 
-        // Bottom-Left D-pad: Left & Right
-        const leftBtn = this.add.rectangle(45, btnY, 50, 44, 0x000000, 0.7)
-            .setStrokeStyle(2, 0x00E5FF)
-            .setInteractive();
-        const leftText = this.add.text(45, btnY, '◄', { fontSize: '14px', fill: '#00E5FF' }).setOrigin(0.5);
+        this.joyBase.fillStyle(0xffffff, 1);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(3, 0x888888, 1);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        leftBtn.on('pointerdown', () => { this.mobileInput.left = true; });
-        leftBtn.on('pointerup', () => { this.mobileInput.left = false; });
-        leftBtn.on('pointerout', () => { this.mobileInput.left = false; });
+        this.joyKnob.fillStyle(0x4488ff, 1);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
 
-        const rightBtn = this.add.rectangle(110, btnY, 50, 44, 0x000000, 0.7)
-            .setStrokeStyle(2, 0x00E5FF)
-            .setInteractive();
-        const rightText = this.add.text(110, btnY, '►', { fontSize: '14px', fill: '#00E5FF' }).setOrigin(0.5);
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
 
-        rightBtn.on('pointerdown', () => { this.mobileInput.right = true; });
-        rightBtn.on('pointerup', () => { this.mobileInput.right = false; });
-        rightBtn.on('pointerout', () => { this.mobileInput.right = false; });
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
 
-        // Bottom-Right: Jump & Action
-        const jumpBtn = this.add.rectangle(W - 125, btnY, 54, 44, 0x000000, 0.7)
-            .setStrokeStyle(2, 0xFFD700)
-            .setInteractive();
-        const jumpText = this.add.text(W - 125, btnY, 'JUMP', {
-            fontSize: '8px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#FFD700'
-        }).setOrigin(0.5);
+        this.resetJoystick = () => {
+            this.joyPointer = null;
+            if (this.joyBase && this.joyBase.active) this.joyBase.setVisible(false);
+            if (this.joyKnob && this.joyKnob.active) this.joyKnob.setVisible(false);
+            this.mobileInput.left = false;
+            this.mobileInput.right = false;
+            this.mobileInput.up = false;
+            this.mobileInput.down = false;
+            this.mobileInput.jump = false;
+        };
 
-        jumpBtn.on('pointerdown', () => { this.tryJump(); });
+        const onPointerDown = (ptr, currentlyOver) => {
+            if (this.currentMode !== 'explore') return;
+            if (ptr.y < 65) return;
+            if (currentlyOver && currentlyOver.length > 0) return;
 
-        const actBtn = this.add.rectangle(W - 55, btnY, 54, 44, 0x000000, 0.7)
-            .setStrokeStyle(2, 0x00FFAA)
-            .setInteractive();
-        const actText = this.add.text(W - 55, btnY, 'ACT', {
-            fontSize: '8px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#00FFAA'
-        }).setOrigin(0.5);
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                if (this.joyPointer === null) {
+                    this.joyPointer = ptr;
+                    this.joyOrigin.x = ptr.x;
+                    this.joyOrigin.y = ptr.y;
+                    this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                if (this.nearStation) {
+                    this.handleStationAction();
+                } else {
+                    this.tryJump();
+                }
+            }
+        };
 
-        actBtn.on('pointerdown', () => { this.handleStationAction(); });
+        const onPointerMove = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                const dx = ptr.x - this.joyOrigin.x;
+                const dy = ptr.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
 
-        this.mobileControlsContainer.add([leftBtn, leftText, rightBtn, rightText, jumpBtn, jumpText, actBtn, actText]);
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            }
+        };
+
+        const onPointerUp = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                this.resetJoystick();
+            }
+        };
+
+        this.input.on('pointerdown', onPointerDown);
+        this.input.on('pointermove', onPointerMove);
+        this.input.on('pointerup', onPointerUp);
+
+        this.events.once('shutdown', () => {
+            this.input.off('pointerdown', onPointerDown);
+            this.input.off('pointermove', onPointerMove);
+            this.input.off('pointerup', onPointerUp);
+            if (this.joyBase) this.joyBase.destroy();
+            if (this.joyKnob) this.joyKnob.destroy();
+        });
     }
 
     tryJump() {
@@ -1483,6 +1528,7 @@ class StarWarsCargoWingScene extends Phaser.Scene {
             nextTxt,
             this.dpStatusBanner
         ]);
+        this.datapadContainer.list.forEach(c => { if (c && c.setScrollFactor) c.setScrollFactor(0); });
     }
 
     navigateDatapadCreature(dir) {
@@ -2051,7 +2097,9 @@ class StarWarsCargoWingScene extends Phaser.Scene {
         exitResBtn.on('pointerdown', () => this.closePowerDiagnostic());
 
         this.diagResultsContainer.add([resBox, this.resTitleText, this.resScoreText, this.resRankText, this.resBadgeText, replayBtn, replayTxt, exitResBtn, exitResTxt]);
+        this.diagResultsContainer.list.forEach(c => { if (c && c.setScrollFactor) c.setScrollFactor(0); });
         this.diagContainer.add(this.diagResultsContainer);
+        this.diagContainer.list.forEach(c => { if (c && c.setScrollFactor) c.setScrollFactor(0); });
     }
 
     openPowerDiagnostic() {
@@ -2400,6 +2448,29 @@ class StarWarsCargoWingScene extends Phaser.Scene {
         }
 
         // --- Explore Mode Player Movement ---
+        if (this.joyPointer) {
+            if (this.joyPointer.isDown) {
+                const JOY_RADIUS = 60;
+                const dx = this.joyPointer.x - this.joyOrigin.x;
+                const dy = this.joyPointer.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                if (this.joyKnob && this.joyKnob.active) {
+                    this.joyKnob.setPosition(kx, ky);
+                }
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            } else {
+                this.resetJoystick();
+            }
+        }
+
         let vx = 0;
         let vy = 0;
 

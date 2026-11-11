@@ -87,11 +87,13 @@ class OceaneerClubScene extends Phaser.Scene {
             });
         }
 
-        // Fixed Top Marquee Banner
-        this.add.rectangle(W / 2, 30, 420, 34, 0x050C24, 0.92)
+        // Fixed Top Marquee Banner (sized to avoid overlapping top-right EXIT button on mobile)
+        const bannerW = Math.min(420, Math.max(220, W - 160));
+        const bannerX = (W < 580) ? Math.round((W - 130) / 2) : Math.round(W / 2);
+        this.add.rectangle(bannerX, 30, bannerW, 34, 0x050C24, 0.92)
             .setScrollFactor(0).setDepth(1900).setStrokeStyle(2, 0xFFD700);
-        this.add.text(W / 2, 30, "★ DISNEY'S OCEANEER CLUB (DECK 2) ★", {
-            fontSize: '10px', fontFamily: '"Press Start 2P", monospace', fill: '#FFD700', stroke: '#000000', strokeThickness: 2
+        this.add.text(bannerX, 30, W < 440 ? "★ OCEANEER CLUB ★" : "★ DISNEY'S OCEANEER CLUB (DECK 2) ★", {
+            fontSize: W < 440 ? '8px' : '10px', fontFamily: '"Press Start 2P", monospace', fill: '#FFD700', stroke: '#000000', strokeThickness: 2
         }).setOrigin(0.5).setScrollFactor(0).setDepth(1901);
 
         // ----------------------------------------------------
@@ -275,8 +277,9 @@ class OceaneerClubScene extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(2000).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.exitToShip());
 
-        // Floating Joystick & Touch Controls strictly for non-desktop devices
-        if (!this.sys.game.device.os.desktop) {
+        // Floating Joystick & Touch Controls strictly for non-desktop / touch devices
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.createMobileControls();
         }
 
@@ -523,8 +526,9 @@ class OceaneerClubScene extends Phaser.Scene {
             this.mobileInput.jump = false;
         };
 
-        const onPointerDown = (ptr) => {
+        const onPointerDown = (ptr, currentlyOver) => {
             if (ptr.y < 60 && ptr.x > this.scale.width - 140) return;
+            if (currentlyOver && currentlyOver.length > 0) return;
 
             const halfW = this.scale.width / 2;
             if (ptr.x < halfW) {
@@ -536,8 +540,12 @@ class OceaneerClubScene extends Phaser.Scene {
                     this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
                 }
             } else {
-                this.mobileInput.jump = true;
-                this.time.delayedCall(120, () => { this.mobileInput.jump = false; });
+                if (this.nearExit || this.nearRalphSlide || this.nearImagineering || this.nearMarvel || this.nearStarWars || this.nearFairytale) {
+                    this.handleStationAction();
+                } else {
+                    this.mobileInput.jump = true;
+                    this.time.delayedCall(120, () => { this.mobileInput.jump = false; });
+                }
             }
         };
 
@@ -785,7 +793,7 @@ class OceaneerClubScene extends Phaser.Scene {
             this.counselorBubble.setVisible(nearCounselor);
         }
 
-        const isTouch = !this.sys.game.device.os.desktop;
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
         let activePrompt = '';
         if (this.nearExit) {
             activePrompt = isTouch ? '[ TAP TO EXIT TO SHIP ]' : '[ ENTER: EXIT TO SHIP ]';

@@ -984,7 +984,8 @@ class RalphSlideWingScene extends Phaser.Scene {
             backgroundColor: '#000000',
             padding: { x: 8, y: 5 },
             fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5).setDepth(1200).setVisible(false);
+        }).setOrigin(0.5).setDepth(1200).setVisible(false).setInteractive({ useHandCursor: true });
+        this.actionPrompt.on('pointerdown', () => this.handleActionTrigger());
     }
 
     createPlayer() {
@@ -1180,23 +1181,15 @@ class RalphSlideWingScene extends Phaser.Scene {
 
         this.slideMobileButtons = this.add.container(0, 0).setScrollFactor(0).setDepth(2700).setVisible(false);
 
-        // Left button
-        const btnL = this.add.rectangle(65, H - 70, 90, 60, 0x000000, 0.75)
-            .setStrokeStyle(3, 0x00FFFF).setInteractive({ useHandCursor: true });
-        const textL = this.add.text(65, H - 70, '◄ LEFT', {
-            fontSize: '10px', fill: '#00FFFF', fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5);
-        btnL.on('pointerdown', () => this.steerSlide(-1));
+        const hintText = this.add.text(W / 2, H - 24, 'TAP LEFT OR RIGHT SIDE OF SCREEN TO STEER', {
+            fontSize: '7px',
+            fill: '#00FFFF',
+            backgroundColor: '#000000',
+            padding: { x: 8, y: 4 },
+            fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setScrollFactor(0);
 
-        // Right button
-        const btnR = this.add.rectangle(W - 65, H - 70, 90, 60, 0x000000, 0.75)
-            .setStrokeStyle(3, 0x00FFFF).setInteractive({ useHandCursor: true });
-        const textR = this.add.text(W - 65, H - 70, 'RIGHT ►', {
-            fontSize: '10px', fill: '#00FFFF', fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5);
-        btnR.on('pointerdown', () => this.steerSlide(1));
-
-        this.slideMobileButtons.add([btnL, textL, btnR, textR]);
+        this.slideMobileButtons.add([hintText]);
     }
 
     startSlideRun() {
@@ -1234,10 +1227,11 @@ class RalphSlideWingScene extends Phaser.Scene {
         this.slideHUD.setVisible(true);
         if (this.btnRideSlide) this.btnRideSlide.setVisible(false);
 
-        // Show mobile steer buttons on non-desktop
-        if (!this.sys.game.device.os.desktop) {
+        // Show mobile steer hint on touch devices
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.slideMobileButtons.setVisible(true);
-            if (this.roomMobileControls) this.roomMobileControls.setVisible(false);
+            if (this.resetJoystick) this.resetJoystick();
         }
 
         // Camera center view
@@ -1585,10 +1579,7 @@ class RalphSlideWingScene extends Phaser.Scene {
         this.slideHUD.setVisible(false);
         this.slideMobileButtons.setVisible(false);
         if (this.btnRideSlide) this.btnRideSlide.setVisible(true);
-
-        if (!this.sys.game.device.os.desktop && this.roomMobileControls) {
-            this.roomMobileControls.setVisible(true);
-        }
+        if (this.resetJoystick) this.resetJoystick();
 
         // Restore camera following player
         this.cameras.main.setBounds(0, 0, this.roomW, this.roomH);
@@ -1721,8 +1712,9 @@ class RalphSlideWingScene extends Phaser.Scene {
 
         resetKeyInputs();
 
-        // Mobile On-Screen Controls for room exploration
-        if (!this.sys.game.device.os.desktop) {
+        // Mobile On-Screen Controls for room exploration (Floating Joystick + Tap on Right)
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.setupMobileRoomControls();
         }
 
@@ -1741,34 +1733,96 @@ class RalphSlideWingScene extends Phaser.Scene {
     }
 
     setupMobileRoomControls() {
-        const W = this.scale.width;
-        const H = this.scale.height;
+        this.input.addPointer(3);
 
-        this.roomMobileControls = this.add.container(0, 0).setScrollFactor(0).setDepth(2800);
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        this.joyBase = this.add.graphics().setScrollFactor(0).setDepth(2800).setAlpha(0.5);
+        this.joyKnob = this.add.graphics().setScrollFactor(0).setDepth(2801).setAlpha(0.7);
 
-        // D-Pad Left / Right on bottom-left
-        const leftBtn = this.add.circle(50, H - 55, 28, 0x000000, 0.75).setStrokeStyle(2, 0xFFFFFF).setInteractive();
-        this.add.text(50, H - 55, '◄', { fontSize: '12px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' }).setOrigin(0.5);
-        leftBtn.on('pointerdown', () => { this.mobileInput.left = true; });
-        leftBtn.on('pointerup', () => { this.mobileInput.left = false; });
-        leftBtn.on('pointerout', () => { this.mobileInput.left = false; });
+        this.joyBase.fillStyle(0xffffff, 1);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(3, 0x888888, 1);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        const rightBtn = this.add.circle(115, H - 55, 28, 0x000000, 0.75).setStrokeStyle(2, 0xFFFFFF).setInteractive();
-        this.add.text(115, H - 55, '►', { fontSize: '12px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' }).setOrigin(0.5);
-        rightBtn.on('pointerdown', () => { this.mobileInput.right = true; });
-        rightBtn.on('pointerup', () => { this.mobileInput.right = false; });
-        rightBtn.on('pointerout', () => { this.mobileInput.right = false; });
+        this.joyKnob.fillStyle(0x4488ff, 1);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
 
-        // Action & Jump buttons on bottom-right
-        const jumpBtn = this.add.circle(W - 115, H - 55, 28, 0x005588, 0.8).setStrokeStyle(2, 0xFFFFFF).setInteractive();
-        this.add.text(W - 115, H - 55, 'JUMP', { fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' }).setOrigin(0.5);
-        jumpBtn.on('pointerdown', () => this.tryJump());
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
 
-        const actBtn = this.add.circle(W - 50, H - 55, 28, 0xFF4081, 0.8).setStrokeStyle(2, 0xFFFFFF).setInteractive();
-        this.add.text(W - 50, H - 55, 'ACT', { fontSize: '7px', fill: '#FFFFFF', fontFamily: '"Press Start 2P"' }).setOrigin(0.5);
-        actBtn.on('pointerdown', () => this.handleActionTrigger());
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
 
-        this.roomMobileControls.add([leftBtn, rightBtn, jumpBtn, actBtn]);
+        this.resetJoystick = () => {
+            this.joyPointer = null;
+            if (this.joyBase && this.joyBase.active) this.joyBase.setVisible(false);
+            if (this.joyKnob && this.joyKnob.active) this.joyKnob.setVisible(false);
+            this.mobileInput.left = false;
+            this.mobileInput.right = false;
+            this.mobileInput.up = false;
+            this.mobileInput.down = false;
+            this.mobileInput.jump = false;
+        };
+
+        const onPointerDown = (ptr, currentlyOver) => {
+            if (this.currentMode !== 'ROOM' || this.completionMenuOpen) return;
+            if (ptr.y < 60) return;
+            if (currentlyOver && currentlyOver.length > 0) return;
+
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                if (this.joyPointer === null) {
+                    this.joyPointer = ptr;
+                    this.joyOrigin.x = ptr.x;
+                    this.joyOrigin.y = ptr.y;
+                    this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                if (this.activeStation) {
+                    this.triggerStation(this.activeStation.name, this.activeStation.x, this.floorY - 40);
+                } else {
+                    this.tryJump();
+                }
+            }
+        };
+
+        const onPointerMove = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                const dx = ptr.x - this.joyOrigin.x;
+                const dy = ptr.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            }
+        };
+
+        const onPointerUp = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                this.resetJoystick();
+            }
+        };
+
+        this.input.on('pointerdown', onPointerDown);
+        this.input.on('pointermove', onPointerMove);
+        this.input.on('pointerup', onPointerUp);
+
+        this.events.once('shutdown', () => {
+            this.input.off('pointerdown', onPointerDown);
+            this.input.off('pointermove', onPointerMove);
+            this.input.off('pointerup', onPointerUp);
+            if (this.joyBase) this.joyBase.destroy();
+            if (this.joyKnob) this.joyKnob.destroy();
+        });
     }
 
     tryJump() {
@@ -1856,6 +1910,29 @@ class RalphSlideWingScene extends Phaser.Scene {
     updateRoomMovement(time, delta) {
         if (!this.player) return;
 
+        if (this.joyPointer) {
+            if (this.joyPointer.isDown) {
+                const JOY_RADIUS = 60;
+                const dx = this.joyPointer.x - this.joyOrigin.x;
+                const dy = this.joyPointer.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                if (this.joyKnob && this.joyKnob.active) {
+                    this.joyKnob.setPosition(kx, ky);
+                }
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            } else {
+                this.resetJoystick();
+            }
+        }
+
         const isLeft = (this.cursors.left && this.cursors.left.isDown) ||
                        (this.keysWASD.left && this.keysWASD.left.isDown) ||
                        this.mobileInput.left;
@@ -1864,9 +1941,15 @@ class RalphSlideWingScene extends Phaser.Scene {
                         (this.keysWASD.right && this.keysWASD.right.isDown) ||
                         this.mobileInput.right;
 
-        const isJump = (this.cursors.up && Phaser.Input.Keyboard.JustDown(this.cursors.up)) ||
-                       (this.keysWASD.up && Phaser.Input.Keyboard.JustDown(this.keysWASD.up)) ||
-                       (this.keysWASD.space && Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) ||
+        const isUp = (this.cursors.up && this.cursors.up.isDown) ||
+                     (this.keysWASD.up && this.keysWASD.up.isDown) ||
+                     this.mobileInput.up;
+
+        const isDown = (this.cursors.down && this.cursors.down.isDown) ||
+                       (this.keysWASD.down && this.keysWASD.down.isDown) ||
+                       this.mobileInput.down;
+
+        const isJump = (this.keysWASD.space && Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) ||
                        (this.cursors.space && Phaser.Input.Keyboard.JustDown(this.cursors.space));
 
         if (isJump) {
@@ -1874,6 +1957,7 @@ class RalphSlideWingScene extends Phaser.Scene {
         }
 
         let vx = 0;
+        let vy = 0;
         if (isLeft && !isRight) {
             vx = -this.playerSpeed;
             this.facing = 'left';
@@ -1884,8 +1968,15 @@ class RalphSlideWingScene extends Phaser.Scene {
             this.player.setFlipX(false);
         }
 
-        // Horizontal position clamping
+        if (isUp && !isDown) {
+            vy = -(this.playerSpeed * 0.6);
+        } else if (isDown && !isUp) {
+            vy = (this.playerSpeed * 0.6);
+        }
+
+        // Position clamping
         this.player.x = Phaser.Math.Clamp(this.player.x + (vx * (delta / 1000)), 50, this.roomW - 50);
+        this.groundY = Phaser.Math.Clamp(this.groundY + (vy * (delta / 1000)), this.floorY - 10, this.roomH - 25);
 
         // 2.5D Jump physics
         if (this.isJumping) {
@@ -1912,7 +2003,7 @@ class RalphSlideWingScene extends Phaser.Scene {
 
         // Animation update
         if (!this.isJumping) {
-            if (vx !== 0) {
+            if (vx !== 0 || vy !== 0) {
                 if (this.charData.walkAnim && this.anims.exists(this.charData.walkAnim)) {
                     this.player.anims.play(this.charData.walkAnim, true);
                 }

@@ -413,8 +413,9 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         // 5. Input Setup
         this.setupKeyboardInput();
 
-        // Mobile Controls strictly for non-desktop devices
-        if (!this.sys.game.device.os.desktop) {
+        // Mobile Controls strictly for non-desktop / touch devices
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.createMobileControls();
         }
 
@@ -422,6 +423,7 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         this.events.on('resume', () => {
             this.refreshBadgeHUD();
             if (this.resetKeyInputs) this.resetKeyInputs();
+            if (this.resetJoystick) this.resetJoystick();
         });
     }
 
@@ -1131,58 +1133,66 @@ class ImagineeringLabWingScene extends Phaser.Scene {
     // HUD & STANDALONE BUTTONS
     // =========================================================================
     createHUD(W, H) {
-        // 1. Standalone Top-Right Return to Oceaneer Hub Button
-        const exitBtn = this.add.container(W - 85, 24).setScrollFactor(0).setDepth(2000);
-        const exitBg = this.add.rectangle(0, 0, 150, 28, 0x0A1F36, 0.95)
+        // 1. Standalone Top-Right Return to Oceaneer Hub Button (no Container for pixel-accurate scrolled camera hit-testing)
+        const exitX = W - 85;
+        const exitY = 24;
+        const exitBg = this.add.rectangle(exitX, exitY, 150, 28, 0x0A1F36, 0.95)
+            .setScrollFactor(0).setDepth(2000)
             .setStrokeStyle(2, 0x00E5FF)
             .setInteractive({ useHandCursor: true });
-        const exitTxt = this.add.text(0, 0, '◄ OCEANEER HUB', {
+        this.add.text(exitX, exitY, '◄ OCEANEER HUB', {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00FFFF'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(2001);
 
         exitBg.on('pointerover', () => exitBg.setFillStyle(0x133960, 1));
         exitBg.on('pointerout', () => exitBg.setFillStyle(0x0A1F36, 0.95));
         exitBg.on('pointerdown', () => {
             if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) retroArcadeAudio.play('laser');
-            this.returnToHub();
+            if (this.activeSubMode !== 'none') {
+                this.closeActiveModal();
+            } else {
+                this.returnToHub();
+            }
         });
-        exitBtn.add([exitBg, exitTxt]);
 
-        // 2. Top-Left Wing Badge & Title HUD
-        const hudBox = this.add.container(12, 14).setScrollFactor(0).setDepth(2000);
-        const hudBg = this.add.rectangle(130, 22, 260, 44, 0x041324, 0.88).setStrokeStyle(1, 0x00E5FF, 0.8);
-        const hudTitle = this.add.text(12, 8, 'WDI LAB WING • DECK 2', {
+        // 2. Top-Left Wing Badge & Title HUD (standalone GameObjects)
+        this.add.rectangle(142, 36, 260, 44, 0x041324, 0.88)
+            .setScrollFactor(0).setDepth(2000)
+            .setStrokeStyle(1, 0x00E5FF, 0.8);
+        this.add.text(24, 22, 'WDI LAB WING • DECK 2', {
             fontSize: '7px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#F8B800'
-        });
+        }).setScrollFactor(0).setDepth(2001);
 
-        this.hudBadgeText = this.add.text(12, 24, '', {
+        this.hudBadgeText = this.add.text(24, 38, '', {
             fontSize: '6px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00E5FF'
-        });
-        hudBox.add([hudBg, hudTitle, this.hudBadgeText]);
+        }).setScrollFactor(0).setDepth(2001);
 
-        // 3. Bottom Quick Navigation Bar for Mobile and Fast Access
-        const quickBar = this.add.container(W / 2, H - 20).setScrollFactor(0).setDepth(1500);
+        // 3. Bottom Quick Navigation Bar for Mobile and Fast Access (standalone GameObjects)
+        const spacing = Math.min(160, Math.floor(W / 3.1));
+        const btnW = Math.min(140, spacing - 8);
+        const quickY = H - 20;
         const quickStations = [
-            { label: '🎨 MAQUETTES', x: -160, action: () => this.openMaquettesShowcase() },
-            { label: '🖨 FIGMENT 3D', x: 0, action: () => this.openFigmentPrinter() },
-            { label: '🎢 COASTER CAD', x: 160, action: () => this.openCoasterBuilder() }
+            { label: '🎨 MAQUETTES', x: W / 2 - spacing, action: () => this.openMaquettesShowcase() },
+            { label: '🖨 FIGMENT 3D', x: W / 2, action: () => this.openFigmentPrinter() },
+            { label: '🎢 COASTER CAD', x: W / 2 + spacing, action: () => this.openCoasterBuilder() }
         ];
 
         quickStations.forEach(s => {
-            const btnBg = this.add.rectangle(s.x, 0, 140, 24, 0x051B33, 0.9)
+            const btnBg = this.add.rectangle(s.x, quickY, btnW, 24, 0x051B33, 0.9)
+                .setScrollFactor(0).setDepth(1500)
                 .setStrokeStyle(1, 0x00E5FF)
                 .setInteractive({ useHandCursor: true });
-            const btnTxt = this.add.text(s.x, 0, s.label, {
+            this.add.text(s.x, quickY, s.label, {
                 fontSize: '7px',
                 fontFamily: '"Press Start 2P", monospace',
                 fill: '#FFFFFF'
-            }).setOrigin(0.5);
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(1501);
 
             btnBg.on('pointerover', () => btnBg.setFillStyle(0x0C3E75, 1));
             btnBg.on('pointerout', () => btnBg.setFillStyle(0x051B33, 0.9));
@@ -1190,7 +1200,6 @@ class ImagineeringLabWingScene extends Phaser.Scene {
                 if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) retroArcadeAudio.play('powerup');
                 s.action();
             });
-            quickBar.add([btnBg, btnTxt]);
         });
 
         this.refreshBadgeHUD();
@@ -1341,76 +1350,98 @@ class ImagineeringLabWingScene extends Phaser.Scene {
     }
 
     // =========================================================================
-    // MOBILE TOUCH CONTROLS
+    // MOBILE TOUCH CONTROLS (Floating Joystick on Left + Tap to Jump/Use on Right)
     // =========================================================================
     createMobileControls() {
-        const W = this.scale.width;
-        const H = this.scale.height;
+        this.input.addPointer(3);
 
-        // Virtual D-pad on bottom left
-        const joyX = 80;
-        const joyY = H - 90;
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        this.joyBase = this.add.graphics().setScrollFactor(0).setDepth(2500).setAlpha(0.5);
+        this.joyKnob = this.add.graphics().setScrollFactor(0).setDepth(2501).setAlpha(0.7);
 
-        const joyBase = this.add.circle(joyX, joyY, 50, 0x00E5FF, 0.2).setScrollFactor(0).setDepth(2500);
-        const joyKnob = this.add.circle(joyX, joyY, 24, 0x00E5FF, 0.5).setScrollFactor(0).setDepth(2501);
+        this.joyBase.fillStyle(0xffffff, 1);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(3, 0x888888, 1);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        this.input.on('pointerdown', (ptr) => {
-            if (ptr.x < W * 0.4 && ptr.y > H * 0.5) {
-                this.joyActive = true;
-                this.updateJoyPosition(ptr.x, ptr.y, joyX, joyY, joyKnob);
-            }
-        });
+        this.joyKnob.fillStyle(0x4488ff, 1);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
 
-        this.input.on('pointermove', (ptr) => {
-            if (this.joyActive) {
-                this.updateJoyPosition(ptr.x, ptr.y, joyX, joyY, joyKnob);
-            }
-        });
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
+
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
 
         this.resetJoystick = () => {
-            this.joyActive = false;
-            if (joyKnob && joyKnob.active) {
-                joyKnob.setPosition(joyX, joyY);
-            }
+            this.joyPointer = null;
+            if (this.joyBase && this.joyBase.active) this.joyBase.setVisible(false);
+            if (this.joyKnob && this.joyKnob.active) this.joyKnob.setVisible(false);
             this.mobileInput.left = false;
             this.mobileInput.right = false;
             this.mobileInput.up = false;
             this.mobileInput.down = false;
         };
 
-        this.input.on('pointerup', () => {
-            this.resetJoystick();
+        const onPointerDown = (ptr, currentlyOver) => {
+            if (this.activeSubMode !== 'none') return;
+            if (ptr.y < 55 && ptr.x > this.scale.width - 170) return;
+            if (currentlyOver && currentlyOver.length > 0) return;
+
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                if (this.joyPointer === null) {
+                    this.joyPointer = ptr;
+                    this.joyOrigin.x = ptr.x;
+                    this.joyOrigin.y = ptr.y;
+                    this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                if (this.currentNearestStation) {
+                    this.triggerCurrentStation();
+                } else {
+                    this.tryJump();
+                }
+            }
+        };
+
+        const onPointerMove = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                const dx = ptr.x - this.joyOrigin.x;
+                const dy = ptr.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            }
+        };
+
+        const onPointerUp = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                this.resetJoystick();
+            }
+        };
+
+        this.input.on('pointerdown', onPointerDown);
+        this.input.on('pointermove', onPointerMove);
+        this.input.on('pointerup', onPointerUp);
+
+        this.events.once('shutdown', () => {
+            this.input.off('pointerdown', onPointerDown);
+            this.input.off('pointermove', onPointerMove);
+            this.input.off('pointerup', onPointerUp);
+            if (this.joyBase) this.joyBase.destroy();
+            if (this.joyKnob) this.joyKnob.destroy();
         });
-
-        // Action Buttons on bottom right
-        const actX = W - 70;
-        const actY = H - 85;
-
-        // Jump Button
-        const jumpBtn = this.add.circle(actX - 70, actY, 28, 0xF8B800, 0.75).setScrollFactor(0).setDepth(2500).setInteractive();
-        this.add.text(actX - 70, actY, 'JUMP', { fontSize: '7px', fontFamily: '"Press Start 2P", monospace', fill: '#000000' }).setOrigin(0.5).setScrollFactor(0).setDepth(2501);
-        jumpBtn.on('pointerdown', () => this.tryJump());
-
-        // Interact / Action Button
-        const actBtn = this.add.circle(actX, actY, 32, 0x00E5FF, 0.85).setScrollFactor(0).setDepth(2500).setInteractive();
-        this.add.text(actX, actY, 'USE', { fontSize: '8px', fontFamily: '"Press Start 2P", monospace', fill: '#000000' }).setOrigin(0.5).setScrollFactor(0).setDepth(2501);
-        actBtn.on('pointerdown', () => this.triggerCurrentStation());
-    }
-
-    updateJoyPosition(px, py, cx, cy, knob) {
-        const dx = px - cx;
-        const dy = py - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = 45;
-        const angle = Math.atan2(dy, dx);
-        const clampedDist = Math.min(dist, maxDist);
-
-        knob.setPosition(cx + Math.cos(angle) * clampedDist, cy + Math.sin(angle) * clampedDist);
-
-        this.mobileInput.left = dx < -14;
-        this.mobileInput.right = dx > 14;
-        this.mobileInput.up = dy < -14;
-        this.mobileInput.down = dy > 14;
     }
 
     // =========================================================================
@@ -1437,7 +1468,11 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         }
 
         if (this.activeSubMode === 'printer') {
-            if (Phaser.Input.Keyboard.JustDown(this.keysWASD.enter) || Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) {
+            if (Phaser.Input.Keyboard.JustDown(this.cursors.left) || Phaser.Input.Keyboard.JustDown(this.keysWASD.left)) {
+                this.changePrintModel(-1);
+            } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right) || Phaser.Input.Keyboard.JustDown(this.keysWASD.right)) {
+                this.changePrintModel(1);
+            } else if (Phaser.Input.Keyboard.JustDown(this.keysWASD.enter) || Phaser.Input.Keyboard.JustDown(this.keysWASD.space)) {
                 this.start3DPrintSequence();
             }
             return;
@@ -1470,6 +1505,29 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         }
 
         const dt = delta * 0.001;
+
+        if (this.joyPointer) {
+            if (this.joyPointer.isDown) {
+                const JOY_RADIUS = 60;
+                const dx = this.joyPointer.x - this.joyOrigin.x;
+                const dy = this.joyPointer.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                if (this.joyKnob && this.joyKnob.active) {
+                    this.joyKnob.setPosition(kx, ky);
+                }
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            } else {
+                this.resetJoystick();
+            }
+        }
 
         // Keyboard & mobile movement inputs
         const isLeft = (this.cursors.left && this.cursors.left.isDown) ||
@@ -1665,102 +1723,168 @@ class ImagineeringLabWingScene extends Phaser.Scene {
     }
 
     // =========================================================================
+    // HELPER: TRACK & CREATE STANDALONE MODAL GAMEOBJECTS (ScrollFactor 0)
+    // =========================================================================
+    addModalObj(obj, depth = 3001) {
+        if (!this.modalObjects) this.modalObjects = [];
+        obj.setScrollFactor(0).setDepth(depth);
+        this.modalObjects.push(obj);
+        return obj;
+    }
+
+    createModalButton(screenX, screenY, label, callback, strokeColor = 0x00E5FF, btnW = 130, btnH = 28, depth = 3005) {
+        const bg = this.addModalObj(
+            this.add.rectangle(screenX, screenY, btnW, btnH, 0x082545, 0.95)
+                .setStrokeStyle(2, strokeColor)
+                .setInteractive({ useHandCursor: true }),
+            depth
+        );
+        const txt = this.addModalObj(
+            this.add.text(screenX, screenY, label, {
+                fontSize: '7px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#FFFFFF'
+            }).setOrigin(0.5),
+            depth + 1
+        );
+
+        bg.on('pointerover', () => bg.setFillStyle(0x114375, 1));
+        bg.on('pointerout', () => bg.setFillStyle(0x082545, 0.95));
+        bg.on('pointerdown', callback);
+
+        return { bg, txt, setVisible: (v) => { bg.setVisible(v); txt.setVisible(v); } };
+    }
+
+    // =========================================================================
     // STATION 2: ATTRACTION MAQUETTES SHOWCASE MODAL
     // =========================================================================
     openMaquettesShowcase() {
+        this.closeActiveModal(true);
+        if (this.resetJoystick) this.resetJoystick();
         this.activeSubMode = 'maquettes';
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) retroArcadeAudio.play('laser');
 
         const W = this.scale.width;
         const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
 
-        this.maquetteModal = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(3000);
+        const boxW = Math.min(680, W - 24);
+        const boxH = Math.min(460, H - 24);
 
         // Modal backdrop overlay
-        const overlay = this.add.rectangle(0, 0, W * 2, H * 2, 0x000000, 0.75).setInteractive();
-        const boxW = Math.min(680, W - 40);
-        const boxH = Math.min(460, H - 40);
+        this.addModalObj(this.add.rectangle(cx, cy, W * 2, H * 2, 0x000000, 0.78).setInteractive(), 3000);
 
         // Blueprint technical border frame
-        const boxBg = this.add.rectangle(0, 0, boxW, boxH, 0x051E38, 0.98)
-            .setStrokeStyle(3, 0x00E5FF);
+        this.addModalObj(
+            this.add.rectangle(cx, cy, boxW, boxH, 0x051E38, 0.98).setStrokeStyle(3, 0x00E5FF),
+            3001
+        );
+
+        // Top-right corner [ ✕ ] close button
+        this.createModalButton(cx + boxW / 2 - 24, cy - boxH / 2 + 20, '✕', () => this.closeActiveModal(), 0xFF4444, 32, 24, 3006);
 
         // Title banner
-        const titleTxt = this.add.text(0, -boxH / 2 + 24, '★ ATTRACTION MAQUETTES & MODELS SHOWCASE ★', {
-            fontSize: '9px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#00E5FF'
-        }).setOrigin(0.5);
+        this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 22, '★ ATTRACTION MAQUETTES & MODELS ★', {
+                fontSize: '8px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#00E5FF'
+            }).setOrigin(0.5),
+            3002
+        );
 
-        const subTitleTxt = this.add.text(0, -boxH / 2 + 40, 'WDWNT DISNEY DESTINY OCEANEER LAB ARCHIVE', {
-            fontSize: '6px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#F8B800'
-        }).setOrigin(0.5);
+        this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 38, 'WDWNT DISNEY DESTINY OCEANEER LAB ARCHIVE', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#F8B800'
+            }).setOrigin(0.5),
+            3002
+        );
 
         // Maquette index display
-        this.maqIndexText = this.add.text(0, -boxH / 2 + 60, '', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#FFFFFF'
-        }).setOrigin(0.5);
+        this.maqIndexText = this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 56, '', {
+                fontSize: '7px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#FFFFFF'
+            }).setOrigin(0.5),
+            3002
+        );
 
         // Model Preview Box
-        const prevBox = this.add.rectangle(0, -50, 110, 110, 0x031020, 0.9).setStrokeStyle(2, 0x00E5FF);
-        this.maqPreviewIcon = this.add.image(0, -50, 'wdi_maq_panther').setScale(2.2);
+        this.addModalObj(
+            this.add.rectangle(cx, cy - 54, 104, 104, 0x031020, 0.9).setStrokeStyle(2, 0x00E5FF),
+            3002
+        );
+        this.maqPreviewIcon = this.addModalObj(
+            this.add.image(cx, cy - 54, 'wdi_maq_panther').setScale(2.1),
+            3003
+        );
 
         // Model Name & DWG Code
-        this.maqNameText = this.add.text(0, 22, '', {
-            fontSize: '9px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#00FFFF',
-            align: 'center'
-        }).setOrigin(0.5);
+        this.maqNameText = this.addModalObj(
+            this.add.text(cx, cy + 16, '', {
+                fontSize: '8px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#00FFFF',
+                align: 'center'
+            }).setOrigin(0.5),
+            3002
+        );
 
-        this.maqDwgText = this.add.text(0, 40, '', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#F8B800'
-        }).setOrigin(0.5);
+        this.maqDwgText = this.addModalObj(
+            this.add.text(cx, cy + 34, '', {
+                fontSize: '7px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#F8B800'
+            }).setOrigin(0.5),
+            3002
+        );
 
         // Model Location / Era
-        this.maqLocationText = this.add.text(0, 58, '', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#BBBBBB'
-        }).setOrigin(0.5);
+        this.maqLocationText = this.addModalObj(
+            this.add.text(cx, cy + 50, '', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#BBBBBB'
+            }).setOrigin(0.5),
+            3002
+        );
 
-        // Fact text container
-        this.maqFactText = this.add.text(0, 100, '', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#E0F7FA',
-            align: 'center',
-            wordWrap: { width: boxW - 80 },
-            lineSpacing: 5
-        }).setOrigin(0.5);
+        // Fact text
+        this.maqFactText = this.addModalObj(
+            this.add.text(cx, cy + 92, '', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#E0F7FA',
+                align: 'center',
+                wordWrap: { width: boxW - 60 },
+                lineSpacing: 4
+            }).setOrigin(0.5),
+            3002
+        );
 
         // Quote text
-        this.maqQuoteText = this.add.text(0, 146, '', {
-            fontSize: '6px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#9B51E0',
-            align: 'center',
-            wordWrap: { width: boxW - 90 }
-        }).setOrigin(0.5);
+        this.maqQuoteText = this.addModalObj(
+            this.add.text(cx, cy + 138, '', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#9B51E0',
+                align: 'center',
+                wordWrap: { width: boxW - 70 }
+            }).setOrigin(0.5),
+            3002
+        );
 
-        // Interactive Navigation Buttons: [◄ PREV] and [NEXT ►]
-        const btnY = boxH / 2 - 36;
-        const prevBtn = this.createModalButton(-130, btnY, '◄ PREV MODEL', () => this.changeMaquette(-1));
-        const nextBtn = this.createModalButton(130, btnY, 'NEXT MODEL ►', () => this.changeMaquette(1));
-        const closeBtn = this.createModalButton(0, btnY, '[ ✕ CLOSE ]', () => this.closeActiveModal(), 0xFF4444);
-
-        this.maquetteModal.add([
-            overlay, boxBg, titleTxt, subTitleTxt, this.maqIndexText,
-            prevBox, this.maqPreviewIcon, this.maqNameText, this.maqDwgText,
-            this.maqLocationText, this.maqFactText, this.maqQuoteText,
-            prevBtn, nextBtn, closeBtn
-        ]);
+        // Interactive Navigation Buttons: [◄ PREV MODEL], [ ✕ CLOSE ], [NEXT MODEL ►]
+        const btnY = cy + boxH / 2 - 28;
+        const btnSpread = Math.min(145, Math.floor((boxW - 40) / 3));
+        const btnWidth = Math.min(130, btnSpread - 8);
+        this.createModalButton(cx - btnSpread, btnY, '◄ PREV MODEL', () => this.changeMaquette(-1), 0x00E5FF, btnWidth, 28);
+        this.createModalButton(cx, btnY, '[ ✕ CLOSE ]', () => this.closeActiveModal(), 0xFF4444, btnWidth, 28);
+        this.createModalButton(cx + btnSpread, btnY, 'NEXT MODEL ►', () => this.changeMaquette(1), 0x00E5FF, btnWidth, 28);
 
         this.updateMaquetteView();
     }
@@ -1773,6 +1897,7 @@ class ImagineeringLabWingScene extends Phaser.Scene {
 
     updateMaquetteView() {
         const item = WDI_MAQUETTES[this.currentMaquetteIdx];
+        if (!item || !this.maqIndexText) return;
         this.maqIndexText.setText(`MODEL ${this.currentMaquetteIdx + 1} OF ${WDI_MAQUETTES.length}`);
         this.maqPreviewIcon.setTexture(item.iconKey);
         this.maqNameText.setText(item.name);
@@ -1782,141 +1907,236 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         this.maqQuoteText.setText(item.quote);
     }
 
-    createModalButton(x, y, label, callback, strokeColor = 0x00E5FF) {
-        const c = this.add.container(x, y);
-        const bg = this.add.rectangle(0, 0, 130, 26, 0x082545, 0.9)
-            .setStrokeStyle(1, strokeColor)
-            .setInteractive({ useHandCursor: true });
-        const txt = this.add.text(0, 0, label, {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#FFFFFF'
-        }).setOrigin(0.5);
-
-        bg.on('pointerover', () => bg.setFillStyle(0x114375, 1));
-        bg.on('pointerout', () => bg.setFillStyle(0x082545, 0.9));
-        bg.on('pointerdown', callback);
-
-        c.add([bg, txt]);
-        return c;
-    }
-
     // =========================================================================
     // STATION 3: FIGMENT 3D PRINTER STATION
     // =========================================================================
+    get3DPrintModels() {
+        return [
+            {
+                id: 'figment',
+                name: 'FIGMENT THE DRAGON',
+                textureKey: 'wdi_figment_sprite',
+                scale: 2.4,
+                lore: '"Two tiny wings, eyes big and yellow,\nHorns of a steer, but a lovable fellow!\nFrom Journey Into Imagination at EPCOT."'
+            },
+            {
+                id: 'panther',
+                name: 'BLACK PANTHER MAQUETTE',
+                textureKey: 'wdi_maq_panther',
+                scale: 2.0,
+                lore: '"Grand Hall King T\'Challa Vibranium Statue\nDesigned for Disney Destiny Atrium (Decks 3-5)."'
+            },
+            {
+                id: 'dumbo',
+                name: 'DUMBO FLYING ELEPHANT',
+                textureKey: 'wdi_maq_dumbo',
+                scale: 2.0,
+                lore: '"Fantasyland Aerial Carousel Vehicle\n1:24 Scale Hydraulic Arm Prototype."'
+            },
+            {
+                id: 'baymax',
+                name: 'BAYMAX NURSE-BOT CRUISER',
+                textureKey: 'wdi_maq_baymax',
+                scale: 2.0,
+                lore: '"The Happy Ride with Baymax\nCentrifugal Turntable Chariot Model."'
+            },
+            {
+                id: 'pirates',
+                name: 'PIRATE GALLEON FLUME BOAT',
+                textureKey: 'wdi_maq_pirates',
+                scale: 2.0,
+                lore: '"Pirates of the Caribbean 1967\nMarc Davis & Claude Coats Scale Hull."'
+            }
+        ];
+    }
+
     openFigmentPrinter() {
+        this.closeActiveModal(true);
+        if (this.resetJoystick) this.resetJoystick();
         this.activeSubMode = 'printer';
+        if (this.currentPrintModelIdx === undefined) this.currentPrintModelIdx = 0;
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) retroArcadeAudio.play('powerup');
 
         const W = this.scale.width;
         const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
 
-        this.printerModal = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(3000);
+        const boxW = Math.min(640, W - 24);
+        const boxH = Math.min(450, H - 24);
 
-        const overlay = this.add.rectangle(0, 0, W * 2, H * 2, 0x000000, 0.75).setInteractive();
-        const boxW = Math.min(620, W - 40);
-        const boxH = Math.min(440, H - 40);
+        // Backdrop overlay
+        this.addModalObj(this.add.rectangle(cx, cy, W * 2, H * 2, 0x000000, 0.78).setInteractive(), 3000);
+        this.addModalObj(this.add.rectangle(cx, cy, boxW, boxH, 0x071A2E, 0.98).setStrokeStyle(3, 0x9B51E0), 3001);
 
-        const boxBg = this.add.rectangle(0, 0, boxW, boxH, 0x071A2E, 0.98).setStrokeStyle(3, 0x9B51E0);
+        // Top-right corner [ ✕ ] close button
+        this.createModalButton(cx + boxW / 2 - 24, cy - boxH / 2 + 20, '✕', () => this.closeActiveModal(), 0xFF4444, 32, 24, 3006);
 
         // Header
-        const headerTxt = this.add.text(0, -boxH / 2 + 24, '★ FIGMENT 3D PRINTER STATION ★', {
-            fontSize: '9px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#9B51E0'
-        }).setOrigin(0.5);
+        this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 20, '★ FIGMENT 3D PRINTER STATION ★', {
+                fontSize: '8px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#9B51E0'
+            }).setOrigin(0.5),
+            3002
+        );
 
-        const subTxt = this.add.text(0, -boxH / 2 + 40, 'ADDITIVE IMAGINEERING ACCELERATOR • EXTRUDER 215°C', {
-            fontSize: '6px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#F8B800'
-        }).setOrigin(0.5);
+        this.printModelIndexText = this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 36, '', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#F8B800'
+            }).setOrigin(0.5),
+            3002
+        );
 
         // 3D Printing Chamber Visualization
-        const chamberBg = this.add.rectangle(0, -40, 160, 140, 0x030B14, 0.95).setStrokeStyle(2, 0x9B51E0);
+        this.addModalObj(
+            this.add.rectangle(cx, cy - 52, 150, 126, 0x030B14, 0.95).setStrokeStyle(2, 0x9B51E0),
+            3002
+        );
         // Print Bed
-        this.add.rectangle(0, 20, 130, 8, 0x334455);
+        this.addModalObj(
+            this.add.rectangle(cx, cy - 2, 120, 8, 0x334455),
+            3003
+        );
 
-        // Progressive Figment Layer Sprite
+        // Progressive Model Layer Sprite
         const prog = getSafeOceaneerProgress();
-        this.figmentPrintSprite = this.add.image(0, -25, 'wdi_figment_sprite')
-            .setScale(2.5)
-            .setAlpha(prog.figmentPrinted ? 1 : 0);
+        this.figmentPrintSprite = this.addModalObj(
+            this.add.image(cx, cy - 42, 'wdi_figment_sprite')
+                .setScale(2.4)
+                .setAlpha(prog.figmentPrinted ? 1 : 0.35),
+            3004
+        );
 
-        // Laser scan line
-        this.laserScanG = this.add.graphics();
-        this.laserScanG.fillStyle(0x00FFFF, 0.9);
-        this.laserScanG.fillRect(-70, -85, 140, 3);
+        // Laser scan line (screen coordinates)
+        this.laserScanG = this.addModalObj(this.add.graphics(), 3005);
         this.laserScanG.setVisible(false);
 
+        // Model Name Label
+        this.printModelNameText = this.addModalObj(
+            this.add.text(cx, cy + 24, '', {
+                fontSize: '8px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#00FFFF'
+            }).setOrigin(0.5),
+            3002
+        );
+
         // Status Readout
-        this.printerStatusText = this.add.text(0, 48, prog.figmentPrinted ? 'STATUS: FIGMENT PRINTED & BADGE UNLOCKED!' : 'STATUS: READY TO MATERIALIZE FIGMENT FIGURINE', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: prog.figmentPrinted ? '#00FF88' : '#00E5FF'
-        }).setOrigin(0.5);
+        this.printerStatusText = this.addModalObj(
+            this.add.text(cx, cy + 44, prog.figmentPrinted ? 'STATUS: 3D MODEL PRINTED & BADGE UNLOCKED!' : 'STATUS: SELECT MODEL & TAP PRINT TO MATERIALIZE', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: prog.figmentPrinted ? '#00FF88' : '#00E5FF'
+            }).setOrigin(0.5),
+            3002
+        );
 
         // Progress Bar
-        this.printerProgBarBg = this.add.rectangle(0, 68, 260, 12, 0x000000).setStrokeStyle(1, 0x00E5FF);
-        this.printerProgBarFill = this.add.rectangle(-130, 68, 0, 10, 0x9B51E0).setOrigin(0, 0.5);
+        this.printerProgBarBg = this.addModalObj(
+            this.add.rectangle(cx, cy + 62, 260, 12, 0x000000).setStrokeStyle(1, 0x00E5FF),
+            3002
+        );
+        this.printerProgBarFill = this.addModalObj(
+            this.add.rectangle(cx - 130, cy + 62, prog.figmentPrinted ? 260 : 0, 10, 0x9B51E0).setOrigin(0, 0.5),
+            3003
+        );
 
-        // Figment lore snippet
-        const loreTxt = this.add.text(0, 100, '"Two tiny wings, eyes big and yellow,\nHorns of a steer, but a lovable fellow!\nFrom Journey Into Imagination at EPCOT."', {
-            fontSize: '6px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#BB8FCE',
-            align: 'center',
-            lineSpacing: 4
-        }).setOrigin(0.5);
+        // Model lore snippet
+        this.printModelLoreText = this.addModalObj(
+            this.add.text(cx, cy + 96, '', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#BB8FCE',
+                align: 'center',
+                lineSpacing: 4
+            }).setOrigin(0.5),
+            3002
+        );
 
-        // Action Buttons: [PRINT FIGMENT] and [CLOSE]
-        const btnY = boxH / 2 - 36;
-        this.printBtn = this.createModalButton(-100, btnY, prog.figmentPrinted ? '↺ RE-PRINT' : '★ PRINT FIGMENT', () => this.start3DPrintSequence(), 0x9B51E0);
-        const closeBtn = this.createModalButton(100, btnY, '[ ✕ CLOSE ]', () => this.closeActiveModal(), 0xFF4444);
+        // Row 1 Buttons: [◄ PREV MODEL]   [★ PRINT MODEL]   [NEXT MODEL ►]
+        const row1Y = cy + boxH / 2 - 58;
+        const btnSpread = Math.min(150, Math.floor((boxW - 36) / 3));
+        const sideBtnW = Math.min(126, btnSpread - 10);
+        const centerBtnW = Math.min(150, btnSpread + 10);
 
-        this.printerModal.add([
-            overlay, boxBg, headerTxt, subTxt, chamberBg,
-            this.figmentPrintSprite, this.laserScanG, this.printerStatusText,
-            this.printerProgBarBg, this.printerProgBarFill, loreTxt,
-            this.printBtn, closeBtn
-        ]);
+        this.prevPrintModelBtn = this.createModalButton(cx - btnSpread, row1Y, '◄ PREV MODEL', () => this.changePrintModel(-1), 0x00E5FF, sideBtnW, 26);
+        this.printBtn = this.createModalButton(cx, row1Y, prog.figmentPrinted ? '↺ RE-PRINT' : '★ 3D PRINT', () => this.start3DPrintSequence(), 0x9B51E0, centerBtnW, 28);
+        this.nextPrintModelBtn = this.createModalButton(cx + btnSpread, row1Y, 'NEXT MODEL ►', () => this.changePrintModel(1), 0x00E5FF, sideBtnW, 26);
+
+        // Row 2 Button: [ ✕ CLOSE / BACK TO LAB ]
+        const row2Y = cy + boxH / 2 - 24;
+        this.createModalButton(cx, row2Y, '[ ✕ CLOSE / BACK TO LAB ]', () => this.closeActiveModal(), 0xFF4444, 210, 26);
+
+        this.updatePrinterModelView();
+    }
+
+    changePrintModel(delta) {
+        if (this.isPrinting) return;
+        const models = this.get3DPrintModels();
+        this.currentPrintModelIdx = ((this.currentPrintModelIdx || 0) + delta + models.length) % models.length;
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) retroArcadeAudio.play('laser');
+        this.updatePrinterModelView();
+    }
+
+    updatePrinterModelView() {
+        const models = this.get3DPrintModels();
+        const item = models[this.currentPrintModelIdx || 0];
+        if (!item || !this.figmentPrintSprite) return;
+
+        const prog = getSafeOceaneerProgress();
+        this.printModelIndexText.setText(`CAD FILE ${(this.currentPrintModelIdx || 0) + 1} OF ${models.length} • EXTRUDER 215°C`);
+        this.figmentPrintSprite.setTexture(item.textureKey).setScale(item.scale).setAlpha(prog.figmentPrinted ? 1 : 0.45);
+        this.printModelNameText.setText(item.name);
+        this.printModelLoreText.setText(item.lore);
     }
 
     start3DPrintSequence() {
         if (this.isPrinting) return;
         this.isPrinting = true;
-        this.printBtn.setVisible(false);
+        if (this.printBtn) this.printBtn.setVisible(false);
 
-        this.figmentPrintSprite.setAlpha(0);
-        this.laserScanG.setVisible(true);
+        const W = this.scale.width;
+        const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
+
+        if (this.figmentPrintSprite) this.figmentPrintSprite.setAlpha(0.1);
+        if (this.laserScanG) this.laserScanG.setVisible(true);
 
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('laser');
         }
 
-        // Animate laser scan and progress bar
         let printStep = 0;
         const totalSteps = 10;
-        const stepInterval = 250;
+        const stepInterval = 220;
 
-        const timer = this.time.addEvent({
+        this.printTimerEvent = this.time.addEvent({
             delay: stepInterval,
             repeat: totalSteps,
             callback: () => {
+                if (this.activeSubMode !== 'printer' || !this.printerProgBarFill) return;
                 printStep++;
                 const ratio = Math.min(1, printStep / totalSteps);
                 this.printerProgBarFill.width = 260 * ratio;
-                this.figmentPrintSprite.setAlpha(ratio);
+                if (this.figmentPrintSprite) this.figmentPrintSprite.setAlpha(ratio);
 
-                // Laser oscillates vertically
-                const scanY = -85 + (ratio * 80);
-                this.laserScanG.clear();
-                this.laserScanG.fillStyle(0x00FFFF, 0.9);
-                this.laserScanG.fillRect(-70, scanY, 140, 3);
-                // Sparkle particles
-                this.createPrinterSparks(0, scanY);
+                // Laser oscillates vertically inside chamber
+                const scanY = (cy - 95) + (ratio * 80);
+                if (this.laserScanG) {
+                    this.laserScanG.clear();
+                    this.laserScanG.fillStyle(0x00FFFF, 0.9);
+                    this.laserScanG.fillRect(cx - 65, scanY, 130, 3);
+                }
+                this.createPrinterSparks(cx, scanY);
 
-                this.printerStatusText.setText(`PRINTING: ${Math.round(ratio * 100)}% • MATERIALIZING SPARK`);
+                if (this.printerStatusText) {
+                    this.printerStatusText.setText(`PRINTING: ${Math.round(ratio * 100)}% • MATERIALIZING SPARK`);
+                }
 
                 if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play && printStep % 2 === 0) {
                     retroArcadeAudio.play('laser');
@@ -1933,8 +2153,10 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         for (let i = 0; i < 4; i++) {
             const rx = cx + Phaser.Math.Between(-50, 50);
             const ry = cy + Phaser.Math.Between(-4, 4);
-            const spark = this.add.text(rx, ry, '✦', { fontSize: '6px', fill: '#FFD700' }).setOrigin(0.5);
-            this.printerModal.add(spark);
+            const spark = this.addModalObj(
+                this.add.text(rx, ry, '✦', { fontSize: '6px', fill: '#FFD700' }).setOrigin(0.5),
+                3005
+            );
             this.tweens.add({
                 targets: spark,
                 alpha: 0,
@@ -1947,8 +2169,9 @@ class ImagineeringLabWingScene extends Phaser.Scene {
 
     finish3DPrintSequence() {
         this.isPrinting = false;
-        this.laserScanG.setVisible(false);
-        this.printBtn.setVisible(true);
+        this.printTimerEvent = null;
+        if (this.laserScanG) this.laserScanG.setVisible(false);
+        if (this.printBtn) this.printBtn.setVisible(true);
 
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
@@ -1960,8 +2183,12 @@ class ImagineeringLabWingScene extends Phaser.Scene {
             imagineeringBadge: true
         });
 
-        this.printerStatusText.setText('★ COMPLETE: FIGMENT PRINTED & BADGE EARNED! ★');
-        this.printerStatusText.setColor('#F8B800');
+        const models = this.get3DPrintModels();
+        const item = models[this.currentPrintModelIdx || 0];
+        if (this.printerStatusText) {
+            this.printerStatusText.setText(`★ COMPLETE: ${item ? item.name : 'MODEL'} PRINTED & BADGE EARNED! ★`);
+            this.printerStatusText.setColor('#F8B800');
+        }
 
         this.refreshBadgeHUD();
 
@@ -1973,35 +2200,46 @@ class ImagineeringLabWingScene extends Phaser.Scene {
     // STATION 4: RIDE STUDIO COASTER BUILDER & TESTING SIMULATOR
     // =========================================================================
     openCoasterBuilder() {
+        this.closeActiveModal(true);
+        if (this.resetJoystick) this.resetJoystick();
         this.activeSubMode = 'coaster_draft';
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) retroArcadeAudio.play('laser');
 
         const W = this.scale.width;
         const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
 
-        this.coasterDraftModal = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(3000);
+        const boxW = Math.min(740, W - 24);
+        const boxH = Math.min(480, H - 24);
 
-        const overlay = this.add.rectangle(0, 0, W * 2, H * 2, 0x000000, 0.8).setInteractive();
-        const boxW = Math.min(740, W - 30);
-        const boxH = Math.min(480, H - 30);
+        this.addModalObj(this.add.rectangle(cx, cy, W * 2, H * 2, 0x000000, 0.8).setInteractive(), 3000);
+        this.addModalObj(this.add.rectangle(cx, cy, boxW, boxH, 0x051E38, 0.98).setStrokeStyle(3, 0xF8B800), 3001);
 
-        const boxBg = this.add.rectangle(0, 0, boxW, boxH, 0x051E38, 0.98).setStrokeStyle(3, 0xF8B800);
+        // Top-right corner [ ✕ ] close button
+        this.createModalButton(cx + boxW / 2 - 24, cy - boxH / 2 + 20, '✕', () => this.closeActiveModal(), 0xFF4444, 32, 24, 3006);
 
         // Header
-        const header = this.add.text(0, -boxH / 2 + 22, '★ RIDE STUDIO COASTER BUILDER ★', {
-            fontSize: '9px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#F8B800'
-        }).setOrigin(0.5);
+        this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 22, '★ RIDE STUDIO COASTER BUILDER ★', {
+                fontSize: '9px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#F8B800'
+            }).setOrigin(0.5),
+            3002
+        );
 
-        const subhead = this.add.text(0, -boxH / 2 + 38, 'CUSTOMIZE 4 TRACK SEGMENTS & LAUNCH TEST SIMULATION', {
-            fontSize: '6px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#00E5FF'
-        }).setOrigin(0.5);
+        this.addModalObj(
+            this.add.text(cx, cy - boxH / 2 + 38, 'CUSTOMIZE 4 TRACK SEGMENTS & LAUNCH TEST SIMULATION', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#00E5FF'
+            }).setOrigin(0.5),
+            3002
+        );
 
         // 4 Segment Customization Rows
-        const rowStartY = -130;
+        const rowStartY = cy - 130;
         const rowGap = 52;
 
         this.draftSelectedRow = 0;
@@ -2018,79 +2256,103 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         categories.forEach((cat, idx) => {
             const ry = rowStartY + (idx * rowGap);
             // Row background box
-            const rbox = this.add.rectangle(0, ry, boxW - 60, 44, 0x082545, 0.9).setStrokeStyle(1, 0x00E5FF, 0.6);
+            const rbox = this.addModalObj(
+                this.add.rectangle(cx, ry, boxW - 50, 44, 0x082545, 0.9).setStrokeStyle(1, 0x00E5FF, 0.6),
+                3002
+            );
             this.draftRowBoxes.push(rbox);
 
             // Category label
-            this.add.text(-boxW / 2 + 45, ry - 12, cat.label, {
-                fontSize: '6px',
-                fontFamily: '"Press Start 2P", monospace',
-                fill: '#F8B800'
-            });
+            this.addModalObj(
+                this.add.text(cx - boxW / 2 + 40, ry - 13, cat.label, {
+                    fontSize: '6px',
+                    fontFamily: '"Press Start 2P", monospace',
+                    fill: '#F8B800'
+                }),
+                3003
+            );
 
             // Choice label
-            const choiceTxt = this.add.text(0, ry + 2, '', {
-                fontSize: '8px',
-                fontFamily: '"Press Start 2P", monospace',
-                fill: '#00FFFF'
-            }).setOrigin(0.5);
+            const choiceTxt = this.addModalObj(
+                this.add.text(cx, ry + 5, '', {
+                    fontSize: '7px',
+                    fontFamily: '"Press Start 2P", monospace',
+                    fill: '#00FFFF'
+                }).setOrigin(0.5),
+                3003
+            );
 
             this.segmentRowTexts.push({ catKey: cat.key, textObj: choiceTxt });
 
             // Prev button [◄]
-            const prevArrow = this.add.rectangle(-boxW / 2 + 65, ry + 2, 26, 20, 0x0C3E75)
-                .setStrokeStyle(1, 0x00E5FF)
-                .setInteractive({ useHandCursor: true });
-            this.add.text(-boxW / 2 + 65, ry + 2, '◄', { fontSize: '8px', fontFamily: '"Press Start 2P", monospace', fill: '#FFFFFF' }).setOrigin(0.5);
+            const prevArrow = this.addModalObj(
+                this.add.rectangle(cx - boxW / 2 + 58, ry + 5, 34, 24, 0x0C3E75)
+                    .setStrokeStyle(1, 0x00E5FF)
+                    .setInteractive({ useHandCursor: true }),
+                3004
+            );
+            this.addModalObj(
+                this.add.text(cx - boxW / 2 + 58, ry + 5, '◄', { fontSize: '8px', fontFamily: '"Press Start 2P", monospace', fill: '#FFFFFF' }).setOrigin(0.5),
+                3005
+            );
             prevArrow.on('pointerdown', () => {
                 this.draftSelectedRow = idx;
                 this.cycleCoasterChoice(cat.key, -1);
             });
 
             // Next button [►]
-            const nextArrow = this.add.rectangle(boxW / 2 - 65, ry + 2, 26, 20, 0x0C3E75)
-                .setStrokeStyle(1, 0x00E5FF)
-                .setInteractive({ useHandCursor: true });
-            this.add.text(boxW / 2 - 65, ry + 2, '►', { fontSize: '8px', fontFamily: '"Press Start 2P", monospace', fill: '#FFFFFF' }).setOrigin(0.5);
+            const nextArrow = this.addModalObj(
+                this.add.rectangle(cx + boxW / 2 - 58, ry + 5, 34, 24, 0x0C3E75)
+                    .setStrokeStyle(1, 0x00E5FF)
+                    .setInteractive({ useHandCursor: true }),
+                3004
+            );
+            this.addModalObj(
+                this.add.text(cx + boxW / 2 - 58, ry + 5, '►', { fontSize: '8px', fontFamily: '"Press Start 2P", monospace', fill: '#FFFFFF' }).setOrigin(0.5),
+                3005
+            );
             nextArrow.on('pointerdown', () => {
                 this.draftSelectedRow = idx;
                 this.cycleCoasterChoice(cat.key, 1);
             });
-
-            this.coasterDraftModal.add([rbox, prevArrow, nextArrow]);
         });
 
         // Coaster Spec Readout Box
-        const specY = 92;
-        const specBox = this.add.rectangle(0, specY, boxW - 60, 40, 0x031224, 0.95).setStrokeStyle(1, 0xF8B800, 0.8);
-        this.specSummaryText = this.add.text(0, specY, '', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#FFFFFF',
-            align: 'center',
-            lineSpacing: 4
-        }).setOrigin(0.5);
+        const specY = cy + 92;
+        this.addModalObj(
+            this.add.rectangle(cx, specY, boxW - 50, 40, 0x031224, 0.95).setStrokeStyle(1, 0xF8B800, 0.8),
+            3002
+        );
+        this.specSummaryText = this.addModalObj(
+            this.add.text(cx, specY, '', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#FFFFFF',
+                align: 'center',
+                lineSpacing: 4
+            }).setOrigin(0.5),
+            3003
+        );
 
-        // Buttons: [★ TEST RIDE SIMULATOR ★] and [CLOSE]
-        const btnY = boxH / 2 - 32;
-        const testBtn = this.add.container(-110, btnY);
-        const testBg = this.add.rectangle(0, 0, 240, 32, 0xF8B800).setInteractive({ useHandCursor: true });
-        const testTxt = this.add.text(0, 0, '★ TEST RIDE SIMULATOR ★', {
-            fontSize: '8px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#000000'
-        }).setOrigin(0.5);
+        // Buttons: [★ TEST RIDE SIMULATOR ★] and [ ✕ RETURN ]
+        const btnY = cy + boxH / 2 - 30;
+        const testBg = this.addModalObj(
+            this.add.rectangle(cx - 95, btnY, 220, 30, 0xF8B800).setInteractive({ useHandCursor: true }),
+            3005
+        );
+        this.addModalObj(
+            this.add.text(cx - 95, btnY, '★ TEST RIDE SIMULATOR ★', {
+                fontSize: '7px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#000000'
+            }).setOrigin(0.5),
+            3006
+        );
         testBg.on('pointerover', () => testBg.setFillStyle(0xFFD700));
         testBg.on('pointerout', () => testBg.setFillStyle(0xF8B800));
         testBg.on('pointerdown', () => this.launchCoasterSimulation());
-        testBtn.add([testBg, testTxt]);
 
-        const closeBtn = this.createModalButton(170, btnY, '[ ✕ RETURN ]', () => this.closeActiveModal(), 0xFF4444);
-
-        this.coasterDraftModal.add([
-            overlay, boxBg, header, subhead, specBox,
-            this.specSummaryText, testBtn, closeBtn
-        ]);
+        this.createModalButton(cx + 125, btnY, '[ ✕ RETURN ]', () => this.closeActiveModal(), 0xFF4444, 130, 30, 3005);
 
         this.updateCoasterDraftView();
     }
@@ -2142,11 +2404,16 @@ class ImagineeringLabWingScene extends Phaser.Scene {
     // =========================================================================
     // COASTER SIMULATOR: LIVE TEST RIDE
     // =========================================================================
+    addSimObj(obj, depth = 4001) {
+        if (!this.simObjects) this.simObjects = [];
+        obj.setScrollFactor(0).setDepth(depth);
+        this.simObjects.push(obj);
+        return obj;
+    }
+
     launchCoasterSimulation() {
-        if (this.coasterDraftModal) {
-            this.coasterDraftModal.destroy();
-            this.coasterDraftModal = null;
-        }
+        this.closeActiveModal(true);
+        if (this.resetJoystick) this.resetJoystick();
 
         this.activeSubMode = 'coaster_ride';
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
@@ -2156,12 +2423,10 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         const W = this.scale.width;
         const H = this.scale.height;
 
-        this.simContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4000);
-
-        // Simulation Stage Canvas
-        this.simBg = this.add.rectangle(W / 2, H / 2, W, H, 0x040D1A).setInteractive();
-        this.simTrackG = this.add.graphics();
-        this.simSceneryG = this.add.graphics();
+        // Simulation Stage Canvas (standalone GameObjects with ScrollFactor 0)
+        this.simBg = this.addSimObj(this.add.rectangle(W / 2, H / 2, W, H, 0x040D1A).setInteractive(), 4000);
+        this.simSceneryG = this.addSimObj(this.add.graphics(), 4001);
+        this.simTrackG = this.addSimObj(this.add.graphics(), 4002);
 
         // HUD Elements for Simulation
         this.simScore = 200;
@@ -2170,26 +2435,43 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         this.simProgress = 0; // 0 to 1 along ride
         this.simApexTriggered = [false, false, false];
 
-        this.simHudSpeed = this.add.text(20, 20, 'SPEED: 0 MPH', {
+        this.simHudSpeed = this.addSimObj(this.add.text(20, 20, 'SPEED: 0 MPH', {
             fontSize: '9px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00E5FF'
-        });
+        }), 4005);
 
-        this.simHudG = this.add.text(20, 36, 'G-FORCE: 1.0 G', {
+        this.simHudG = this.addSimObj(this.add.text(20, 36, 'G-FORCE: 1.0 G', {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#F8B800'
-        });
+        }), 4005);
 
-        this.simHudScore = this.add.text(W - 200, 20, 'SCORE: 200', {
+        this.simHudScore = this.addSimObj(this.add.text(W - 220, 20, 'SCORE: 200', {
             fontSize: '9px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00FF88'
-        });
+        }), 4005);
+
+        // Top-right exit button during coaster simulation
+        const simExitBtn = this.addSimObj(
+            this.add.rectangle(W - 45, 24, 70, 24, 0x551111, 0.9)
+                .setStrokeStyle(1, 0xFF4444)
+                .setInteractive({ useHandCursor: true }),
+            4006
+        );
+        this.addSimObj(
+            this.add.text(W - 45, 24, '✕ EXIT', {
+                fontSize: '7px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#FFFFFF'
+            }).setOrigin(0.5),
+            4007
+        );
+        simExitBtn.on('pointerdown', () => this.closeActiveModal());
 
         // Boost Prompt Banner
-        this.boostPrompt = this.add.text(W / 2, 70, '', {
+        this.boostPrompt = this.addSimObj(this.add.text(W / 2, 70, '', {
             fontSize: '10px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#FFFF00',
@@ -2197,33 +2479,26 @@ class ImagineeringLabWingScene extends Phaser.Scene {
             padding: { x: 12, y: 8 },
             stroke: '#000000',
             strokeThickness: 3
-        }).setOrigin(0.5).setVisible(false);
+        }).setOrigin(0.5).setVisible(false), 4005);
 
         // Mobile On-Screen Boost Button
-        this.mobileBoostBtn = this.add.rectangle(W / 2, H - 55, 220, 44, 0xF8B800, 0.9)
+        this.mobileBoostBtn = this.addSimObj(this.add.rectangle(W / 2, H - 55, 220, 44, 0xF8B800, 0.9)
             .setStrokeStyle(2, 0xFFFFFF)
-            .setInteractive({ useHandCursor: true });
-        const boostBtnTxt = this.add.text(W / 2, H - 55, '★ TAP TO BOOST! ★', {
+            .setInteractive({ useHandCursor: true }), 4006);
+        this.addSimObj(this.add.text(W / 2, H - 55, '★ TAP TO BOOST! ★', {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#000000'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5), 4007);
 
         this.mobileBoostBtn.on('pointerdown', () => this.tryApexBoost());
 
         // Selected train texture
         const train = COASTER_OPTIONS.trainTheme[this.coasterSelections.trainTheme];
-        this.simTrainSprite = this.add.image(W * 0.1, H * 0.6, train.textureKey).setScale(1.4);
+        this.simTrainSprite = this.addSimObj(this.add.image(W * 0.1, H * 0.6, train.textureKey).setScale(1.4), 4003);
 
         // Rider (Amelia or Riley riding in front seat!)
-        this.simRiderSprite = this.add.image(W * 0.1, H * 0.6 - 12, this.charData.idleKey).setScale(0.8);
-
-        this.simContainer.add([
-            this.simBg, this.simSceneryG, this.simTrackG,
-            this.simTrainSprite, this.simRiderSprite,
-            this.simHudSpeed, this.simHudG, this.simHudScore,
-            this.boostPrompt, this.mobileBoostBtn, boostBtnTxt
-        ]);
+        this.simRiderSprite = this.addSimObj(this.add.image(W * 0.1, H * 0.6 - 12, this.charData.idleKey).setScale(0.8), 4004);
 
         // Key listener for boost during ride (SPACE or UP)
         this.rideBoostKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -2314,8 +2589,6 @@ class ImagineeringLabWingScene extends Phaser.Scene {
         const H = this.scale.height;
 
         const launch = COASTER_OPTIONS.launch[this.coasterSelections.launch];
-        const feature = COASTER_OPTIONS.feature[this.coasterSelections.feature];
-        const show = COASTER_OPTIONS.showScene[this.coasterSelections.showScene];
 
         // Progress speed along track
         const rideDurationSeconds = 12;
@@ -2410,11 +2683,10 @@ class ImagineeringLabWingScene extends Phaser.Scene {
 
     createRideSparks(x, y) {
         for (let i = 0; i < 8; i++) {
-            const spark = this.add.text(x + Phaser.Math.Between(-15, 15), y + Phaser.Math.Between(-15, 15), '✦', {
+            const spark = this.addSimObj(this.add.text(x + Phaser.Math.Between(-15, 15), y + Phaser.Math.Between(-15, 15), '✦', {
                 fontSize: '8px',
                 fill: '#00E5FF'
-            }).setOrigin(0.5);
-            this.simContainer.add(spark);
+            }).setOrigin(0.5), 4005);
             this.tweens.add({
                 targets: spark,
                 alpha: 0,
@@ -2426,12 +2698,15 @@ class ImagineeringLabWingScene extends Phaser.Scene {
     }
 
     finishCoasterSimulation() {
+        this.activeSubMode = 'coaster_report';
         if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('powerup');
         }
 
         const W = this.scale.width;
         const H = this.scale.height;
+        const cx = W / 2;
+        const cy = H / 2;
 
         const launch = COASTER_OPTIONS.launch[this.coasterSelections.launch];
         const train = COASTER_OPTIONS.trainTheme[this.coasterSelections.trainTheme];
@@ -2450,93 +2725,107 @@ class ImagineeringLabWingScene extends Phaser.Scene {
 
         this.refreshBadgeHUD();
 
-        // End-Of-Ride Report Dialog
-        const reportCard = this.add.container(W / 2, H / 2).setScrollFactor(0).setDepth(5000);
-        const cardBg = this.add.rectangle(0, 0, Math.min(620, W - 40), Math.min(380, H - 40), 0x051E38, 0.98)
-            .setStrokeStyle(3, 0xF8B800);
+        // End-Of-Ride Report Dialog (standalone GameObjects with ScrollFactor 0)
+        const cardW = Math.min(620, W - 24);
+        const cardH = Math.min(380, H - 24);
+        this.addSimObj(
+            this.add.rectangle(cx, cy, cardW, cardH, 0x051E38, 0.98).setStrokeStyle(3, 0xF8B800),
+            5000
+        );
 
-        const cardTitle = this.add.text(0, -140, '★ IMAGINEERING RIDE SIMULATION COMPLETE ★', {
-            fontSize: '9px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#F8B800'
-        }).setOrigin(0.5);
+        this.addSimObj(
+            this.add.text(cx, cy - 140, '★ IMAGINEERING RIDE SIMULATION COMPLETE ★', {
+                fontSize: '8px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#F8B800'
+            }).setOrigin(0.5),
+            5001
+        );
 
-        const cardCoaster = this.add.text(0, -112, coasterFullName, {
-            fontSize: '8px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#00E5FF'
-        }).setOrigin(0.5);
+        this.addSimObj(
+            this.add.text(cx, cy - 112, coasterFullName, {
+                fontSize: '8px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#00E5FF'
+            }).setOrigin(0.5),
+            5001
+        );
 
-        const cardStats = this.add.text(0, -40,
-            `FINAL EXCITEMENT SCORE: ${finalScore} PTS\n\n` +
-            `APEX BOOSTS HIT: ${this.simBoostCount} / 3\n` +
-            `MAX SPEED: ${launch.speedMph} MPH\n` +
-            `IMAGINEER RATING: SENIOR THRILL DESIGNER ★★★`, {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#FFFFFF',
-            align: 'center',
-            lineSpacing: 8
-        }).setOrigin(0.5);
+        this.addSimObj(
+            this.add.text(cx, cy - 40,
+                `FINAL EXCITEMENT SCORE: ${finalScore} PTS\n\n` +
+                `APEX BOOSTS HIT: ${this.simBoostCount} / 3\n` +
+                `MAX SPEED: ${launch.speedMph} MPH\n` +
+                `IMAGINEER RATING: SENIOR THRILL DESIGNER ★★★`, {
+                fontSize: '7px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#FFFFFF',
+                align: 'center',
+                lineSpacing: 8
+            }).setOrigin(0.5),
+            5001
+        );
 
-        const badgeNotif = this.add.text(0, 45, '★ IMAGINEERING BADGE REGISTERED IN OCEANEER LOG! ★', {
-            fontSize: '7px',
-            fontFamily: '"Press Start 2P", monospace',
-            fill: '#00FF88'
-        }).setOrigin(0.5);
+        this.addSimObj(
+            this.add.text(cx, cy + 45, '★ IMAGINEERING BADGE REGISTERED IN OCEANEER LOG! ★', {
+                fontSize: '6px',
+                fontFamily: '"Press Start 2P", monospace',
+                fill: '#00FF88'
+            }).setOrigin(0.5),
+            5001
+        );
 
         // Buttons: [↺ REDESIGN], [★ RIDE AGAIN], [✕ EXIT TO LAB]
-        const btnY = 110;
-        const redesignBtn = this.createModalButton(-150, btnY, '↺ REDESIGN', () => {
+        const btnY = cy + 110;
+        const btnSpread = Math.min(150, Math.floor((cardW - 36) / 3));
+        const btnWidth = Math.min(130, btnSpread - 8);
+
+        this.createModalButton(cx - btnSpread, btnY, '↺ REDESIGN', () => {
             this.cleanupSimulation();
             this.openCoasterBuilder();
-        }, 0x00E5FF);
+        }, 0x00E5FF, btnWidth, 28, 5005);
 
-        const rideAgainBtn = this.createModalButton(0, btnY, '★ RIDE AGAIN', () => {
+        this.createModalButton(cx, btnY, '★ RIDE AGAIN', () => {
             this.cleanupSimulation();
             this.launchCoasterSimulation();
-        }, 0xF8B800);
+        }, 0xF8B800, btnWidth, 28, 5005);
 
-        const exitBtn = this.createModalButton(150, btnY, '[ ✕ RETURN ]', () => {
-            this.cleanupSimulation();
-            this.activeSubMode = 'none';
-        }, 0xFF4444);
-
-        reportCard.add([cardBg, cardTitle, cardCoaster, cardStats, badgeNotif, redesignBtn, rideAgainBtn, exitBtn]);
-        this.reportCard = reportCard;
+        this.createModalButton(cx + btnSpread, btnY, '[ ✕ RETURN ]', () => {
+            this.closeActiveModal();
+        }, 0xFF4444, btnWidth, 28, 5005);
     }
 
     cleanupSimulation() {
-        if (this.reportCard) {
-            this.reportCard.destroy();
-            this.reportCard = null;
-        }
-        if (this.simContainer) {
-            this.simContainer.destroy();
-            this.simContainer = null;
+        if (this.simObjects) {
+            this.simObjects.forEach(obj => {
+                if (obj && obj.destroy) obj.destroy();
+            });
+            this.simObjects = [];
         }
     }
 
     // =========================================================================
     // GENERAL MODAL CLEANUP
     // =========================================================================
-    closeActiveModal() {
-        if (this.maquetteModal) {
-            this.maquetteModal.destroy();
-            this.maquetteModal = null;
+    closeActiveModal(silent = false) {
+        if (this.printTimerEvent) {
+            this.printTimerEvent.remove(false);
+            this.printTimerEvent = null;
         }
-        if (this.printerModal) {
-            this.printerModal.destroy();
-            this.printerModal = null;
+        this.isPrinting = false;
+
+        if (this.modalObjects) {
+            this.modalObjects.forEach(obj => {
+                if (obj && obj.destroy) obj.destroy();
+            });
+            this.modalObjects = [];
         }
-        if (this.coasterDraftModal) {
-            this.coasterDraftModal.destroy();
-            this.coasterDraftModal = null;
-        }
+
         this.cleanupSimulation();
         this.activeSubMode = 'none';
+        if (this.resetJoystick) this.resetJoystick();
 
-        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+        if (!silent && typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
             retroArcadeAudio.play('laser');
         }
     }

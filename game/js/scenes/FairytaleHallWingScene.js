@@ -102,7 +102,8 @@ class FairytaleHallWingScene extends Phaser.Scene {
         // 7. Standalone Standout Fixed UI (HUD, Tabs, Exit Button)
         this.createTopNavigationUI();
         this.createBottomStatusHUD();
-        if (!this.sys.game.device.os.desktop) {
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.createMobileControls();
         }
 
@@ -748,8 +749,10 @@ class FairytaleHallWingScene extends Phaser.Scene {
             .setInteractive({ useHandCursor: true });
 
         hitArea.on('pointerdown', (ptr) => {
-            const localX = ptr.x - (this.lanternGridStartX - cellSize / 2);
-            const localY = ptr.y - (this.lanternGridStartY - cellSize / 2);
+            const wx = (ptr.worldX !== undefined) ? ptr.worldX : ptr.x;
+            const wy = (ptr.worldY !== undefined) ? ptr.worldY : ptr.y;
+            const localX = wx - (this.lanternGridStartX - cellSize / 2);
+            const localY = wy - (this.lanternGridStartY - cellSize / 2);
             const c = Math.floor(localX / cellSize);
             const r = Math.floor(localY / cellSize);
             if (c >= 0 && c < cols && r >= 0 && r < rows) {
@@ -1919,37 +1922,95 @@ class FairytaleHallWingScene extends Phaser.Scene {
     }
 
     // =========================================================================
-    // MOBILE ON-SCREEN TOUCH CONTROLS
+    // MOBILE ON-SCREEN TOUCH CONTROLS (Floating Joystick on Left + Tap on Right)
     // =========================================================================
     createMobileControls() {
-        const H = this.scale.height;
-        const W = this.scale.width;
-        const dpadY = H - 55;
+        this.input.addPointer(3);
 
-        // Virtual D-pad buttons: Left and Right
-        const leftBtn = this.add.rectangle(40, dpadY, 44, 34, 0x000000, 0.5)
-            .setScrollFactor(0).setDepth(2100).setInteractive({ useHandCursor: true }).setStrokeStyle(1, 0xFFD700);
-        this.add.text(40, dpadY, '◄', { fontSize: '12px', fill: '#FFD700' }).setOrigin(0.5).setScrollFactor(0).setDepth(2101);
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        this.joyBase = this.add.graphics().setScrollFactor(0).setDepth(2100).setAlpha(0.5);
+        this.joyKnob = this.add.graphics().setScrollFactor(0).setDepth(2101).setAlpha(0.7);
 
-        const rightBtn = this.add.rectangle(95, dpadY, 44, 34, 0x000000, 0.5)
-            .setScrollFactor(0).setDepth(2100).setInteractive({ useHandCursor: true }).setStrokeStyle(1, 0xFFD700);
-        this.add.text(95, dpadY, '►', { fontSize: '12px', fill: '#FFD700' }).setOrigin(0.5).setScrollFactor(0).setDepth(2101);
+        this.joyBase.fillStyle(0xffffff, 1);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(3, 0x888888, 1);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        leftBtn.on('pointerdown', () => { this.mobileInput.left = true; });
-        leftBtn.on('pointerup', () => { this.mobileInput.left = false; });
-        leftBtn.on('pointerout', () => { this.mobileInput.left = false; });
+        this.joyKnob.fillStyle(0x4488ff, 1);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
 
-        rightBtn.on('pointerdown', () => { this.mobileInput.right = true; });
-        rightBtn.on('pointerup', () => { this.mobileInput.right = false; });
-        rightBtn.on('pointerout', () => { this.mobileInput.right = false; });
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
 
-        // Virtual Jump button
-        const jumpBtn = this.add.rectangle(W - 45, dpadY, 48, 34, 0x000000, 0.5)
-            .setScrollFactor(0).setDepth(2100).setInteractive({ useHandCursor: true }).setStrokeStyle(1, 0xFFD700);
-        this.add.text(W - 45, dpadY, 'JUMP', { fontSize: '7px', fontFamily: '"Press Start 2P"', fill: '#FFD700' })
-            .setOrigin(0.5).setScrollFactor(0).setDepth(2101);
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
 
-        jumpBtn.on('pointerdown', () => this.tryJump());
+        this.resetJoystick = () => {
+            this.joyPointer = null;
+            if (this.joyBase && this.joyBase.active) this.joyBase.setVisible(false);
+            if (this.joyKnob && this.joyKnob.active) this.joyKnob.setVisible(false);
+            this.mobileInput.left = false;
+            this.mobileInput.right = false;
+            this.mobileInput.up = false;
+            this.mobileInput.down = false;
+            this.mobileInput.jump = false;
+        };
+
+        const onPointerDown = (ptr, currentlyOver) => {
+            if (ptr.y < 60) return;
+            if (currentlyOver && currentlyOver.length > 0) return;
+
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                if (this.joyPointer === null) {
+                    this.joyPointer = ptr;
+                    this.joyOrigin.x = ptr.x;
+                    this.joyOrigin.y = ptr.y;
+                    this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                this.mobileInput.jump = true;
+                this.time.delayedCall(120, () => { this.mobileInput.jump = false; });
+            }
+        };
+
+        const onPointerMove = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                const dx = ptr.x - this.joyOrigin.x;
+                const dy = ptr.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            }
+        };
+
+        const onPointerUp = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                this.resetJoystick();
+            }
+        };
+
+        this.input.on('pointerdown', onPointerDown);
+        this.input.on('pointermove', onPointerMove);
+        this.input.on('pointerup', onPointerUp);
+
+        this.events.once('shutdown', () => {
+            this.input.off('pointerdown', onPointerDown);
+            this.input.off('pointermove', onPointerMove);
+            this.input.off('pointerup', onPointerUp);
+            if (this.joyBase) this.joyBase.destroy();
+            if (this.joyKnob) this.joyKnob.destroy();
+        });
     }
 
     // =========================================================================
@@ -2073,6 +2134,29 @@ class FairytaleHallWingScene extends Phaser.Scene {
         if (this.isExiting) return;
 
         const dt = delta * 0.001;
+
+        if (this.joyPointer) {
+            if (this.joyPointer.isDown) {
+                const JOY_RADIUS = 60;
+                const dx = this.joyPointer.x - this.joyOrigin.x;
+                const dy = this.joyPointer.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                if (this.joyKnob && this.joyKnob.active) {
+                    this.joyKnob.setPosition(kx, ky);
+                }
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            } else {
+                this.resetJoystick();
+            }
+        }
 
         // Keyboard & mobile input checks
         const moveLeft = Boolean((this.cursors && this.cursors.left && this.cursors.left.isDown) || (this.keysWASD && this.keysWASD.left && this.keysWASD.left.isDown) || this.mobileInput.left);

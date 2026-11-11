@@ -386,8 +386,9 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         // 10. Desktop Keyboard Controls & Native Blur/Focus safety
         this.setupKeyboardInput();
 
-        // 11. Mobile Touch Controls strictly for non-desktop devices
-        if (!this.sys.game.device.os.desktop) {
+        // 11. Mobile Touch Controls strictly for non-desktop / touch devices
+        const isTouch = !this.sys.game.device.os.desktop || this.sys.game.device.input.touch;
+        if (isTouch) {
             this.createMobileTouchControls();
         }
 
@@ -1185,47 +1186,102 @@ class MarvelAcademyWingScene extends Phaser.Scene {
     }
 
     createMobileTouchControls() {
-        const H = this.scale.height;
-        const joyBase = this.add.circle(65, H - 80, 44, 0x112233, 0.6)
-            .setScrollFactor(0).setDepth(2500).setStrokeStyle(2, 0x00E5FF);
-        const joyKnob = this.add.circle(65, H - 80, 20, 0x00E5FF, 0.85)
-            .setScrollFactor(0).setDepth(2501);
+        this.input.addPointer(3);
 
-        this.touchJoystick = { base: joyBase, knob: joyKnob, originX: 65, originY: H - 80, pointer: null };
+        const JOY_RADIUS = 60;
+        const KNOB_RADIUS = 25;
+        this.joyBase = this.add.graphics().setScrollFactor(0).setDepth(2500).setAlpha(0.5);
+        this.joyKnob = this.add.graphics().setScrollFactor(0).setDepth(2501).setAlpha(0.7);
 
-        this.input.on('pointerdown', (ptr) => {
-            if (this.isModalOpen) return;
-            if (ptr.x < 150 && ptr.y > H - 160) {
-                this.touchJoystick.pointer = ptr;
-            }
-        });
+        this.joyBase.fillStyle(0xffffff, 1);
+        this.joyBase.fillCircle(0, 0, JOY_RADIUS);
+        this.joyBase.lineStyle(3, 0x888888, 1);
+        this.joyBase.strokeCircle(0, 0, JOY_RADIUS);
 
-        this.input.on('pointermove', (ptr) => {
-            if (this.touchJoystick && this.touchJoystick.pointer && ptr.id === this.touchJoystick.pointer.id) {
-                const dx = ptr.x - this.touchJoystick.originX;
-                const dy = ptr.y - this.touchJoystick.originY;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                const maxR = 36;
-                const angle = Math.atan2(dy, dx);
-                const clamped = Math.min(dist, maxR);
-                joyKnob.setPosition(this.touchJoystick.originX + Math.cos(angle) * clamped, this.touchJoystick.originY + Math.sin(angle) * clamped);
+        this.joyKnob.fillStyle(0x4488ff, 1);
+        this.joyKnob.fillCircle(0, 0, KNOB_RADIUS);
 
-                this.mobileInput.left = dx < -12;
-                this.mobileInput.right = dx > 12;
-                this.mobileInput.up = dy < -12;
-                this.mobileInput.down = dy > 12;
-            }
-        });
+        this.joyBase.setVisible(false);
+        this.joyKnob.setVisible(false);
 
-        const resetJoy = (ptr) => {
-            if (this.touchJoystick && this.touchJoystick.pointer && (!ptr || ptr.id === this.touchJoystick.pointer.id)) {
-                this.touchJoystick.pointer = null;
-                joyKnob.setPosition(this.touchJoystick.originX, this.touchJoystick.originY);
-                this.mobileInput = { left: false, right: false, up: false, down: false };
+        this.joyPointer = null;
+        this.joyOrigin = { x: 0, y: 0 };
+
+        this.resetJoystick = () => {
+            this.joyPointer = null;
+            if (this.joyBase && this.joyBase.active) this.joyBase.setVisible(false);
+            if (this.joyKnob && this.joyKnob.active) this.joyKnob.setVisible(false);
+            this.mobileInput = { left: false, right: false, up: false, down: false };
+        };
+
+        const onPointerDown = (ptr, currentlyOver) => {
+            if (this.isModalOpen || this.inCombatSimulator) return;
+            if (ptr.y < 60 && ptr.x > this.scale.width - 170) return;
+            if (currentlyOver && currentlyOver.length > 0) return;
+
+            const halfW = this.scale.width / 2;
+            if (ptr.x < halfW) {
+                if (this.joyPointer === null) {
+                    this.joyPointer = ptr;
+                    this.joyOrigin.x = ptr.x;
+                    this.joyOrigin.y = ptr.y;
+                    this.joyBase.setPosition(ptr.x, ptr.y).setVisible(true);
+                    this.joyKnob.setPosition(ptr.x, ptr.y).setVisible(true);
+                }
+            } else {
+                if (this.activeStation) {
+                    this.handleActiveStationTrigger();
+                } else {
+                    this.tryJump();
+                }
             }
         };
 
-        this.input.on('pointerup', resetJoy);
+        const onPointerMove = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                const dx = ptr.x - this.joyOrigin.x;
+                const dy = ptr.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                this.joyKnob.setPosition(kx, ky);
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            }
+        };
+
+        const onPointerUp = (ptr) => {
+            if (this.joyPointer && ptr.id === this.joyPointer.id) {
+                this.resetJoystick();
+            }
+        };
+
+        this.input.on('pointerdown', onPointerDown);
+        this.input.on('pointermove', onPointerMove);
+        this.input.on('pointerup', onPointerUp);
+
+        this.events.once('shutdown', () => {
+            this.input.off('pointerdown', onPointerDown);
+            this.input.off('pointermove', onPointerMove);
+            this.input.off('pointerup', onPointerUp);
+            if (this.joyBase) this.joyBase.destroy();
+            if (this.joyKnob) this.joyKnob.destroy();
+        });
+    }
+
+    tryJump() {
+        if (this.isJumping) return;
+        this.isJumping = true;
+        this.jumpV = 320;
+        this.jumpZ = 1;
+        if (typeof retroArcadeAudio !== 'undefined' && retroArcadeAudio.play) {
+            retroArcadeAudio.play('jump');
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -1256,6 +1312,29 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         if (this.isModalOpen) return;
 
         const dt = delta * 0.001;
+
+        if (this.joyPointer) {
+            if (this.joyPointer.isDown) {
+                const JOY_RADIUS = 60;
+                const dx = this.joyPointer.x - this.joyOrigin.x;
+                const dy = this.joyPointer.y - this.joyOrigin.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const clamped = Math.min(dist, JOY_RADIUS);
+                const angle = Math.atan2(dy, dx);
+                const kx = this.joyOrigin.x + Math.cos(angle) * clamped;
+                const ky = this.joyOrigin.y + Math.sin(angle) * clamped;
+                if (this.joyKnob && this.joyKnob.active) {
+                    this.joyKnob.setPosition(kx, ky);
+                }
+
+                this.mobileInput.left = dx < -15;
+                this.mobileInput.right = dx > 15;
+                this.mobileInput.up = dy < -15;
+                this.mobileInput.down = dy > 15;
+            } else {
+                this.resetJoystick();
+            }
+        }
 
         // Directional Keyboard & Mobile Input
         const isLeft = (this.cursors.left && this.cursors.left.isDown) ||
@@ -1302,18 +1381,28 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             vy *= 0.7071;
         }
 
-        // Apply 2.5D coordinates
+        // Apply 2.5D coordinates & jump
+        if (this.isJumping) {
+            this.jumpZ = (this.jumpZ || 0) + (this.jumpV || 0) * dt;
+            this.jumpV -= 750 * dt;
+            if (this.jumpZ <= 0) {
+                this.jumpZ = 0;
+                this.jumpV = 0;
+                this.isJumping = false;
+            }
+        }
+
         this.player.x += vx * dt;
         this.player.x = Phaser.Math.Clamp(this.player.x, 80, this.roomW - 80);
 
         this.groundY += vy * dt;
         this.groundY = Phaser.Math.Clamp(this.groundY, this.floorY - 5, this.roomH - 25);
 
-        this.player.y = this.groundY;
+        this.player.y = this.groundY - (this.jumpZ || 0);
         this.player.body.reset(this.player.x, this.player.y);
         this.player.setDepth(Math.round(this.groundY));
         this.playerShadow.setPosition(this.player.x, this.groundY + 16);
-        this.playerAura.setPosition(this.player.x, this.groundY - 10);
+        this.playerAura.setPosition(this.player.x, this.player.y - 10);
 
         // Animation playback
         if (moveX !== 0 || moveY !== 0) {
@@ -1393,14 +1482,14 @@ class MarvelAcademyWingScene extends Phaser.Scene {
 
         // Dark backdrop
         const dimBg = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.8)
-            .setInteractive(); // block input to back
+            .setScrollFactor(0).setInteractive(); // block input to back
         this.loreModalContainer.add(dimBg);
 
         // Holographic Modal Box
         const cardW = Math.min(480, W - 30);
         const cardH = Math.min(340, H - 40);
         const cardBox = this.add.rectangle(W / 2, H / 2, cardW, cardH, 0x071122, 0.96)
-            .setStrokeStyle(3, 0x00E5FF);
+            .setScrollFactor(0).setStrokeStyle(3, 0x00E5FF);
         this.loreModalContainer.add(cardBox);
 
         // Top Header
@@ -1408,7 +1497,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00E5FF'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.loreModalContainer.add(this.loreTagText);
 
         this.loreTitleText = this.add.text(W / 2, H / 2 - cardH / 2 + 42, '', {
@@ -1417,11 +1506,11 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#F8B800',
             stroke: '#000',
             strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.loreModalContainer.add(this.loreTitleText);
 
         // Icon Preview
-        this.loreIcon = this.add.image(W / 2, H / 2 - cardH / 2 + 76, 'msha_avengers_logo').setScale(0.85);
+        this.loreIcon = this.add.image(W / 2, H / 2 - cardH / 2 + 76, 'msha_avengers_logo').setScale(0.85).setScrollFactor(0);
         this.loreModalContainer.add(this.loreIcon);
 
         // Description Body
@@ -1431,7 +1520,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#E0F7FA',
             lineSpacing: 8,
             wordWrap: { width: cardW - 40 }
-        });
+        }).setScrollFactor(0);
         this.loreModalContainer.add(this.loreBodyText);
 
         // Quote
@@ -1441,7 +1530,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#FFD700',
             align: 'center',
             wordWrap: { width: cardW - 40 }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.loreModalContainer.add(this.loreQuoteText);
 
         // Close Button
@@ -1451,7 +1540,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#FFFFFF',
             backgroundColor: '#0E2448',
             padding: { x: 10, y: 5 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         closeBtn.on('pointerdown', () => this.closeModals());
         closeBtn.on('pointerover', () => closeBtn.setStyle({ fill: '#FFD700' }));
@@ -1492,13 +1581,13 @@ class MarvelAcademyWingScene extends Phaser.Scene {
 
         this.suitModalContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(2700).setVisible(false);
 
-        const dimBg = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.85).setInteractive();
+        const dimBg = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.85).setScrollFactor(0).setInteractive();
         this.suitModalContainer.add(dimBg);
 
         const cardW = Math.min(520, W - 20);
         const cardH = Math.min(420, H - 30);
         const cardBox = this.add.rectangle(W / 2, H / 2, cardW, cardH, 0x091428, 0.98)
-            .setStrokeStyle(3, 0xF8B800);
+            .setScrollFactor(0).setStrokeStyle(3, 0xF8B800);
         this.suitModalContainer.add(cardBox);
 
         // Header Title
@@ -1508,14 +1597,14 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#F8B800',
             stroke: '#000',
             strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.suitModalContainer.add(title);
 
         const sub = this.add.text(W / 2, H / 2 - cardH / 2 + 38, 'SELECT SUIT TECH & MATERIALIZE NANOBOTS', {
             fontSize: '7px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00E5FF'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.suitModalContainer.add(sub);
 
         // 4 Suit Option Cards (2x2 grid)
@@ -1533,13 +1622,14 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             const cy = startY + row * (rowH + 10);
 
             const sBox = this.add.rectangle(cx, cy, colW, rowH, 0x131E35, 1)
+                .setScrollFactor(0)
                 .setStrokeStyle(2, idx === this.selectedSuitIndex ? 0xF8B800 : 0x2A3B5C)
                 .setInteractive({ useHandCursor: true });
             this.suitModalContainer.add(sBox);
             this.suitCardBoxes.push(sBox);
 
             // Icon
-            const sIcon = this.add.image(cx - colW / 2 + 24, cy, suit.iconKey).setScale(0.8);
+            const sIcon = this.add.image(cx - colW / 2 + 24, cy, suit.iconKey).setScale(0.8).setScrollFactor(0);
             this.suitModalContainer.add(sIcon);
 
             // Name & Hero
@@ -1547,14 +1637,14 @@ class MarvelAcademyWingScene extends Phaser.Scene {
                 fontSize: '7px',
                 fontFamily: '"Press Start 2P", monospace',
                 fill: suit.colorHex
-            });
+            }).setScrollFactor(0);
             this.suitModalContainer.add(sName);
 
             const sHero = this.add.text(cx - colW / 2 + 50, cy - 12, suit.hero.toUpperCase(), {
                 fontSize: '6px',
                 fontFamily: '"Press Start 2P", monospace',
                 fill: '#A0B8D8'
-            });
+            }).setScrollFactor(0);
             this.suitModalContainer.add(sHero);
 
             // Ultimate label
@@ -1562,14 +1652,14 @@ class MarvelAcademyWingScene extends Phaser.Scene {
                 fontSize: '6px',
                 fontFamily: '"Press Start 2P", monospace',
                 fill: '#FFD700'
-            });
+            }).setScrollFactor(0);
             this.suitModalContainer.add(sUlt);
 
             const sPass = this.add.text(cx - colW / 2 + 50, cy + 14, suit.passive, {
                 fontSize: '5px',
                 fontFamily: '"Press Start 2P", monospace',
                 fill: '#00FF88'
-            });
+            }).setScrollFactor(0);
             this.suitModalContainer.add(sPass);
 
             sBox.on('pointerdown', () => this.selectSuitCard(idx));
@@ -1583,7 +1673,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             align: 'center',
             lineSpacing: 5,
             wordWrap: { width: cardW - 50 }
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.suitModalContainer.add(this.suitDetailBox);
 
         // Materialize Nanotech Button
@@ -1593,7 +1683,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#050D1E',
             backgroundColor: '#00E5FF',
             padding: { x: 12, y: 7 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         this.materializeBtn.on('pointerdown', () => this.materializeNanotech());
         this.materializeBtn.on('pointerover', () => this.materializeBtn.setStyle({ backgroundColor: '#FFD700' }));
@@ -1605,7 +1695,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#8899AA'
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setInteractive({ useHandCursor: true });
         closeBtn.on('pointerdown', () => this.closeModals());
         this.suitModalContainer.add(closeBtn);
     }
@@ -1751,15 +1841,15 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         this.combatLayer = this.add.container(0, 0).setScrollFactor(0).setDepth(3100).setVisible(false);
 
         // Cyber Grid Arena Background
-        this.simBg = this.add.rectangle(W / 2, H / 2, W, H, 0x030612, 1);
+        this.simBg = this.add.rectangle(W / 2, H / 2, W, H, 0x030612, 1).setScrollFactor(0);
         this.combatLayer.add(this.simBg);
 
         // Grid lines overlay
-        this.simGridGfx = this.add.graphics();
+        this.simGridGfx = this.add.graphics().setScrollFactor(0);
         this.combatLayer.add(this.simGridGfx);
 
         // Holographic Scanlines
-        this.simScanlines = this.add.graphics();
+        this.simScanlines = this.add.graphics().setScrollFactor(0);
         this.simScanlines.fillStyle(0x00E5FF, 0.04);
         for (let y = 0; y < H; y += 4) {
             this.simScanlines.fillRect(0, y, W, 2);
@@ -1771,7 +1861,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fontSize: '10px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00FFFF'
-        });
+        }).setScrollFactor(0);
         this.combatLayer.add(this.simTimeText);
 
         this.simScoreText = this.add.text(W / 2, 18, 'SCORE: 0000', {
@@ -1780,30 +1870,41 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#FFD700',
             stroke: '#000',
             strokeThickness: 2
-        }).setOrigin(0.5, 0);
+        }).setOrigin(0.5, 0).setScrollFactor(0);
         this.combatLayer.add(this.simScoreText);
 
         this.simComboText = this.add.text(W / 2, 34, 'COMBO: x1', {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#00FF88'
-        }).setOrigin(0.5, 0);
+        }).setOrigin(0.5, 0).setScrollFactor(0);
         this.combatLayer.add(this.simComboText);
 
         // Ultimate Charge Meter (Top Right)
-        this.simUltText = this.add.text(W - 20, 18, 'ULTIMATE: [    ]', {
+        this.simUltText = this.add.text(W - 95, 18, 'ULTIMATE: [    ]', {
             fontSize: '8px',
             fontFamily: '"Press Start 2P", monospace',
             fill: '#E0F7FA'
-        }).setOrigin(1, 0);
+        }).setOrigin(1, 0).setScrollFactor(0);
         this.combatLayer.add(this.simUltText);
+
+        // Top-Right Simulator Exit Button
+        const simExitBtn = this.add.text(W - 16, 16, '[ ✕ EXIT ]', {
+            fontSize: '8px',
+            fontFamily: '"Press Start 2P", monospace',
+            fill: '#FFFFFF',
+            backgroundColor: '#881111',
+            padding: { x: 6, y: 5 }
+        }).setOrigin(1, 0).setScrollFactor(0).setInteractive({ useHandCursor: true });
+        simExitBtn.on('pointerdown', () => this.exitCombatSimulator());
+        this.combatLayer.add(simExitBtn);
 
         // Active Hero Suit label
         this.simSuitText = this.add.text(20, 36, `TECH: ${this.currentSuit.name}`, {
             fontSize: '7px',
             fontFamily: '"Press Start 2P", monospace',
             fill: this.currentSuit.colorHex
-        });
+        }).setScrollFactor(0);
         this.combatLayer.add(this.simSuitText);
 
         // Hero Ultimate Action Button
@@ -1813,7 +1914,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#000000',
             backgroundColor: '#FFD700',
             padding: { x: 12, y: 7 }
-        }).setOrigin(0.5).setVisible(false).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setVisible(false).setInteractive({ useHandCursor: true });
         this.simUltimateBtn.on('pointerdown', () => this.triggerHeroUltimate());
         this.combatLayer.add(this.simUltimateBtn);
 
@@ -1824,12 +1925,12 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#FFFFFF',
             backgroundColor: '#C02020',
             padding: { x: 14, y: 12 }
-        }).setOrigin(0.5).setVisible(false).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setVisible(false).setInteractive({ useHandCursor: true });
         this.simMobileFireBtn.on('pointerdown', () => this.fireEnergyBlast(this.simCrosshair.x, this.simCrosshair.y));
         this.combatLayer.add(this.simMobileFireBtn);
 
         // Targeting Crosshair
-        this.simCrosshair = this.add.image(W / 2, H / 2, 'msha_sim_crosshair');
+        this.simCrosshair = this.add.image(W / 2, H / 2, 'msha_sim_crosshair').setScrollFactor(0);
         this.combatLayer.add(this.simCrosshair);
 
         // Direct Touch-to-Aim & Fire input on entire simulator screen
@@ -1848,12 +1949,12 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         const W = this.scale.width;
         const H = this.scale.height;
 
-        this.debriefCard = this.add.container(0, 0).setVisible(false);
+        this.debriefCard = this.add.container(0, 0).setScrollFactor(0).setVisible(false);
 
         const cardW = Math.min(460, W - 24);
         const cardH = Math.min(340, H - 30);
         const box = this.add.rectangle(W / 2, H / 2, cardW, cardH, 0x050D1E, 0.98)
-            .setStrokeStyle(3, 0xF8B800);
+            .setScrollFactor(0).setStrokeStyle(3, 0xF8B800);
         this.debriefCard.add(box);
 
         const title = this.add.text(W / 2, H / 2 - cardH / 2 + 24, '★ AVENGERS COMBAT DEBRIEFING ★', {
@@ -1862,7 +1963,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#F8B800',
             stroke: '#000',
             strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.debriefCard.add(title);
 
         this.debriefStatsText = this.add.text(W / 2, H / 2 - 25, '', {
@@ -1871,7 +1972,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#E0F7FA',
             align: 'center',
             lineSpacing: 10
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.debriefCard.add(this.debriefStatsText);
 
         this.debriefBadgeText = this.add.text(W / 2, H / 2 + 50, '[★ MARVEL ACADEMY BADGE EARNED! ★]', {
@@ -1880,7 +1981,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#00FF88',
             stroke: '#000',
             strokeThickness: 2
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setScrollFactor(0);
         this.debriefCard.add(this.debriefBadgeText);
 
         // Buttons: Retry & Return to Lab
@@ -1890,7 +1991,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#FFFFFF',
             backgroundColor: '#0E3666',
             padding: { x: 10, y: 6 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setInteractive({ useHandCursor: true });
         retryBtn.on('pointerdown', () => this.startCombatSimulator());
         this.debriefCard.add(retryBtn);
 
@@ -1900,7 +2001,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#00FFFF',
             backgroundColor: '#0A1832',
             padding: { x: 10, y: 6 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setInteractive({ useHandCursor: true });
         returnBtn.on('pointerdown', () => this.exitCombatSimulator());
         this.debriefCard.add(returnBtn);
 
@@ -2090,7 +2191,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         const spawnX = startFromLeft ? -30 : W + 30;
         const spawnY = Phaser.Math.Between(75, this.scale.height - 120);
 
-        const drone = this.add.image(spawnX, spawnY, key).setDepth(3150).setInteractive({ useHandCursor: true });
+        const drone = this.add.image(spawnX, spawnY, key).setScrollFactor(0).setDepth(3150).setInteractive({ useHandCursor: true });
         drone.droneType = droneType;
         drone.hp = hp;
         drone.points = points;
@@ -2135,7 +2236,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
     }
 
     spawnHostileOrb(x, y) {
-        const orb = this.add.image(x, y, 'msha_plasma_orb').setDepth(3145).setInteractive({ useHandCursor: true });
+        const orb = this.add.image(x, y, 'msha_plasma_orb').setScrollFactor(0).setDepth(3145).setInteractive({ useHandCursor: true });
         orb.vy = Phaser.Math.Between(110, 160);
         orb.vx = Phaser.Math.Between(-30, 30);
 
