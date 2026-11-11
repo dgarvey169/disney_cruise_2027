@@ -1,7 +1,9 @@
 # 🚢 2027 Disney Cruise Project - Persistent Memory & Context
 
 > **Repository:** `dgarvey169/disney_cruise_2027`  
-> **Workspace Path:** `/Users/garveyd/agy/disney_cruise_2027`  
+> **Workspace Paths:**
+> - **MacBook Pro (macOS):** `/Users/garveyd/agy/disney_cruise_2027`
+> - **Linux Ubuntu Desktop:** `/home/drew/Projects/Gemini_Projects/disney_cruise_2027`  
 > **Active Branch:** `main`  
 > **Last Updated:** November 10, 2026
 

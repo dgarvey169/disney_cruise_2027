@@ -1,5 +1,8 @@
 # Workspace Rules
 
+- **Multi-Machine Workspace Paths**: Development occurs across two distinct machines—keep both paths preserved in documentation rather than overwriting one with the other:
+  - **MacBook Pro (macOS)**: `/Users/garveyd/agy/disney_cruise_2027`
+  - **Linux Ubuntu Desktop**: `/home/drew/Projects/Gemini_Projects/disney_cruise_2027`
 - **Auto-Push to GitHub**: Always remember to run `git push` to push committed code to GitHub automatically after completing a task or ask for the user. You do not need to ask for permission to push, and you should not wait for the user to remind you.
 - **Bug Fix Workflow via Pull Requests**:
   1. Whenever starting work on a bug, create a dedicated branch (e.g., `fix/issue-<number>-<short-name>`) and set the Project **Status** field to **`In progress`**.
