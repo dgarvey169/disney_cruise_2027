@@ -8,6 +8,10 @@
   4. Post a comment on the bug issue explaining what was done and include a link to the game (`https://dgarvey169.github.io/disney_cruise_2027/game/`).
   5. Move the Project **Status** field to **`In review`** for user testing, providing the PR link and live game link.
   6. Only close the bug and merge the PR into `main` after user testing and explicit approval.
+  - **GitHub Project Board IDs (`Disney Cruise Game` — Project #1 for `@dgarvey169`)**:
+    - `projectId`: `PVT_kwHOAHyLu84BjHTp`
+    - `Status` Field ID: `PVTSSF_lAHOAHyLu84BjHTpzhh83RU`
+    - `Status` Option IDs: `To triage` (`f971fb55`), `Backlog` (`f75ad846`), `Ready` (`856cdede`), `In progress` (`47fc9ee4`), `In review` (`5ef0dc97`), `Done` (`98236657`)
 
 # Game Architecture & Physics Memory
 
@@ -15,7 +19,7 @@
   - Always bump `ASSET_VERSION` in `game/index.html` whenever ANY file under `game/js/` changes. The loader appends `?v=ASSET_VERSION` to every script. Mobile and desktop browsers aggressively cache game scripts, which otherwise hides fixes during user testing.
 - **Code Layout (Issue #58 - split of the former monolithic `game/game.js`)**:
   - All game code lives in classic (non-module) scripts under `game/js/`, sharing one global scope. They are loaded **in order** by the inline loader in `game/index.html` (`async = false` preserves execution order).
-  - `js/lib/` = shared helpers (`config.js`, `amelia-outfit.js`, `edge-arcade-textures.js`, `boutique-icons.js`, `arcade-audio.js`). `js/scenes/` = one file per Phaser scene (`<Name>Scene.js`). `js/main.js` registers `config.scene = [...]` and creates `new Phaser.Game(config)` — it MUST load last.
+  - `js/lib/` = shared helpers (`config.js`, `amelia-outfit.js`, `edge-arcade-textures.js`, `boutique-icons.js`, `arcade-audio.js`, `oceaneer-club-data.js`). `js/scenes/` = one file per Phaser scene (`<Name>Scene.js`). `js/main.js` registers `config.scene = [...]` and creates `new Phaser.Game(config)` — it MUST load last.
   - **Adding a new scene**: create `js/scenes/<Name>Scene.js`, add it to the loader list in `index.html` **before** `js/main.js`, and add the class to `config.scene` in `js/main.js`.
   - **Load-order rule**: cross-file references are fine inside functions/methods (resolved at runtime). Anything evaluated at top level (e.g., `new SomeClass()`, `class X extends Y`) requires its dependency to load in an earlier file. Top-level names must be unique across all files (shared global scope).
 - **GitHub Pages Branch Management**:
