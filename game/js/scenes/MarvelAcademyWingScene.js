@@ -1759,7 +1759,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         }
         if (this.mannequinLabel) {
             this.mannequinLabel.setText(suit.name);
-            this.mannequinLabel.setFillStyle(suit.color);
+            this.mannequinLabel.setColor(suit.colorHex || '#FFFFFF');
         }
 
         // Update Player glowing hero aura
@@ -1770,7 +1770,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         // Update Top HUD
         if (this.hudSuitText) {
             this.hudSuitText.setText(`SUIT: ${suit.name}`);
-            this.hudSuitText.setFillStyle(suit.color);
+            this.hudSuitText.setColor(suit.colorHex || '#00E5FF');
         }
         if (this.hudScoreText) {
             this.hudScoreText.setText(`BEST: ${this.trainingHighScore} ★ BADGE`);
@@ -2010,6 +2010,8 @@ class MarvelAcademyWingScene extends Phaser.Scene {
 
     startCombatSimulator() {
         this.closeModals();
+        if (this.resetKeyInputs) this.resetKeyInputs();
+        if (this.resetJoystick) this.resetJoystick();
         this.inCombatSimulator = true;
         this.simIsGameOver = false;
 
@@ -2030,7 +2032,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         const H = this.scale.height;
         this.simCrosshair.setPosition(W / 2, H / 2);
         this.simSuitText.setText(`TECH: ${this.currentSuit.name}`);
-        this.simSuitText.setFillStyle(this.currentSuit.color);
+        this.simSuitText.setColor(this.currentSuit.colorHex || '#00E5FF');
 
         this.debriefCard.setVisible(false);
         this.simUltimateBtn.setVisible(false);
@@ -2077,9 +2079,9 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         if (this.simTimer > 0) {
             this.simTimeText.setText(`TIME: ${this.simTimer.toFixed(1)}s`);
             if (this.simTimer < 5.0) {
-                this.simTimeText.setFillStyle(0xFF3333);
+                this.simTimeText.setColor('#FF3333');
             } else {
-                this.simTimeText.setFillStyle(0x00FFFF);
+                this.simTimeText.setColor('#00FFFF');
             }
         } else {
             this.simTimeText.setText('TIME: 0.0s');
@@ -2100,10 +2102,10 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         this.simUltText.setText(`ULTIMATE: ${barStr}`);
 
         if (this.simUltimateCharge >= 100) {
-            this.simUltText.setFillStyle(0xFFD700);
+            this.simUltText.setColor('#FFD700');
             this.simUltimateBtn.setVisible(true);
         } else {
-            this.simUltText.setFillStyle(0xE0F7FA);
+            this.simUltText.setColor('#E0F7FA');
             this.simUltimateBtn.setVisible(false);
         }
 
@@ -2278,7 +2280,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
         const originY = this.scale.height - 10;
 
         // Energy Blast Beam Graphic
-        const blastGfx = this.add.graphics().setDepth(3180);
+        const blastGfx = this.add.graphics().setScrollFactor(0).setDepth(3180);
         blastGfx.lineStyle(4, suit.blastColor, 1);
         blastGfx.lineBetween(originX, originY, targetX, targetY);
         blastGfx.fillStyle(suit.glowColor, 1);
@@ -2378,7 +2380,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
 
     createExplosionBurst(x, y, color) {
         for (let i = 0; i < 10; i++) {
-            const spark = this.add.image(x, y, 'msha_nano_spark').setDepth(3190).setTint(color);
+            const spark = this.add.image(x, y, 'msha_nano_spark').setScrollFactor(0).setDepth(3190).setTint(color);
             const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
             const dist = Phaser.Math.Between(20, 50);
             this.tweens.add({
@@ -2401,7 +2403,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             fill: '#00FF88',
             stroke: '#000',
             strokeThickness: 2
-        }).setOrigin(0.5).setDepth(3200);
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3200);
 
         this.tweens.add({
             targets: popup,
@@ -2428,7 +2430,7 @@ class MarvelAcademyWingScene extends Phaser.Scene {
             retroArcadeAudio.play('bomb');
         }
 
-        const ultFlash = this.add.rectangle(W / 2, H / 2, W, H, suit.color, 0.75).setDepth(3250);
+        const ultFlash = this.add.rectangle(W / 2, H / 2, W, H, suit.color, 0.75).setScrollFactor(0).setDepth(3250);
         this.tweens.add({
             targets: ultFlash,
             alpha: 0,
