@@ -10,8 +10,15 @@ config.scene = [
     ObstacleCourseScene,
     AirHockeyScene,
     BasketballShootoutScene,
-    ArcadeShooterScene
+    ArcadeShooterScene,
+    OceaneerClubScene,
+    RalphSlideWingScene,
+    ImagineeringLabWingScene,
+    MarvelAcademyWingScene,
+    StarWarsCargoWingScene,
+    FairytaleHallWingScene
 ];
 window.game = new Phaser.Game(config);
 const game = window.game;
+
 

@@ -2598,6 +2598,12 @@ class GameScene extends Phaser.Scene {
             if (this.wasd.up) this.wasd.up.isDown = false;
             if (this.wasd.down) this.wasd.down.isDown = false;
         }
+        if (this.input && this.input.keyboard) {
+            this.input.keyboard.resetKeys();
+            if (this.input.keyboard.manager) {
+                this.input.keyboard.manager.queue = [];
+            }
+        }
         if (this.elevatorPromptText) {
             this.elevatorPromptText.setVisible(false);
         }
