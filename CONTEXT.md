@@ -83,14 +83,28 @@ The game is a Phaser 3 browser-based platformer. All changes are on the `main` b
   - Added Deck 5 (Edge Tween Club) destination to Midship Elevators.
   - Explorable 8-bit synthwave lounge with neon lights, DJ equalizer, Leo & Maya NPCs with retro Capcom speech bubbles, tropical smoothie speed boosts, and wall-mounted live Leaderboard.
   - "Galaxy Destiny" arcade cabinet: 8-bit retro space shooter mini-game with parallax starfield, waves of Drones, Cruisers, Asteroids, Boss Dreadnought, power-ups, smart bombs, Web Audio synthesizer effects, and persistent high scores.
+- **Amelia's Bibbidi Bobbidi Boutique (#44):**
+  - Added Deck 4 (Bibbidi Bobbidi) destination to Midship Elevators.
+  - Interactive 8-bit royal makeover salon (`BoutiqueScene`) with 4 customization tiers (Wig, Dress, Crown, Wand/Scepter), dynamic procedural sprite generation (`amelia-outfit.js`), Web Audio harp chimes, and `localStorage` persistence.
+- **Riley's Hero Zone (#46):**
+  - Deck 12 arena (`HeroZoneScene`) featuring the Incredibles Timed Obstacle Course (`ObstacleCourseScene`), Retro Air Hockey (`AirHockeyScene`), Pop-A-Shot Basketball Shootout (`BasketballShootoutScene`), and Hall of Heroes records display.
+- **Amelia's Oceaneer Club (#45, #63):**
+  - Added Deck 2 (Oceaneer Club) destination to Midship Elevators.
+  - Central Rotunda Hub (`OceaneerClubScene`) with interactive MagicBand Check-In Scanner, Pixie Dust Trail toggle, interactive Tinker Bell lantern, and 5 themed activity wings:
+    - `RalphSlideWingScene`: Wreck-It Ralph's Sugar Rush Spiral Slide from Deck 3 to Deck 2 with candy boosts and hazards.
+    - `MarvelAcademyWingScene`: Marvel Super Hero Academy with Iron Man, Spider-Man, and Wasp suit-ups and the Holo-Drone Combat Training Bay mini-game.
+    - `StarWarsCargoWingScene`: Star Wars Cargo Bay with porg cage, holotable, Loth-cat feeding, and Coaxium hyperdrive puzzle.
+    - `ImagineeringLabWingScene`: Walt Disney Imagineering Lab with 3D Souvenir Printer, Animator's Studio, and Cyber-Coaster Track Builder & Simulator.
+    - `FairytaleHallWingScene`: Fairytale Hall with Rapunzel's Lantern Painting, Elsa's Ice Magic Symphony, and Belle's Royal Library Storytelling.
 - **Currents Bar Removal (#42):** Doorway and signage removed from Deck 13.
 
 ### Known Pending Items & Feature Roadmap
 - **DuckTales (NES) Graphics & UI Overhaul:** Tracked in Issue #11. Capcom 8-bit styling, black-bordered sprites, PPU palette limits, 16×16 tile grid, retro HP health spheres, padded zero score display, pixelated canvas rendering.
 - **Bespoke Character Levels & Storylines:** Issue #12 triaged, closed, and split into:
+  - **Issue #43:** Midship Elevators and UI Floor Selection Menu (Completed)
   - **Issue #44:** Amelia's Bibbidi Bobbidi Boutique (Completed)
-  - **Issue #45:** Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
-  - **Issue #46:** Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course)
+  - **Issue #45:** Amelia's Oceaneer Club (Completed)
+  - **Issue #46:** Riley's Hero Zone (Completed)
   - **Issue #47:** Riley's Edge Tween Club Arcade (Completed)
 - **AquaMouse Redesign & Overhaul:** Completed in Issue #39 (PR #52) — visual/depth-ordering overhaul only.
 - **Theaters (Pending):** Movie theater and grand Walt Disney Theatre.

@@ -45,6 +45,11 @@
   - **Modal Input Debouncing & SOCD Last-Input Priority**:
     - Mini-game end-screens and completion dialogs must implement a mandatory input debounce window (e.g. 500–600ms) with strict directional navigation (`Up`/`W`, `Down`/`S`), preventing sprint/jump keys held at the finish line from auto-confirming exit actions.
     - Continuous 2.5D movement loops should use Last-Input-Priority (SOCD) for opposing key pairs (`A`/`D`, `W`/`S`) alongside window `blur`, `focus`, and `visibilitychange` release handlers to eliminate stuck keys when switching tabs or windows.
+  - **Phaser 3 Text vs. Shape Color Styling (`setColor` vs. `setFillStyle` - Issue #63)**:
+    - In Phaser 3, `Phaser.GameObjects.Shape` (`Rectangle`, `Ellipse`, `Arc`) uses `.setFillStyle(hexColor, alpha)` to change fill color, whereas `Phaser.GameObjects.Text` does **not** have `.setFillStyle()` and throws `TypeError: ...setFillStyle is not a function` (freezing the scene's `update()` loop). Always use `.setColor('#hex')` or `.setFill('#hex')` on `Text` objects.
+  - **Mobile Multi-Touch & Modal Window Keyboard Capture**:
+    - When opening interactive overlays or mini-game modals inside a walkable room scene, attach keyboard listeners onto `this.input.keyboard` or cleanly manage `window.addEventListener('keydown', ...)` teardown on close so modal handlers do not intercept `Space`/`Enter`/`WASD` after the modal closes.
+    - Always provide a dedicated on-screen mobile action button (`ACTION / ENTER` at `setScrollFactor(0)`) alongside the left-half floating joystick in walkable hub and wing scenes so touch users can trigger proximity station prompts anywhere in scrolled rooms.
 
 
 - **Deck & Stair Coordinates**:
@@ -89,10 +94,21 @@
   - **Sub-Tasks Generated & Tracked**: Broken down into discrete issues on the project board:
     - #43: Midship Elevators and UI Floor Selection Menu (Completed)
     - #44: Amelia's Bibbidi Bobbidi Boutique (8-bit Makeover UI - Completed)
-    - #45: Amelia's Oceaneer Club (Deck 2 Hub & 4 Themed Wings: Marvel, Star Wars, Imagineering, Fairytale Hall)
+    - #45: Amelia's Oceaneer Club (Deck 2 Hub & 5 Themed Wings - Completed)
     - #46: Riley's Hero Zone (Deck 12 Timed Incredibles Obstacle Course - Completed)
     - #47: Riley's Edge Tween Club Arcade (Retro Space Shooter Cabinet - Completed)
   - Storyboard documented in detail in `Issue_12_Storyboard.md`.
+
+- **Amelia's Oceaneer Club (Issue #45 & #63 - Completed)**:
+  - **Elevator Navigation**: Added `Deck 2 (Oceaneer Club)` destination in `ElevatorMenuScene`. Selecting it sets active character to Amelia and launches `OceaneerClubScene`.
+  - **Central Rotunda Hub (`OceaneerClubScene`)**:
+    - MagicBand Check-In Scanner (awards ★ Check-In Stamp), Pixie Dust Trail toggle, interactive Tinker Bell Lantern, 5-Stamp Completion Celebration Banner, and portals to 5 themed wings.
+  - **5 Dedicated Wing Scenes**:
+    - `RalphSlideWingScene`: Wreck-It Ralph's Sugar Rush Spiral Slide from Deck 3 down to Deck 2 with 3 lanes, Sugar Speed Boost pads, Sour Cherry hazards, and sweet bonus tokens.
+    - `MarvelAcademyWingScene`: Marvel Super Hero Academy with Iron Man, Spider-Man, and The Wasp suit-up kiosks (live Amelia sprite/aura transformation) and the Holo-Drone Combat Training Bay mini-game (`setScrollFactor(0)` overlay).
+    - `StarWarsCargoWingScene`: Star Wars Cargo Bay with Porg Cage, Millennium Falcon Holotable, Loth-Cat Treat Dispenser, and 3-Stage Coaxium Hyperdrive Alignment Puzzle.
+    - `ImagineeringLabWingScene`: Walt Disney Imagineering Lab with 3D Souvenir Printer, Animator's Desk, and Cyber-Coaster Track Builder & Physics Simulator.
+    - `FairytaleHallWingScene`: Fairytale Hall with Rapunzel's Lantern Studio, Elsa's Ice Magic Symphony rhythm challenge, and Belle's Royal Library interactive storybook.
 
 - **Amelia's Bibbidi Bobbidi Boutique (Issue #44 - Completed)**:
   - **Elevator Navigation**: Added `Deck 4 (Bibbidi Bobbidi)` destination in `ElevatorMenuScene`. Selecting it automatically switches the active character to Amelia and launches `BoutiqueScene`.
